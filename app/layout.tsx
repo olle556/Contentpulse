@@ -3,6 +3,8 @@ import type { Metadata } from 'next';
 import { Inter } from 'next/font/google';
 import { Providers } from './providers';
 import { Toaster } from "@/components/ui/toaster";
+import RouteGuard from '@/components/RouteGuard';
+
 const inter = Inter({ subsets: ['latin'] });
 
 export const metadata: Metadata = {
@@ -18,8 +20,10 @@ export default function RootLayout({
   return (
     <html lang="en" suppressHydrationWarning>
       <body className={inter.className}>
-        <Providers>{children}</Providers>
-        <Toaster />
+        <RouteGuard>
+          <Providers>{children}</Providers>
+          <Toaster />
+        </RouteGuard>
       </body>
     </html>
   );

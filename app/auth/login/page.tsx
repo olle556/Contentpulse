@@ -22,20 +22,43 @@ export default function Login() {
     setLoading(true);
 
     try {
-      const { error } = await supabase.auth.signInWithPassword({
-        email,
-        password,
+      if (!email || !password) {
+        throw new Error('Please enter both email and password');
+      }
+
+      console.log('Starting login attempt...');
+      
+      // First check if we can connect to Supabase
+      const { data: { session }, error: sessionError } = await supabase.auth.getSession();
+      console.log('Current session:', session);
+
+      const { data, error } = await supabase.auth.signInWithPassword({
+        email: email.trim(), // trim to remove any accidental spaces
+        password: password,
       });
 
-      if (error) throw error;
+      if (error) {
+        console.error('Auth error details:', {
+          message: error.message,
+          status: error.status,
+          name: error.name
+        });
+        throw error;
+      }
 
-      router.push("/dashboard");
-      router.refresh();
+      if (data?.user) {
+        console.log('Login successful, redirecting...');
+        router.push("/dashboard");
+        router.refresh();
+      } else {
+        throw new Error('No user data received');
+      }
     } catch (error: any) {
+      console.error('Full error object:', error);
       toast({
         variant: "destructive",
-        title: "Error",
-        description: error.message,
+        title: "Login Failed",
+        description: error.message || "An unexpected error occurred",
       });
     } finally {
       setLoading(false);

@@ -1,8 +1,19 @@
+"use client";
+
 import { Button } from "@/components/ui/button";
 import { Card } from "@/components/ui/card";
 import { ArrowRight, Sparkles, Target, Zap } from "lucide-react";
+import { toast } from "sonner";
+import { useRouter } from "next/navigation";
 
 export default function Home() {
+  const router = useRouter();
+
+  const handleGetStarted = () => {
+    toast.success("Redirecting to login...");
+    router.push('/auth/login');
+  };
+
   return (
     <main className="min-h-screen bg-gradient-to-b from-background to-muted">
       <div className="container mx-auto px-4 py-16">
@@ -34,7 +45,7 @@ export default function Home() {
         </div>
 
         <div className="text-center">
-          <Button size="lg" className="animate-bounce">
+          <Button size="lg" className="animate-bounce" onClick={handleGetStarted}>
             Get Started <ArrowRight className="ml-2 w-4 h-4" />
           </Button>
         </div>
