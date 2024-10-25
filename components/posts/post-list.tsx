@@ -136,12 +136,12 @@ export function PostList() {
 function getStatusVariant(status: string) {
   switch (status) {
     case "approved":
-      return "success";
+      return "default" as const;
     case "rejected":
-      return "destructive";
+      return "destructive" as const;
     case "posted":
-      return "default";
+      return "secondary" as const;
     default:
-      return "secondary";
+      return "outline" as const;
   }
 }
