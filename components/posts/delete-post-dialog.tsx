@@ -1,7 +1,6 @@
 "use client";
 
 import { useState } from "react";
-import { createClientComponentClient } from "@supabase/auth-helpers-nextjs";
 import {
   AlertDialog,
   AlertDialogAction,
@@ -29,19 +28,17 @@ export function DeletePostDialog({
   onSuccess,
 }: DeletePostDialogProps) {
   const [loading, setLoading] = useState(false);
-  const supabase = createClientComponentClient();
 
   async function handleDelete() {
     if (!post) return;
     setLoading(true);
 
     try {
-      const { error } = await supabase
-        .from("generated_posts")
-        .delete()
-        .eq("id", post.id);
+      const response = await fetch(`/api/posts/${post.id}`, {
+        method: 'DELETE',
+      });
 
-      if (error) throw error;
+      if (!response.ok) throw new Error('Failed to delete post');
 
       toast.success("Post deleted successfully");
       onSuccess();

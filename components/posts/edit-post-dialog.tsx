@@ -1,7 +1,8 @@
 "use client";
 
 import { useState, useEffect } from "react";
-import { createClientComponentClient } from "@supabase/auth-helpers-nextjs";
+import { toast } from "sonner";
+import { GeneratedPost } from "@/types";
 import {
   Dialog,
   DialogContent,
@@ -11,8 +12,6 @@ import {
 import { Button } from "@/components/ui/button";
 import { Label } from "@/components/ui/label";
 import { Textarea } from "@/components/ui/textarea";
-import { toast } from "sonner";
-import { GeneratedPost } from "@/types";
 
 interface EditPostDialogProps {
   post: GeneratedPost | null;
@@ -29,7 +28,6 @@ export function EditPostDialog({
 }: EditPostDialogProps) {
   const [content, setContent] = useState("");
   const [loading, setLoading] = useState(false);
-  const supabase = createClientComponentClient();
 
   useEffect(() => {
     if (post) {
@@ -43,12 +41,13 @@ export function EditPostDialog({
     setLoading(true);
 
     try {
-      const { error } = await supabase
-        .from("generated_posts")
-        .update({ content })
-        .eq("id", post.id);
+      const response = await fetch(`/api/posts/${post.id}`, {
+        method: 'PATCH',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ content }),
+      });
 
-      if (error) throw error;
+      if (!response.ok) throw new Error('Failed to update post');
 
       toast.success("Post updated successfully");
       onSuccess();

@@ -14,7 +14,9 @@ import { toast } from "sonner";
 import { ContentSource } from "@/types";
 import { Loader2, Check, RefreshCw } from "lucide-react";
 import { useEditor, EditorContent } from "@tiptap/react";
-import StarterKit from "@tiptap/starter-kit";
+import Document from '@tiptap/extension-document'
+import Text from '@tiptap/extension-text'
+import Paragraph from '@tiptap/extension-paragraph'
 
 interface GeneratePostDialogProps {
   open: boolean;
@@ -33,7 +35,12 @@ export function GeneratePostDialog({ open, onOpenChange, onSuccess }: GeneratePo
 
   // TipTap editor setup
   const editor = useEditor({
-    extensions: [StarterKit],
+    extensions: [
+      Document,
+      Paragraph,
+      Text,
+      // Remove StarterKit and only include specific extensions you need
+    ],
     content: generatedContent,
     editorProps: {
       attributes: {
@@ -41,7 +48,7 @@ export function GeneratePostDialog({ open, onOpenChange, onSuccess }: GeneratePo
       },
     },
     onUpdate: ({ editor }) => {
-      const content = editor.getHTML();
+      const content = editor.getText(); // Use getText() instead of getHTML()
       setGeneratedContent(content);
       handleAutosave(content);
     },
@@ -55,8 +62,8 @@ export function GeneratePostDialog({ open, onOpenChange, onSuccess }: GeneratePo
 
   // Handle dialog close
   const handleDialogClose = async (open: boolean) => {
-    if (!open && editor?.getHTML()) {
-      await handleSave(editor.getHTML());
+    if (!open && editor?.getText()) {
+      await handleSave(editor.getText());
     }
     setIsEditing(false);
     onOpenChange(open);
@@ -70,7 +77,7 @@ export function GeneratePostDialog({ open, onOpenChange, onSuccess }: GeneratePo
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({ 
-          content,
+          content: content.trim(), // Trim any extra whitespace
           platform: 'twitter',
           status: 'draft'
         }),
@@ -103,7 +110,7 @@ export function GeneratePostDialog({ open, onOpenChange, onSuccess }: GeneratePo
 
   const handleDoneEditing = async () => {
     if (editor) {
-      const content = editor.getHTML();
+      const content = editor.getText();
       await handleSave(content);
       setIsEditing(false);
     }
@@ -191,10 +198,10 @@ export function GeneratePostDialog({ open, onOpenChange, onSuccess }: GeneratePo
           </div>
 
           {generatedContent && !isEditing ? (
-            // View mode
+            // View mode - update to use plain text
             <div className="space-y-4">
-              <div className="prose max-w-none">
-                <div dangerouslySetInnerHTML={{ __html: generatedContent }} />
+              <div className="prose max-w-none whitespace-pre-wrap">
+                {generatedContent}
               </div>
               <div className="flex justify-end space-x-2">
                 <Button

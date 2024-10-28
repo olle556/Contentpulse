@@ -100,34 +100,3 @@ export async function POST(request: Request) {
     await prisma.$disconnect();
   }
 }
-
-export async function DELETE(request: Request) {
-  try {
-    const { searchParams } = new URL(request.url);
-    const id = searchParams.get('id');
-
-    if (!id) {
-      return NextResponse.json({ 
-        success: false, 
-        error: 'Post ID is required' 
-      }, { status: 400 });
-    }
-
-    await prisma.generatedPost.delete({
-      where: { id }
-    });
-
-    return NextResponse.json({ 
-      success: true,
-      message: 'Post deleted successfully'
-    });
-  } catch (error) {
-    console.error('Error deleting post:', error);
-    return NextResponse.json({ 
-      success: false, 
-      error: error instanceof Error ? error.message : 'Failed to delete post' 
-    }, { status: 500 });
-  } finally {
-    await prisma.$disconnect();
-  }
-}
