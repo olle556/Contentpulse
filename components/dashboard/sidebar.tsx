@@ -10,10 +10,12 @@ import {
   PenTool,
   Calendar,
   LayoutDashboard,
+  Palette,
 } from "lucide-react";
 
 const navigation = [
   { name: "Overview", href: "/dashboard", icon: LayoutDashboard },
+  { name: "Your Brand", href: "/dashboard/brand", icon: Palette },
   { name: "Content Sources", href: "/dashboard/sources", icon: LinkIcon },
   { name: "Generated Posts", href: "/dashboard/posts", icon: PenTool },
   { name: "Schedule", href: "/dashboard/schedule", icon: Calendar },
