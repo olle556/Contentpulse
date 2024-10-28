@@ -34,6 +34,7 @@ export interface ContentSource {
   category: string;
   crawlFrequency: string;
   lastCrawled: Date;
+  scrapedContent?: string; // Add this field
 }
 
 export interface ScrapedContent {

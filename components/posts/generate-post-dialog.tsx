@@ -1,7 +1,6 @@
 "use client";
 
-import { useState } from "react";
-import { createClientComponentClient } from "@supabase/auth-helpers-nextjs";
+import { useState, useEffect } from "react";
 import {
   Dialog,
   DialogContent,
@@ -10,15 +9,10 @@ import {
 } from "@/components/ui/dialog";
 import { Button } from "@/components/ui/button";
 import { Label } from "@/components/ui/label";
-import {
-  Select,
-  SelectContent,
-  SelectItem,
-  SelectTrigger,
-  SelectValue,
-} from "@/components/ui/select";
+import { Checkbox } from "@/components/ui/checkbox";
 import { Textarea } from "@/components/ui/textarea";
 import { toast } from "sonner";
+import { ContentSource } from "@/types";
 import { Loader2 } from "lucide-react";
 
 interface GeneratePostDialogProps {
@@ -26,138 +20,138 @@ interface GeneratePostDialogProps {
   onOpenChange: (open: boolean) => void;
 }
 
-export function GeneratePostDialog({
-  open,
-  onOpenChange,
-}: GeneratePostDialogProps) {
-  const [platform, setPlatform] = useState<"X" | "Threads">("X");
-  const [contentType, setContentType] = useState<"text" | "thread">("text");
-  const [tone, setTone] = useState("professional");
+export function GeneratePostDialog({ open, onOpenChange }: GeneratePostDialogProps) {
+  const [sources, setSources] = useState<ContentSource[]>([]);
+  const [selectedSources, setSelectedSources] = useState<string[]>([]);
   const [loading, setLoading] = useState(false);
+  const [generatingPost, setGeneratingPost] = useState(false);
   const [generatedContent, setGeneratedContent] = useState("");
-  const supabase = createClientComponentClient();
+  const [usedSources, setUsedSources] = useState<string[]>([]);
 
-  async function handleGenerate() {
-    setLoading(true);
+  useEffect(() => {
+    fetchSources();
+  }, []);
 
+  async function fetchSources() {
     try {
-      // Here you would integrate with your AI service to generate content
-      // For now, we'll simulate the generation
-      await new Promise((resolve) => setTimeout(resolve, 2000));
-      const content = `Sample generated ${contentType} for ${platform} with a ${tone} tone.`;
-      setGeneratedContent(content);
-    } catch (error: any) {
-      toast.error(error.message);
-    } finally {
-      setLoading(false);
+      const response = await fetch('/api/sources');
+      const data = await response.json();
+      if (data.success) {
+        setSources(data.sources);
+      }
+    } catch (error) {
+      console.error('Error fetching sources:', error);
+      toast.error('Failed to fetch sources');
     }
   }
 
-  async function handleSave() {
-    if (!generatedContent) return;
-    setLoading(true);
+  async function handleSourceSelect(sourceId: string) {
+    const isSelected = selectedSources.includes(sourceId);
+    if (isSelected) {
+      setSelectedSources(selectedSources.filter(id => id !== sourceId));
+    } else {
+      setSelectedSources([...selectedSources, sourceId]);
+    }
+  }
+
+  async function handleGenerate() {
+    if (selectedSources.length === 0) {
+      toast.error("Please select at least one source");
+      return;
+    }
+
+    setGeneratingPost(true);
 
     try {
-      const { data: { session } } = await supabase.auth.getSession();
-      if (!session) throw new Error("Not authenticated");
-
-      const { error } = await supabase.from("generated_posts").insert({
-        user_id: session.user.id,
-        content: generatedContent,
-        platform,
-        status: "pending",
+      const response = await fetch('/api/generate-post', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ sourceIds: selectedSources }),
       });
 
-      if (error) throw error;
+      const data = await response.json();
+      if (!data.success) throw new Error(data.error);
 
-      toast.success("Post saved successfully");
-      onOpenChange(false);
-      setGeneratedContent("");
+      setGeneratedContent(data.content);
+      setUsedSources(data.sourceUrls); // Store the used source URLs
+      toast.success('Post generated successfully');
     } catch (error: any) {
-      toast.error(error.message);
+      toast.error(error.message || 'Failed to generate post');
     } finally {
-      setLoading(false);
+      setGeneratingPost(false);
     }
   }
 
   return (
     <Dialog open={open} onOpenChange={onOpenChange}>
-      <DialogContent className="sm:max-w-[500px]">
+      <DialogContent className="sm:max-w-[600px]">
         <DialogHeader>
-          <DialogTitle>Generate New Post</DialogTitle>
+          <DialogTitle>Generate Post from Sources</DialogTitle>
         </DialogHeader>
+        
         <div className="space-y-4">
           <div className="space-y-2">
-            <Label>Platform</Label>
-            <Select value={platform} onValueChange={(value: "X" | "Threads") => setPlatform(value)}>
-              <SelectTrigger>
-                <SelectValue placeholder="Select platform" />
-              </SelectTrigger>
-              <SelectContent>
-                <SelectItem value="X">X (Twitter)</SelectItem>
-                <SelectItem value="Threads">Threads</SelectItem>
-              </SelectContent>
-            </Select>
-          </div>
-
-          <div className="space-y-2">
-            <Label>Content Type</Label>
-            <Select value={contentType} onValueChange={(value: "text" | "thread") => setContentType(value)}>
-              <SelectTrigger>
-                <SelectValue placeholder="Select content type" />
-              </SelectTrigger>
-              <SelectContent>
-                <SelectItem value="text">Single Post</SelectItem>
-                <SelectItem value="thread">Thread</SelectItem>
-              </SelectContent>
-            </Select>
-          </div>
-
-          <div className="space-y-2">
-            <Label>Tone</Label>
-            <Select value={tone} onValueChange={setTone}>
-              <SelectTrigger>
-                <SelectValue placeholder="Select tone" />
-              </SelectTrigger>
-              <SelectContent>
-                <SelectItem value="professional">Professional</SelectItem>
-                <SelectItem value="casual">Casual</SelectItem>
-                <SelectItem value="friendly">Friendly</SelectItem>
-                <SelectItem value="humorous">Humorous</SelectItem>
-              </SelectContent>
-            </Select>
+            <Label>Select Sources</Label>
+            <div className="grid gap-2 max-h-[200px] overflow-y-auto">
+              {sources.map((source) => (
+                <div key={source.id} className="flex items-center space-x-2">
+                  <Checkbox
+                    id={source.id}
+                    checked={selectedSources.includes(source.id)}
+                    onCheckedChange={() => handleSourceSelect(source.id)}
+                  />
+                  <Label htmlFor={source.id} className="cursor-pointer">
+                    {source.url} ({source.category})
+                  </Label>
+                </div>
+              ))}
+            </div>
           </div>
 
           {generatedContent && (
-            <div className="space-y-2">
-              <Label>Generated Content</Label>
-              <Textarea
-                value={generatedContent}
-                onChange={(e) => setGeneratedContent(e.target.value)}
-                rows={5}
-              />
+            <div className="space-y-4">
+              <div className="space-y-2">
+                <Label>Generated Content</Label>
+                <Textarea
+                  value={generatedContent}
+                  onChange={(e) => setGeneratedContent(e.target.value)}
+                  rows={5}
+                />
+              </div>
+              
+              {usedSources.length > 0 && (
+                <div className="space-y-2">
+                  <Label>Sources Used:</Label>
+                  <div className="text-sm text-muted-foreground">
+                    {usedSources.map((url, index) => (
+                      <div key={index}>• {url}</div>
+                    ))}
+                  </div>
+                </div>
+              )}
             </div>
           )}
 
           <div className="flex justify-end space-x-2">
             <Button
-              type="button"
               variant="outline"
               onClick={() => onOpenChange(false)}
             >
               Cancel
             </Button>
-            {!generatedContent ? (
-              <Button onClick={handleGenerate} disabled={loading}>
-                {loading && <Loader2 className="mr-2 h-4 w-4 animate-spin" />}
-                Generate
-              </Button>
-            ) : (
-              <Button onClick={handleSave} disabled={loading}>
-                {loading && <Loader2 className="mr-2 h-4 w-4 animate-spin" />}
-                Save Post
-              </Button>
-            )}
+            <Button 
+              onClick={handleGenerate}
+              disabled={generatingPost || selectedSources.length === 0}
+            >
+              {generatingPost ? (
+                <>
+                  <Loader2 className="mr-2 h-4 w-4 animate-spin" />
+                  Generating...
+                </>
+              ) : (
+                'Generate Post'
+              )}
+            </Button>
           </div>
         </div>
       </DialogContent>

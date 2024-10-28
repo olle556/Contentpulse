@@ -1,116 +1,70 @@
 "use client";
 
 import { useState } from "react";
-import { createClientComponentClient } from "@supabase/auth-helpers-nextjs";
-import {
-  Dialog,
-  DialogContent,
-  DialogHeader,
-  DialogTitle,
-} from "@/components/ui/dialog";
+import { Dialog, DialogContent, DialogHeader, DialogTitle } from "@/components/ui/dialog";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
-import { Label } from "@/components/ui/label";
-import {
-  Select,
-  SelectContent,
-  SelectItem,
-  SelectTrigger,
-  SelectValue,
-} from "@/components/ui/select";
-import { toast } from "sonner";
 
 interface AddSourceDialogProps {
   open: boolean;
   onOpenChange: (open: boolean) => void;
+  onSuccess?: () => Promise<void>;
 }
 
-export function AddSourceDialog({ open, onOpenChange }: AddSourceDialogProps) {
+export function AddSourceDialog({ open, onOpenChange, onSuccess }: AddSourceDialogProps) {
   const [url, setUrl] = useState("");
-  const [category, setCategory] = useState("");
-  const [frequency, setFrequency] = useState("daily");
-  const [loading, setLoading] = useState(false);
-  const supabase = createClientComponentClient();
+  const [isLoading, setIsLoading] = useState(false);
 
-  async function handleSubmit(e: React.FormEvent) {
+  const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
-    setLoading(true);
+    setIsLoading(true);
 
     try {
-      const { data: { session } } = await supabase.auth.getSession();
-      if (!session) throw new Error("Not authenticated");
-
-      const { error } = await supabase.from("content_sources").insert({
-        user_id: session.user.id,
-        url,
-        category,
-        crawl_frequency: frequency,
+      const response = await fetch('/api/analyze-url', {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json',
+        },
+        body: JSON.stringify({ url }),
       });
-
-      if (error) throw error;
-
-      toast.success("Content source added successfully");
-      onOpenChange(false);
-      setUrl("");
-      setCategory("");
-      setFrequency("daily");
-    } catch (error: any) {
-      toast.error(error.message);
+      
+      const data = await response.json();
+      
+      if (data.success) {
+        // Clear the form and close the dialog
+        setUrl("");
+        onOpenChange(false);
+        
+        // Call the onSuccess callback if provided
+        if (onSuccess) {
+          await onSuccess();
+        }
+      }
+    } catch (error) {
+      console.error('Error adding source:', error);
     } finally {
-      setLoading(false);
+      setIsLoading(false);
     }
-  }
+  };
 
   return (
     <Dialog open={open} onOpenChange={onOpenChange}>
       <DialogContent>
         <DialogHeader>
-          <DialogTitle>Add Content Source</DialogTitle>
+          <DialogTitle>Add New Content Source</DialogTitle>
         </DialogHeader>
         <form onSubmit={handleSubmit} className="space-y-4">
           <div className="space-y-2">
-            <Label htmlFor="url">URL</Label>
             <Input
-              id="url"
-              placeholder="https://example.com/feed"
+              placeholder="Enter URL"
               value={url}
               onChange={(e) => setUrl(e.target.value)}
               required
             />
           </div>
-          <div className="space-y-2">
-            <Label htmlFor="category">Category</Label>
-            <Input
-              id="category"
-              placeholder="News, Blog, Social Media, etc."
-              value={category}
-              onChange={(e) => setCategory(e.target.value)}
-              required
-            />
-          </div>
-          <div className="space-y-2">
-            <Label htmlFor="frequency">Crawl Frequency</Label>
-            <Select value={frequency} onValueChange={setFrequency}>
-              <SelectTrigger>
-                <SelectValue placeholder="Select frequency" />
-              </SelectTrigger>
-              <SelectContent>
-                <SelectItem value="hourly">Hourly</SelectItem>
-                <SelectItem value="daily">Daily</SelectItem>
-                <SelectItem value="weekly">Weekly</SelectItem>
-              </SelectContent>
-            </Select>
-          </div>
-          <div className="flex justify-end space-x-2">
-            <Button
-              type="button"
-              variant="outline"
-              onClick={() => onOpenChange(false)}
-            >
-              Cancel
-            </Button>
-            <Button type="submit" disabled={loading}>
-              {loading ? "Adding..." : "Add Source"}
+          <div className="flex justify-end">
+            <Button type="submit" disabled={isLoading}>
+              {isLoading ? "Adding..." : "Add Source"}
             </Button>
           </div>
         </form>

@@ -1,6 +1,6 @@
 "use client";
 
-import { useState } from "react";
+import { useState, useEffect } from "react";
 import { Plus } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { ContentSourceList } from "@/components/sources/content-source-list";
@@ -13,6 +13,7 @@ export default function SourcesPage() {
   const [url, setUrl] = useState("");
   const [analysis, setAnalysis] = useState("");
   const [isLoading, setIsLoading] = useState(false);
+  const [sources, setSources] = useState<ContentSource[]>([]);
 
   const handleAnalyzeUrl = async () => {
     setIsLoading(true);
@@ -27,12 +28,34 @@ export default function SourcesPage() {
       
       const data = await response.json();
       setAnalysis(data.analysis);
+      
+      // Refresh the sources list
+      if (data.source) {
+        setSources(prevSources => [...prevSources, data.source]);
+      }
     } catch (error) {
       console.error('Error analyzing URL:', error);
     } finally {
       setIsLoading(false);
     }
   };
+
+  const refreshSources = async () => {
+    try {
+      const response = await fetch('/api/sources');
+      const data = await response.json();
+      if (data.success) {
+        setSources(data.sources);
+      }
+    } catch (error) {
+      console.error('Error fetching sources:', error);
+    }
+  };
+
+  // Add useEffect to load sources initially
+  useEffect(() => {
+    refreshSources();
+  }, []);
 
   return (
     <div className="space-y-6">
@@ -65,8 +88,12 @@ export default function SourcesPage() {
         </div>
       )}
 
-      <ContentSourceList />
-      <AddSourceDialog open={isAddSourceOpen} onOpenChange={setIsAddSourceOpen} />
+      <ContentSourceList sources={sources} />
+      <AddSourceDialog 
+        open={isAddSourceOpen} 
+        onOpenChange={setIsAddSourceOpen}
+        onSuccess={refreshSources}
+      />
     </div>
   );
 }
