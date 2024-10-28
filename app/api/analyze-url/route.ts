@@ -31,6 +31,7 @@ export async function POST(request: Request) {
     // First, fetch the content from the URL
     const response = await fetch(url);
     const htmlContent = await response.text();
+    console.log(htmlContent);
 
     // Create a simple HTML to text converter
     const textContent = htmlContent.replace(/<[^>]*>/g, ' ')
