@@ -3,12 +3,13 @@ import { PrismaClient } from '@prisma/client';
 import { OpenAIEmbeddings } from '@langchain/openai';
 
 const prisma = new PrismaClient();
-const embeddings = new OpenAIEmbeddings({
-  openAIApiKey: process.env.OPENAI_API_KEY,
-});
 
 export async function POST(request: Request) {
   try {
+    const embeddings = new OpenAIEmbeddings({
+      openAIApiKey: process.env.OPENAI_API_KEY,
+    });
+    
     const { query, sourceIds, limit = 5 } = await request.json();
     
     // Generate embedding for the query
