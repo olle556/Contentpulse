@@ -17,7 +17,7 @@ const navigation = [
   { name: "Content Sources", href: "/dashboard/sources", icon: LinkIcon },
   { name: "Generated Posts", href: "/dashboard/posts", icon: PenTool },
   { name: "Schedule", href: "/dashboard/schedule", icon: Calendar },
-  { name: "Analytics", href: "/dashboard/analytics", icon: BarChart },
+
   { name: "Settings", href: "/dashboard/settings", icon: Settings },
 ];
 
