@@ -10,23 +10,104 @@ import {
 import { Button } from "@/components/ui/button";
 import { Label } from "@/components/ui/label";
 import { Checkbox } from "@/components/ui/checkbox";
-import { Textarea } from "@/components/ui/textarea";
 import { toast } from "sonner";
 import { ContentSource } from "@/types";
-import { Loader2 } from "lucide-react";
+import { Loader2, Check, RefreshCw } from "lucide-react";
+import { useEditor, EditorContent } from "@tiptap/react";
+import StarterKit from "@tiptap/starter-kit";
 
 interface GeneratePostDialogProps {
   open: boolean;
   onOpenChange: (open: boolean) => void;
+  onSuccess?: () => void;
 }
 
-export function GeneratePostDialog({ open, onOpenChange }: GeneratePostDialogProps) {
+export function GeneratePostDialog({ open, onOpenChange, onSuccess }: GeneratePostDialogProps) {
   const [sources, setSources] = useState<ContentSource[]>([]);
   const [selectedSources, setSelectedSources] = useState<string[]>([]);
-  const [loading, setLoading] = useState(false);
   const [generatingPost, setGeneratingPost] = useState(false);
   const [generatedContent, setGeneratedContent] = useState("");
-  const [usedSources, setUsedSources] = useState<string[]>([]);
+  const [isEditing, setIsEditing] = useState(false);
+  const [isSaving, setIsSaving] = useState(false);
+  const [savedPost, setSavedPost] = useState<any>(null);
+
+  // TipTap editor setup
+  const editor = useEditor({
+    extensions: [StarterKit],
+    content: generatedContent,
+    editorProps: {
+      attributes: {
+        class: "min-h-[150px] w-full rounded-md border border-input bg-background px-3 py-2 focus-visible:outline-none",
+      },
+    },
+    onUpdate: ({ editor }) => {
+      const content = editor.getHTML();
+      setGeneratedContent(content);
+      handleAutosave(content);
+    },
+  });
+
+  useEffect(() => {
+    if (editor && generatedContent) {
+      editor.commands.setContent(generatedContent);
+    }
+  }, [editor, generatedContent]);
+
+  // Handle dialog close
+  const handleDialogClose = async (open: boolean) => {
+    if (!open && editor?.getHTML()) {
+      await handleSave(editor.getHTML());
+    }
+    setIsEditing(false);
+    onOpenChange(open);
+  };
+
+  // Save content
+  const handleSave = async (content: string) => {
+    setIsSaving(true);
+    try {
+      const response = await fetch('/api/posts', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ 
+          content,
+          platform: 'twitter',
+          status: 'draft'
+        }),
+      });
+      
+      const data = await response.json();
+      if (!response.ok) throw new Error('Failed to save');
+      
+      setSavedPost(data.post);
+      setGeneratedContent(content);
+      toast.success('Changes saved');
+      onSuccess?.(); // Call onSuccess after successful save
+    } catch (error) {
+      toast.error('Failed to save changes');
+    } finally {
+      setIsSaving(false);
+    }
+  };
+
+  // Autosave with debounce
+  let autosaveTimeout: NodeJS.Timeout;
+  const handleAutosave = (content: string) => {
+    clearTimeout(autosaveTimeout);
+    autosaveTimeout = setTimeout(() => {
+      if (content) {
+        handleSave(content);
+      }
+    }, 1000);
+  };
+
+  const handleDoneEditing = async () => {
+    if (editor) {
+      const content = editor.getHTML();
+      await handleSave(content);
+      setIsEditing(false);
+    }
+  };
 
   useEffect(() => {
     fetchSources();
@@ -73,8 +154,9 @@ export function GeneratePostDialog({ open, onOpenChange }: GeneratePostDialogPro
       if (!data.success) throw new Error(data.error);
 
       setGeneratedContent(data.content);
-      setUsedSources(data.sourceUrls); // Store the used source URLs
-      toast.success('Post generated successfully');
+      if (editor) {
+        editor.commands.setContent(data.content);
+      }
     } catch (error: any) {
       toast.error(error.message || 'Failed to generate post');
     } finally {
@@ -83,7 +165,7 @@ export function GeneratePostDialog({ open, onOpenChange }: GeneratePostDialogPro
   }
 
   return (
-    <Dialog open={open} onOpenChange={onOpenChange}>
+    <Dialog open={open} onOpenChange={handleDialogClose}>
       <DialogContent className="sm:max-w-[600px]">
         <DialogHeader>
           <DialogTitle>Generate Post from Sources</DialogTitle>
@@ -108,37 +190,46 @@ export function GeneratePostDialog({ open, onOpenChange }: GeneratePostDialogPro
             </div>
           </div>
 
-          {generatedContent && (
+          {generatedContent && !isEditing ? (
+            // View mode
             <div className="space-y-4">
-              <div className="space-y-2">
-                <Label>Generated Content</Label>
-                <Textarea
-                  value={generatedContent}
-                  onChange={(e) => setGeneratedContent(e.target.value)}
-                  rows={5}
-                />
+              <div className="prose max-w-none">
+                <div dangerouslySetInnerHTML={{ __html: generatedContent }} />
               </div>
-              
-              {usedSources.length > 0 && (
-                <div className="space-y-2">
-                  <Label>Sources Used:</Label>
-                  <div className="text-sm text-muted-foreground">
-                    {usedSources.map((url, index) => (
-                      <div key={index}>• {url}</div>
-                    ))}
-                  </div>
-                </div>
-              )}
+              <div className="flex justify-end space-x-2">
+                <Button
+                  variant="outline"
+                  onClick={() => handleGenerate()}
+                >
+                  <RefreshCw className="w-4 h-4 mr-2" />
+                  Regenerate
+                </Button>
+                <Button onClick={() => setIsEditing(true)}>
+                  Edit Post
+                </Button>
+              </div>
             </div>
-          )}
-
-          <div className="flex justify-end space-x-2">
-            <Button
-              variant="outline"
-              onClick={() => onOpenChange(false)}
-            >
-              Cancel
-            </Button>
+          ) : isEditing ? (
+            // Edit mode with TipTap
+            <div className="space-y-4">
+              <EditorContent editor={editor} />
+              <div className="flex justify-end space-x-2">
+                {isSaving && (
+                  <span className="text-sm text-muted-foreground">
+                    <Loader2 className="w-4 h-4 animate-spin inline mr-2" />
+                    Saving...
+                  </span>
+                )}
+                <Button 
+                  variant="outline" 
+                  onClick={handleDoneEditing}
+                >
+                  Done Editing
+                </Button>
+              </div>
+            </div>
+          ) : (
+            // Initial state
             <Button 
               onClick={handleGenerate}
               disabled={generatingPost || selectedSources.length === 0}
@@ -152,7 +243,7 @@ export function GeneratePostDialog({ open, onOpenChange }: GeneratePostDialogPro
                 'Generate Post'
               )}
             </Button>
-          </div>
+          )}
         </div>
       </DialogContent>
     </Dialog>

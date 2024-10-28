@@ -1,6 +1,6 @@
 "use client";
 
-import { useState } from "react";
+import { useState, useCallback } from "react";
 import { Button } from "@/components/ui/button";
 import { Wand2 } from "lucide-react";
 import { GeneratePostDialog } from "@/components/posts/generate-post-dialog";
@@ -8,6 +8,12 @@ import { PostList } from "@/components/posts/post-list";
 
 export default function PostsPage() {
   const [isGenerateOpen, setIsGenerateOpen] = useState(false);
+  const [key, setKey] = useState(0); // Add this to force refresh
+
+  const handleGenerateSuccess = useCallback(() => {
+    setIsGenerateOpen(false);
+    setKey(prev => prev + 1); // Force PostList to remount and refetch
+  }, []);
 
   return (
     <div className="space-y-6">
@@ -19,8 +25,12 @@ export default function PostsPage() {
         </Button>
       </div>
 
-      <PostList />
-      <GeneratePostDialog open={isGenerateOpen} onOpenChange={setIsGenerateOpen} />
+      <PostList key={key} />
+      <GeneratePostDialog 
+        open={isGenerateOpen} 
+        onOpenChange={setIsGenerateOpen}
+        onSuccess={handleGenerateSuccess}
+      />
     </div>
   );
 }

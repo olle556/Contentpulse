@@ -51,15 +51,15 @@ export interface ScrapedContent {
 
 export interface GeneratedPost {
   id: string;
-  userId: string;
   content: string;
   platform: string;
-  sourceMaterials: ScrapedContent[];
-  status: 'pending' | 'approved' | 'rejected' | 'posted';
+  status: string;
   scheduledTime?: Date;
   feedbackRating?: number;
   feedbackComments?: string;
   createdAt: Date;
+  updatedAt: Date;
+  userId: string;
 }
 
 export interface PostHistory {
