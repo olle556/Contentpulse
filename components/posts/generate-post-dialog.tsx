@@ -17,6 +17,13 @@ import { useEditor, EditorContent } from "@tiptap/react";
 import Document from '@tiptap/extension-document'
 import Text from '@tiptap/extension-text'
 import Paragraph from '@tiptap/extension-paragraph'
+import {
+  Select,
+  SelectContent,
+  SelectItem,
+  SelectTrigger,
+  SelectValue,
+} from "@/components/ui/select";
 
 interface GeneratePostDialogProps {
   open: boolean;
@@ -32,6 +39,7 @@ export function GeneratePostDialog({ open, onOpenChange, onSuccess }: GeneratePo
   const [isEditing, setIsEditing] = useState(false);
   const [isSaving, setIsSaving] = useState(false);
   const [savedPost, setSavedPost] = useState<any>(null);
+  const [selectedPlatform, setSelectedPlatform] = useState("twitter");
 
   // TipTap editor setup
   const editor = useEditor({
@@ -78,7 +86,7 @@ export function GeneratePostDialog({ open, onOpenChange, onSuccess }: GeneratePo
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({ 
           content: content.trim(), // Trim any extra whitespace
-          platform: 'twitter',
+          platform: selectedPlatform,
           status: 'draft'
         }),
       });
@@ -220,6 +228,22 @@ export function GeneratePostDialog({ open, onOpenChange, onSuccess }: GeneratePo
             // Edit mode with TipTap
             <div className="space-y-4">
               <EditorContent editor={editor} />
+              <div className="space-y-2">
+                <Label>Platform</Label>
+                <Select
+                  value={selectedPlatform}
+                  onValueChange={setSelectedPlatform}
+                >
+                  <SelectTrigger>
+                    <SelectValue placeholder="Select platform" />
+                  </SelectTrigger>
+                  <SelectContent>
+                    <SelectItem value="twitter">Twitter</SelectItem>
+                    <SelectItem value="linkedin">LinkedIn</SelectItem>
+                    <SelectItem value="facebook">Facebook</SelectItem>
+                  </SelectContent>
+                </Select>
+              </div>
               <div className="flex justify-end space-x-2">
                 {isSaving && (
                   <span className="text-sm text-muted-foreground">
