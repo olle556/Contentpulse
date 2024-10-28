@@ -28,15 +28,26 @@ export async function POST(request: Request) {
       });
     }
 
-    // First, fetch the content from the URL
-    const response = await fetch(url);
-    const htmlContent = await response.text();
-    console.log(htmlContent);
+    // Fetch content using firecrawl route
+    const crawlResponse = await fetch(`${process.env.NEXT_PUBLIC_BASE_URL}/api/firecrawl`, {
+      method: 'POST',
+      headers: {
+        'Content-Type': 'application/json',
+      },
+      body: JSON.stringify({ url }),
+    });
+
+    if (!crawlResponse.ok) {
+      throw new Error('Failed to crawl URL');
+    }
+
+    const { content: URLContent } = await crawlResponse.json();
+    console.log(URLContent);
 
     // Create a simple HTML to text converter
-    const textContent = htmlContent.replace(/<[^>]*>/g, ' ')
-      .replace(/\s+/g, ' ')
-      .trim();
+    //const textContent = htmlContent.replace(/<[^>]*>/g, ' ')
+      //.replace(/\s+/g, ' ')
+      //.trim();
 
     // Send to Claude for analysis
     const message = await anthropic.messages.create({
@@ -44,9 +55,9 @@ export async function POST(request: Request) {
       max_tokens: 1000,
       messages: [{
         role: 'user',
-        content: `Analyze the following webpage content and provide a comprehensive summary of its main topics, key points, and overall purpose. If relevant, identify the target audience and content quality. Here's the content:
+        content: `Write a social media post. Analyze the following webpage content and provide a comprehensive summary of its main topics, key points, and overall purpose. If relevant, identify the target audience and content quality. Here's the content:
 
-        ${textContent.substring(0, 10000)} // Limiting content length to avoid token limits
+        ${URLContent.substring(0, 10000)} // Limiting content length to avoid token limits
         `
       }]
     });

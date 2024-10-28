@@ -16,7 +16,7 @@ export async function POST(request: Request) {
 
     const crawlResponse = await app.asyncCrawlUrl(url, {
       maxDepth: 1,
-      limit: 6,
+      limit: 100,
       allowExternalLinks: false,
       allowBackwardLinks: false,
       scrapeOptions: {
