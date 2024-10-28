@@ -49,6 +49,7 @@ export async function POST(request: Request) {
       content: combinedMarkdown 
     });
 
+    console.log(combinedMarkdown);
   } catch (error) {
     console.error('Error processing URL:', error);
     return NextResponse.json({ 
