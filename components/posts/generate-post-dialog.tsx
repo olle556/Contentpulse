@@ -80,7 +80,7 @@ export function GeneratePostDialog({ open, onOpenChange, onSuccess }: GeneratePo
   // Save content
   const handleSave = async (content: string) => {
     setIsSaving(true);
-    try {
+    try { //API/post
       const response = await fetch('/api/posts', {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
@@ -129,12 +129,12 @@ export function GeneratePostDialog({ open, onOpenChange, onSuccess }: GeneratePo
   }, []);
 
   async function fetchSources() {
-    try {
+    try { //API/sources
       const response = await fetch('/api/sources');
       const data = await response.json();
       if (data.success) {
         setSources(data.sources);
-      }
+      } 
     } catch (error) {
       console.error('Error fetching sources:', error);
       toast.error('Failed to fetch sources');
@@ -158,7 +158,7 @@ export function GeneratePostDialog({ open, onOpenChange, onSuccess }: GeneratePo
 
     setGeneratingPost(true);
 
-    try {
+    try { //API/generate-post
       const response = await fetch('/api/generate-post', {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },

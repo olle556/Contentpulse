@@ -1,8 +1,5 @@
 import { NextResponse } from 'next/server';
 import { createClientComponentClient } from "@supabase/auth-helpers-nextjs";
-import FirecrawlApp from "@mendable/firecrawl-js";
-
-const app = new FirecrawlApp({ apiKey: process.env.NEXT_PUBLIC_FIRECRAWL_API_KEY || "" });
 
 export async function POST(request: Request) {
   const supabase = createClientComponentClient();
@@ -24,16 +21,14 @@ export async function POST(request: Request) {
       }, { status: 404 });
     }
 
-    // Use Firecrawl to get content
-    const crawlResponse = await app.asyncCrawlUrl(source.url, {
-      maxDepth: 1,
-      limit: 6,
-      allowExternalLinks: false,
-      allowBackwardLinks: false,
-      scrapeOptions: {
-        formats: ["markdown"],
+    // Use existing firecrawl endpoint instead of direct API call
+    const crawlResponse = await fetch('/api/firecrawl', {
+      method: 'POST',
+      headers: {
+        'Content-Type': 'application/json',
       },
-    });
+      body: JSON.stringify({ url: source.url })
+    }).then(res => res.json());
 
     if (!crawlResponse.success) {
       return NextResponse.json({ 
@@ -42,20 +37,11 @@ export async function POST(request: Request) {
       }, { status: 400 });
     }
 
-    const status = await app.checkCrawlStatus(crawlResponse.id);
-    
-    if (!status.success) {
-      return NextResponse.json({ 
-        success: false, 
-        error: status.error 
-      }, { status: 400 });
-    }
-
     // Update source with scraped content
     const { error: updateError } = await supabase
       .from("content_sources")
       .update({
-        scrapedContent: status.data.map(item => item.markdown).join('\n\n---\n\n'),
+        scrapedContent: crawlResponse.content,
         lastCrawled: new Date().toISOString()
       })
       .eq("id", sourceId);
