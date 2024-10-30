@@ -11,7 +11,7 @@ export default function Home() {
 
   const handleGetStarted = () => {
     toast.success("Redirecting to login...");
-    router.push('/auth/login');
+    router.push('/authentication/login');
   };
 
   return (
