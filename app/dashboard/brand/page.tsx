@@ -51,8 +51,6 @@ const advancedSteps = [
     name: 'Brand Fundamentals',
     fields: [
       { name: 'missionStatement', label: 'Mission Statement', type: 'textarea' },
-      { name: 'coreValues', label: 'Core Values', type: 'textarea' },
-      { name: 'visualIdentity', label: 'Visual Identity', type: 'textarea' },
       { name: 'slogans', label: 'Existing Slogan(s)', type: 'textarea' },
     ]
   },
@@ -62,8 +60,6 @@ const advancedSteps = [
     fields: [
       { name: 'demographics', label: 'Demographics (age, gender, location, income level)', type: 'textarea' },
       { name: 'psychographics', label: 'Psychographics (interests, lifestyle, values)', type: 'textarea' },
-      { name: 'onlinePresence', label: 'Where does your audience spend time online?', type: 'textarea' },
-      { name: 'contentEngagement', label: 'What content does your audience engage with most?', type: 'textarea' },
     ]
   },
   {
@@ -71,8 +67,6 @@ const advancedSteps = [
     name: 'Business Details',
     fields: [
       { name: 'productsServices', label: 'Products/Services Offered', type: 'textarea' },
-      { name: 'pricingStrategy', label: 'Price Points/Pricing Strategy', type: 'textarea' },
-      { name: 'differentiators', label: 'Key Differentiators from Competitors', type: 'textarea' },
     ]
   },
   {
@@ -80,7 +74,6 @@ const advancedSteps = [
     name: 'Content Preferences',
     fields: [
       { name: 'contentThemes', label: 'Content Themes to Focus On', type: 'textarea' },
-      { name: 'topicsToAvoid', label: 'Specific Topics to Avoid', type: 'textarea' },
       { name: 'successfulPosts', label: 'Successful Past Posts', type: 'textarea' },
       { name: 'competitorContent', label: 'Competitor Content that Resonates', type: 'textarea' },
     ]
@@ -95,7 +88,6 @@ const advancedSteps = [
         type: 'select',
         options: ['Brand Awareness', 'Lead Generation', 'Sales', 'Customer Retention', 'Other']
       },
-      { name: 'kpis', label: 'Key Performance Indicators (KPIs)', type: 'textarea' },
       { name: 'callToActions', label: 'Desired Call-to-Actions', type: 'textarea' },
     ]
   },
@@ -122,36 +114,26 @@ const advancedSteps = [
 ]
 
 const formSchema = z.object({
-  brandName: z.string().min(2, 'Brand name must be at least 2 characters'),
+  brandName: z.string(),
   brandType: z.string(),
   industry: z.string(),
   locations: z.string(),
-  website: z.string().url('Please enter a valid URL'),
+  website: z.string(),
   socialMedia: z.string(),
   missionStatement: z.string(),
-  coreValues: z.string(),
   brandVoice: z.string(),
-  visualIdentity: z.string(),
   slogans: z.string(),
   // Target Audience
   demographics: z.string(),
   psychographics: z.string(),
-  onlinePresence: z.string(),
-  contentEngagement: z.string(),
-  // Business Details
-  productsServices: z.string(),
-  pricingStrategy: z.string(),
-  differentiators: z.string(),
   usp: z.string(),
   currentPromotions: z.string(),
   // Content Preferences
   contentThemes: z.string(),
-  topicsToAvoid: z.string(),
   successfulPosts: z.string(),
   competitorContent: z.string(),
   // Marketing Goals
   primaryObjectives: z.string(),
-  kpis: z.string(),
   callToActions: z.string(),
   // Additional Context
   upcomingEvents: z.string(),
@@ -166,7 +148,6 @@ const formSchema = z.object({
 })
 
 export default function BrandInformationPage() {
-  const [currentStep, setCurrentStep] = useState(0)
   const [showAdvanced, setShowAdvanced] = useState(false)
   
   const form = useForm<z.infer<typeof formSchema>>({
@@ -179,29 +160,19 @@ export default function BrandInformationPage() {
       website: '',
       socialMedia: '',
       missionStatement: '',
-      coreValues: '',
       brandVoice: '',
-      visualIdentity: '',
       slogans: '',
       // Target Audience
       demographics: '',
       psychographics: '',
-      onlinePresence: '',
-      contentEngagement: '',
-      // Business Details
-      productsServices: '',
-      pricingStrategy: '',
-      differentiators: '',
       usp: '',
       currentPromotions: '',
       // Content Preferences
       contentThemes: '',
-      topicsToAvoid: '',
       successfulPosts: '',
       competitorContent: '',
       // Marketing Goals
       primaryObjectives: '',
-      kpis: '',
       callToActions: '',
       // Additional Context
       upcomingEvents: '',
@@ -273,74 +244,65 @@ export default function BrandInformationPage() {
         <CardContent className="p-6">
           <div className="flex justify-between items-center mb-6">
             <h2 className="text-2xl font-bold">Advanced Brand Settings</h2>
-            <Button
-              variant="outline"
-              onClick={() => setShowAdvanced(!showAdvanced)}
-            >
-              {showAdvanced ? 'Hide' : 'Edit'}
-            </Button>
+            <div className="flex gap-2">
+              {showAdvanced && (
+                <Button type="submit" onClick={form.handleSubmit(onSubmit)}>Submit</Button>
+              )}
+              <Button
+                variant="outline"
+                onClick={() => setShowAdvanced(!showAdvanced)}
+              >
+                {showAdvanced ? 'Hide' : 'Edit'}
+              </Button>
+            </div>
           </div>
 
           {showAdvanced && (
             <Form {...form}>
               <form onSubmit={form.handleSubmit(onSubmit)} className="space-y-6">
-                {advancedSteps[currentStep].fields.map((field) => (
-                  <FormField
-                    key={field.name}
-                    control={form.control}
-                    name={field.name as any}
-                    render={({ field: formField }) => (
-                      <FormItem>
-                        <FormLabel>{field.label}</FormLabel>
-                        <FormControl>
-                          {field.type === 'select' ? (
-                            <Select
-                              onValueChange={formField.onChange}
-                              defaultValue={formField.value}
-                            >
-                              <SelectTrigger>
-                                <SelectValue placeholder="Select an option" />
-                              </SelectTrigger>
-                              <SelectContent>
-                                {field.options?.map((option) => (
-                                  <SelectItem key={option} value={option.toLowerCase()}>
-                                    {option}
-                                  </SelectItem>
-                                ))}
-                              </SelectContent>
-                            </Select>
-                          ) : field.type === 'textarea' ? (
-                            <Textarea {...formField} />
-                          ) : (
-                            <Input {...formField} type={field.type} />
-                          )}
-                        </FormControl>
-                        <FormMessage />
-                      </FormItem>
-                    )}
-                  />
+                {advancedSteps.map((section) => (
+                  <div key={section.id} className="space-y-4">
+                    <h3 className="text-xl font-semibold">{section.name}</h3>
+                    {section.fields.map((field) => (
+                      <FormField
+                        key={field.name}
+                        control={form.control}
+                        name={field.name as any}
+                        render={({ field: formField }) => (
+                          <FormItem>
+                            <FormLabel>{field.label}</FormLabel>
+                            <FormControl>
+                              {field.type === 'select' ? (
+                                <Select
+                                  onValueChange={formField.onChange}
+                                  defaultValue={formField.value}
+                                >
+                                  <SelectTrigger>
+                                    <SelectValue placeholder="Select an option" />
+                                  </SelectTrigger>
+                                  <SelectContent>
+                                    {field.options?.map((option) => (
+                                      <SelectItem key={option} value={option.toLowerCase()}>
+                                        {option}
+                                      </SelectItem>
+                                    ))}
+                                  </SelectContent>
+                                </Select>
+                              ) : field.type === 'textarea' ? (
+                                <Textarea {...formField} />
+                              ) : (
+                                <Input {...formField} type={field.type} />
+                              )}
+                            </FormControl>
+                            <FormMessage />
+                          </FormItem>
+                        )}
+                      />
+                    ))}
+                  </div>
                 ))}
-
-                <div className="flex justify-between pt-4">
-                  <Button
-                    type="button"
-                    variant="outline"
-                    onClick={() => setCurrentStep(Math.max(0, currentStep - 1))}
-                    disabled={currentStep === 0}
-                  >
-                    Previous
-                  </Button>
-                  
-                  {currentStep === advancedSteps.length - 1 ? (
-                    <Button type="submit">Submit</Button>
-                  ) : (
-                    <Button
-                      type="button"
-                      onClick={() => setCurrentStep(Math.min(advancedSteps.length - 1, currentStep + 1))}
-                    >
-                      Next
-                  </Button>
-                  )}
+                <div className="flex justify-end pt-4">
+                  <Button type="submit">Submit</Button>
                 </div>
               </form>
             </Form>
