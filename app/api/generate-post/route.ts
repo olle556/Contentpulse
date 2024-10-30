@@ -12,31 +12,44 @@ export async function POST(request: Request) {
     const { sourceIds } = await request.json();
 
     // Fetch content from selected sources
-    const sources = await prisma.contentSource.findMany({
-      where: {
-        id: {
-          in: sourceIds
-        }
+    // const sources = await prisma.contentSource.findMany({
+    //   where: {
+    //     id: {
+    //       in: sourceIds
+    //     }
+    //   },
+    //   include: {
+    //     scrapedContent: true
+    //   }
+    // });
+    // Format the content from sources in a more structured way
+    // const sourceContexts = sources.map(source => ({
+    //   url: source.url,
+    //   content: source.scrapedContent.map(content => content.content).join('\n')
+    // }));
+
+    // Fetch content using firecrawl route
+    const URLContent = await fetch(`${process.env.NEXT_PUBLIC_BASE_URL}/api/firecrawl`, {
+      method: 'POST',
+      headers: {
+        'Content-Type': 'application/json',
       },
-      include: {
-        scrapedContent: true
-      }
+      body: JSON.stringify({ sourceIds }),
     });
 
-    // Format the content from sources in a more structured way
-    const sourceContexts = sources.map(source => ({
-      url: source.url,
-      content: source.scrapedContent.map(content => content.content).join('\n')
-    }));
+    console.log('generate post API har fåptt response från firecrawl');
+
+    if (!URLContent.ok) {
+      throw new Error('Failed to crawl URL');
+    }
+
+    const contentText = await URLContent.text();
+
 
     // Create a more detailed prompt for Claude
     const prompt = `You are a social media content creator. Your task is to create an engaging social media post based on the following source materials.
-
-Sources:
-${sourceContexts.map((source, index) => `
-Source ${index + 1} (${source.url}):
-${source.content.substring(0, 1000)}  // Limiting each source to first 1000 chars for clarity
-`).join('\n')}
+Source:
+${contentText}
 
 Instructions:
 1. Create a single, engaging social media post (maximum 280 characters)
@@ -57,24 +70,24 @@ Please generate the post now:`;
       }]
     });
 
-    const generatedContent = message.content[0].type === 'text' 
-      ? message.content[0].text 
+    const generatedContent = message.content[0].type === 'text'
+      ? message.content[0].text
       : '';
 
     // Log for debugging
-    console.log('Source URLs:', sources.map(s => s.url));
+    console.log('Source URL:', sourceIds);
     console.log('Generated Content:', generatedContent);
 
-    return NextResponse.json({ 
-      success: true, 
+    return NextResponse.json({
+      success: true,
       content: generatedContent,
-      sourceUrls: sources.map(s => s.url) // Return source URLs for reference
+      sourceUrls: sourceIds // Return source URLs for reference
     });
 
   } catch (error) {
     console.error('Error generating post:', error);
-    return NextResponse.json({ 
-      success: false, 
+    return NextResponse.json({
+      success: false,
       error: error instanceof Error ? error.message : 'Failed to generate post'
     }, { status: 500 });
   } finally {
