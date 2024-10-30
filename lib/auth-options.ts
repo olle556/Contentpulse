@@ -31,5 +31,5 @@ export const authOptions: AuthOptions = {
   pages: {
     signIn: "/authentication/login",
   },
-  debug: true,
+  debug: false,
 };
