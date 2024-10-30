@@ -40,6 +40,34 @@ export function GeneratePostDialog({ open, onOpenChange, onSuccess }: GeneratePo
   const [isSaving, setIsSaving] = useState(false);
   const [savedPost, setSavedPost] = useState<any>(null);
   const [selectedPlatform, setSelectedPlatform] = useState("twitter");
+  const [selectedTone, setSelectedTone] = useState("professional");
+  const [isScraping, setIsScraping] = useState(false);
+
+  const TONES = [
+    { value: "professional", label: "Professional" },
+    { value: "casual", label: "Casual" },
+    { value: "funny", label: "Funny" },
+    { value: "creative", label: "Creative" },
+    { value: "formal", label: "Formal" },
+  ];
+
+  const PLATFORMS = [
+    { 
+      value: "twitter", 
+      label: "Twitter/X",
+      maxLength: 280,
+    },
+    { 
+      value: "linkedin", 
+      label: "LinkedIn",
+      maxLength: 3000,
+    },
+    { 
+      value: "facebook", 
+      label: "Facebook",
+      maxLength: 63206,
+    },
+  ];
 
   // TipTap editor setup
   const editor = useEditor({
@@ -152,30 +180,50 @@ export function GeneratePostDialog({ open, onOpenChange, onSuccess }: GeneratePo
 
   async function handleGenerate() {
     if (selectedSources.length === 0) {
-      toast.error("Please select at least one source");
+      toast.error("Please select a source");
       return;
     }
 
     setGeneratingPost(true);
+    setIsScraping(true);
 
-    try { //API/generate-post
+    try {
+      const selectedSource = sources.find(source => source.id === selectedSources[0]);
+      if (!selectedSource) {
+        throw new Error("Selected source not found");
+      }
+
+      console.log('Selected source URL:', selectedSource.url); // Debug log
+
       const response = await fetch('/api/generate-post', {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({ sourceIds: selectedSources }),
+        body: JSON.stringify({ 
+          sourceUrl: selectedSource.url,
+          platform: selectedPlatform,
+          tone: selectedTone,
+        }),
       });
 
       const data = await response.json();
-      if (!data.success) throw new Error(data.error);
+      
+      if (response.status === 402) {
+        toast.error("Service is temporarily unavailable. Please try again later.");
+        return;
+      }
+      
+      if (!response.ok) throw new Error(data.error || 'Failed to generate post');
 
       setGeneratedContent(data.content);
       if (editor) {
         editor.commands.setContent(data.content);
       }
+      toast.success('Post generated successfully');
     } catch (error: any) {
       toast.error(error.message || 'Failed to generate post');
     } finally {
       setGeneratingPost(false);
+      setIsScraping(false);
     }
   }
 
@@ -188,22 +236,80 @@ export function GeneratePostDialog({ open, onOpenChange, onSuccess }: GeneratePo
         
         <div className="space-y-4">
           <div className="space-y-2">
-            <Label>Select Sources</Label>
-            <div className="grid gap-2 max-h-[200px] overflow-y-auto">
-              {sources.map((source) => (
-                <div key={source.id} className="flex items-center space-x-2">
-                  <Checkbox
-                    id={source.id}
-                    checked={selectedSources.includes(source.id)}
-                    onCheckedChange={() => handleSourceSelect(source.id)}
-                  />
-                  <Label htmlFor={source.id} className="cursor-pointer">
-                    {source.url} ({source.category})
-                  </Label>
-                </div>
-              ))}
+            <Label>Select Source</Label>
+            <Select
+              value={selectedSources[0] || ""}
+              onValueChange={(sourceId) => setSelectedSources([sourceId])}
+            >
+              <SelectTrigger>
+                <SelectValue placeholder="Select a source" />
+              </SelectTrigger>
+              <SelectContent>
+                {sources.map((source) => (
+                  <SelectItem 
+                    key={source.id} 
+                    value={source.id}
+                    className="flex flex-col items-start py-2"
+                  >
+                    <div className="max-w-[500px] break-all">
+                      {source.url}
+                    </div>
+                    <span className="text-xs text-muted-foreground">
+                      {source.category}
+                    </span>
+                  </SelectItem>
+                ))}
+              </SelectContent>
+            </Select>
+          </div>
+
+          <div className="grid grid-cols-2 gap-4">
+            <div className="space-y-2">
+              <Label>Tone</Label>
+              <Select
+                value={selectedTone}
+                onValueChange={setSelectedTone}
+              >
+                <SelectTrigger>
+                  <SelectValue placeholder="Select tone" />
+                </SelectTrigger>
+                <SelectContent>
+                  {TONES.map((tone) => (
+                    <SelectItem key={tone.value} value={tone.value}>
+                      {tone.label}
+                    </SelectItem>
+                  ))}
+                </SelectContent>
+              </Select>
+            </div>
+
+            <div className="space-y-2">
+              <Label>Platform</Label>
+              <Select
+                value={selectedPlatform}
+                onValueChange={setSelectedPlatform}
+              >
+                <SelectTrigger>
+                  <SelectValue placeholder="Select platform" />
+                </SelectTrigger>
+                <SelectContent>
+                  {PLATFORMS.map((platform) => (
+                    <SelectItem key={platform.value} value={platform.value}>
+                      {platform.label}
+                    </SelectItem>
+                  ))}
+                </SelectContent>
+              </Select>
             </div>
           </div>
+
+          {isEditing && (
+            <div className="text-sm text-muted-foreground text-right">
+              {generatedContent.length} / {
+                PLATFORMS.find(p => p.value === selectedPlatform)?.maxLength || '∞'
+              } characters
+            </div>
+          )}
 
           {generatedContent && !isEditing ? (
             // View mode - update to use plain text
@@ -228,22 +334,6 @@ export function GeneratePostDialog({ open, onOpenChange, onSuccess }: GeneratePo
             // Edit mode with TipTap
             <div className="space-y-4">
               <EditorContent editor={editor} />
-              <div className="space-y-2">
-                <Label>Platform</Label>
-                <Select
-                  value={selectedPlatform}
-                  onValueChange={setSelectedPlatform}
-                >
-                  <SelectTrigger>
-                    <SelectValue placeholder="Select platform" />
-                  </SelectTrigger>
-                  <SelectContent>
-                    <SelectItem value="twitter">Twitter</SelectItem>
-                    <SelectItem value="linkedin">LinkedIn</SelectItem>
-                    <SelectItem value="facebook">Facebook</SelectItem>
-                  </SelectContent>
-                </Select>
-              </div>
               <div className="flex justify-end space-x-2">
                 {isSaving && (
                   <span className="text-sm text-muted-foreground">
@@ -268,7 +358,7 @@ export function GeneratePostDialog({ open, onOpenChange, onSuccess }: GeneratePo
               {generatingPost ? (
                 <>
                   <Loader2 className="mr-2 h-4 w-4 animate-spin" />
-                  Generating...
+                  {isScraping ? 'Scraping content...' : 'Generating post...'}
                 </>
               ) : (
                 'Generate Post'

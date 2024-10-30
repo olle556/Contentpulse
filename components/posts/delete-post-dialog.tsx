@@ -38,9 +38,13 @@ export function DeletePostDialog({
         method: 'DELETE',
       });
 
-      if (!response.ok) throw new Error('Failed to delete post');
+      const data = await response.json();
 
-      toast.success("Post deleted successfully");
+      if (!response.ok) {
+        throw new Error(data.error || 'Failed to delete post');
+      }
+
+      toast.success(data.message);
       onSuccess();
       onOpenChange(false);
     } catch (error: any) {

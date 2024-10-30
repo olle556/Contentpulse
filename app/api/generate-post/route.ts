@@ -91,6 +91,8 @@ ${tone === 'professional' ? '- Use industry-appropriate terminology\n- Maintain 
   tone === 'funny' ? '- Include appropriate humor\n- Use wordplay or puns if relevant\n- Keep it light but informative' :
   tone === 'creative' ? '- Use unique perspectives\n- Include metaphors or analogies\n- Be imaginative in presentation' :
   '- Use formal language\n- Maintain strict professionalism\n- Focus on facts and accuracy'}
+In you answer, exclude the following:
+Any explanation of the content, just the post.
 
 Please generate the post now:`;
 
