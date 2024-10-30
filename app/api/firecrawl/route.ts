@@ -1,76 +1,36 @@
-import { NextResponse } from 'next/server';
-import FirecrawlApp from "@mendable/firecrawl-js";
+import { prisma } from '@/lib/prisma';
+import { getServerSession } from 'next-auth/next';
+import { authOptions } from '@/lib/auth-options';
 
-const app = new FirecrawlApp({ apiKey: process.env.NEXT_PUBLIC_FIRECRAWL_API_KEY || "" });
-
-export async function POST(request: Request) {
-
+export async function POST(req: Request) {
   try {
-    const { url } = await request.json();
-
-    if (!url) {
-      return NextResponse.json({
-        success: false,
-        error: "Please provide a URL"
-      }, { status: 400 });
+    const session = await getServerSession(authOptions);
+    if (!session?.user?.email) {
+      return new Response(JSON.stringify({ error: 'Unauthorized' }), { status: 401 });
     }
 
-    if (!process.env.NEXT_PUBLIC_FIRECRAWL_API_KEY) {
-      console.error('Missing Firecrawl API key');
-      return NextResponse.json({
-        success: false,
-        error: 'Missing API key configuration'
-      }, { status: 500 });
+    const { url } = await req.json();
+    
+    // Get the user
+    const user = await prisma.user.findUnique({
+      where: { email: session.user.email },
+    });
+
+    if (!user) {
+      return new Response(JSON.stringify({ error: 'User not found' }), { status: 404 });
     }
 
-    console.log('Attempting to crawl URL:', url);
-
-    const crawlResponse = await app.crawlUrl(url, {
-      maxDepth: 1,
-      limit: 100000,
-      allowExternalLinks: false,
-      allowBackwardLinks: false,
-      scrapeOptions: {
-        formats: ["markdown"],
+    // Create the content source
+    const contentSource = await prisma.contentSource.create({
+      data: {
+        url,
+        userId: user.id,
       },
     });
 
-    console.log('Raw crawl response:', JSON.stringify(crawlResponse, null, 2));
-
-    if (!crawlResponse.success) {
-      return NextResponse.json({
-        success: false,
-        error: crawlResponse.error
-      }, { status: 400 });
-    }
-
-    console.log('Crawl Response:', crawlResponse);
-
-    let markdownContent = "";
-
-    switch (crawlResponse.status) {
-      case "completed":
-        markdownContent = crawlResponse.data
-          .map(item => item.markdown)
-          .join('\n\n') || "No content found";
-        break;
-      case "failed":
-        throw new Error("Crawl failed");
-      default:
-    }
-
-    console.log('Markdown Content:', markdownContent);
-
-    return NextResponse.json({
-      success: true,
-      content: markdownContent
-    });
-
+    return new Response(JSON.stringify({ success: true, data: contentSource }), { status: 200 });
   } catch (error) {
-    console.error('Error:', error);
-    return NextResponse.json({
-      success: false,
-      error: (error as Error).message || 'Failed to process URL'
-    }, { status: 500 });
+    console.error('Error in firecrawl:', error);
+    return new Response(JSON.stringify({ error: 'Internal Server Error' }), { status: 500 });
   }
 }

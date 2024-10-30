@@ -4,6 +4,9 @@ import { useState } from "react";
 import { Dialog, DialogContent, DialogHeader, DialogTitle } from "@/components/ui/dialog";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
+import { isValidUrl, ensureHttps } from "@/lib/utils";
+import { useSession } from "next-auth/react";
+import { toast } from "@/hooks/use-toast";
 
 interface AddSourceDialogProps {
   open: boolean;
@@ -12,6 +15,13 @@ interface AddSourceDialogProps {
 }
 
 export function AddSourceDialog({ open, onOpenChange, onSuccess }: AddSourceDialogProps) {
+  const { data: session, status } = useSession({
+    required: true,
+    onUnauthenticated() {
+      console.log("Session status:", status);
+      window.location.href = '/authentication/login';
+    },
+  });
   const [url, setUrl] = useState("");
   const [isLoading, setIsLoading] = useState(false);
 
@@ -20,29 +30,49 @@ export function AddSourceDialog({ open, onOpenChange, onSuccess }: AddSourceDial
     setIsLoading(true);
 
     try {
-      const response = await fetch('/api/firecrawl', {
+      console.log("Submit - Session status:", status);
+      console.log("Submit - Session data:", session);
+
+      if (status !== "authenticated" || !session) {
+        throw new Error("Not authenticated");
+      }
+
+      const formattedUrl = ensureHttps(url);
+      
+      if (!isValidUrl(formattedUrl)) {
+        throw new Error("Invalid URL");
+      }
+
+      const response = await fetch('/api/sources', {
         method: 'POST',
         headers: {
           'Content-Type': 'application/json',
         },
-        body: JSON.stringify({ url }),
+        body: JSON.stringify({ url: formattedUrl }),
+        credentials: 'include',
       });
-      
+
+      console.log("Response status:", response.status);
       const data = await response.json();
-      console.log('Data:', data);
-      
-      if (data.success) {
-        // Clear the form and close the dialog
-        setUrl("");
-        onOpenChange(false);
-        
-        // Call the onSuccess callback if provided
-        if (onSuccess) {
-          await onSuccess();
-        }
+      console.log("Response data:", data);
+
+      if (!response.ok) {
+        throw new Error(data.error || 'Failed to add source');
       }
+
+      if (onSuccess) {
+        await onSuccess();
+      }
+      
+      setUrl("");
+      onOpenChange(false);
     } catch (error) {
       console.error('Error adding source:', error);
+      toast({
+        title: "Error",
+        description: error instanceof Error ? error.message : "Failed to add source",
+        variant: "destructive",
+      });
     } finally {
       setIsLoading(false);
     }

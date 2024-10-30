@@ -1,40 +1,35 @@
-import { NextAuthOptions } from "next-auth";
-import GithubProvider from "next-auth/providers/github";
+import { AuthOptions } from "next-auth";
+import GoogleProvider from "next-auth/providers/google";
 import { PrismaAdapter } from "@next-auth/prisma-adapter";
-import { DefaultSession } from "next-auth";
 import { prisma } from "./prisma";
-import { User } from "@prisma/client";
 
-interface SessionUser {
-  id: string;
-  accountType: string;
-  name?: string | null;
-  email?: string | null;
-  image?: string | null;
-}
-
-export const authOptions: NextAuthOptions = {
+export const authOptions: AuthOptions = {
   adapter: PrismaAdapter(prisma),
   providers: [
-    GithubProvider({
-      clientId: process.env.GITHUB_ID!,
-      clientSecret: process.env.GITHUB_SECRET!,
+    GoogleProvider({
+      clientId: process.env.GOOGLE_CLIENT_ID!,
+      clientSecret: process.env.GOOGLE_CLIENT_SECRET!,
     }),
   ],
   callbacks: {
-    session: async ({ session, user }) => {
-      const prismaUser = await prisma.user.findUnique({
-        where: { id: user.id },
-      });
-
-      return {
-        ...session,
-        user: {
-          ...session.user,
-          id: user.id,
-          accountType: prismaUser?.accountType || 'individual',
-        } as SessionUser,
-      };
+    session: async ({ session, token, user }) => {
+      if (session?.user) {
+        session.user.id = token.sub!;
+      }
+      return session;
+    },
+    jwt: async ({ token, user }) => {
+      if (user) {
+        token.sub = user.id;
+      }
+      return token;
     },
   },
+  session: {
+    strategy: "jwt",
+  },
+  pages: {
+    signIn: "/authentication/login",
+  },
+  debug: true,
 };
