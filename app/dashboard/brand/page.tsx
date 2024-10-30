@@ -24,36 +24,34 @@ import { zodResolver } from '@hookform/resolvers/zod'
 import { useForm } from 'react-hook-form'
 import * as z from 'zod'
 
-const steps = [
-  {
-    id: 'basic-identity',
-    name: 'Basic Brand Identity',
-    fields: [
-      { name: 'brandName', label: 'Brand Name', type: 'text' },
-      { 
-        name: 'brandType', 
-        label: 'Brand Type', 
-        type: 'select',
-        options: ['Company', 'Influencer', 'Personal Brand', 'Non-profit', 'Other']
-      },
-      { name: 'industry', label: 'Industry/Market Sector', type: 'text' },
-      { name: 'locations', label: 'Location(s)', type: 'text' },
-      { name: 'website', label: 'Website URL', type: 'url' },
-      { name: 'socialMedia', label: 'Social Media URLs', type: 'textarea' },
-    ]
+// Split steps into basic and advanced
+const basicFields = [
+  { name: 'brandName', label: 'Brand Name', type: 'text' },
+  { 
+    name: 'brandType', 
+    label: 'Brand Type', 
+    type: 'select',
+    options: ['Company', 'Influencer', 'Personal Brand', 'Non-profit', 'Other']
   },
+  { name: 'industry', label: 'Industry/Market Sector', type: 'text' },
+  { name: 'language', label: 'Language', type: 'text' }, // New field
+  { name: 'website', label: 'Website URL', type: 'url' },
+  { 
+    name: 'brandVoice', 
+    label: 'Brand Voice', 
+    type: 'select',
+    options: ['Professional', 'Casual', 'Friendly', 'Authoritative', 'Playful']
+  },
+  { name: 'usp', label: 'Unique Selling Proposition', type: 'textarea' },
+]
+
+const advancedSteps = [
   {
     id: 'brand-fundamentals',
     name: 'Brand Fundamentals',
     fields: [
       { name: 'missionStatement', label: 'Mission Statement', type: 'textarea' },
       { name: 'coreValues', label: 'Core Values', type: 'textarea' },
-      { 
-        name: 'brandVoice', 
-        label: 'Brand Voice', 
-        type: 'select',
-        options: ['Professional', 'Casual', 'Friendly', 'Authoritative', 'Playful']
-      },
       { name: 'visualIdentity', label: 'Visual Identity', type: 'textarea' },
       { name: 'slogans', label: 'Existing Slogan(s)', type: 'textarea' },
     ]
@@ -75,8 +73,6 @@ const steps = [
       { name: 'productsServices', label: 'Products/Services Offered', type: 'textarea' },
       { name: 'pricingStrategy', label: 'Price Points/Pricing Strategy', type: 'textarea' },
       { name: 'differentiators', label: 'Key Differentiators from Competitors', type: 'textarea' },
-      { name: 'usp', label: 'Unique Selling Propositions', type: 'textarea' },
-      { name: 'currentPromotions', label: 'Current Promotions or Offers', type: 'textarea' },
     ]
   },
   {
@@ -171,6 +167,7 @@ const formSchema = z.object({
 
 export default function BrandInformationPage() {
   const [currentStep, setCurrentStep] = useState(0)
+  const [showAdvanced, setShowAdvanced] = useState(false)
   
   const form = useForm<z.infer<typeof formSchema>>({
     resolver: zodResolver(formSchema),
@@ -225,19 +222,13 @@ export default function BrandInformationPage() {
   }
 
   return (
-    <div className="container mx-auto py-10">
+    <div className="container mx-auto py-10 space-y-6">
       <Card>
         <CardContent className="p-6">
-          <div className="mb-8">
-            <h2 className="text-2xl font-bold">{steps[currentStep].name}</h2>
-            <p className="text-muted-foreground">
-              Step {currentStep + 1} of {steps.length}
-            </p>
-          </div>
-
+          <h2 className="text-2xl font-bold mb-6">Basic Brand Identity</h2>
           <Form {...form}>
             <form onSubmit={form.handleSubmit(onSubmit)} className="space-y-6">
-              {steps[currentStep].fields.map((field) => (
+              {basicFields.map((field) => (
                 <FormField
                   key={field.name}
                   control={form.control}
@@ -273,30 +264,87 @@ export default function BrandInformationPage() {
                   )}
                 />
               ))}
-
-              <div className="flex justify-between pt-4">
-                <Button
-                  type="button"
-                  variant="outline"
-                  onClick={() => setCurrentStep(Math.max(0, currentStep - 1))}
-                  disabled={currentStep === 0}
-                >
-                  Previous
-                </Button>
-                
-                {currentStep === steps.length - 1 ? (
-                  <Button type="submit">Submit</Button>
-                ) : (
-                  <Button
-                    type="button"
-                    onClick={() => setCurrentStep(Math.min(steps.length - 1, currentStep + 1))}
-                  >
-                    Next
-                </Button>
-                )}
-              </div>
             </form>
           </Form>
+        </CardContent>
+      </Card>
+
+      <Card>
+        <CardContent className="p-6">
+          <div className="flex justify-between items-center mb-6">
+            <h2 className="text-2xl font-bold">Advanced Brand Settings</h2>
+            <Button
+              variant="outline"
+              onClick={() => setShowAdvanced(!showAdvanced)}
+            >
+              {showAdvanced ? 'Hide' : 'Edit'}
+            </Button>
+          </div>
+
+          {showAdvanced && (
+            <Form {...form}>
+              <form onSubmit={form.handleSubmit(onSubmit)} className="space-y-6">
+                {advancedSteps[currentStep].fields.map((field) => (
+                  <FormField
+                    key={field.name}
+                    control={form.control}
+                    name={field.name as any}
+                    render={({ field: formField }) => (
+                      <FormItem>
+                        <FormLabel>{field.label}</FormLabel>
+                        <FormControl>
+                          {field.type === 'select' ? (
+                            <Select
+                              onValueChange={formField.onChange}
+                              defaultValue={formField.value}
+                            >
+                              <SelectTrigger>
+                                <SelectValue placeholder="Select an option" />
+                              </SelectTrigger>
+                              <SelectContent>
+                                {field.options?.map((option) => (
+                                  <SelectItem key={option} value={option.toLowerCase()}>
+                                    {option}
+                                  </SelectItem>
+                                ))}
+                              </SelectContent>
+                            </Select>
+                          ) : field.type === 'textarea' ? (
+                            <Textarea {...formField} />
+                          ) : (
+                            <Input {...formField} type={field.type} />
+                          )}
+                        </FormControl>
+                        <FormMessage />
+                      </FormItem>
+                    )}
+                  />
+                ))}
+
+                <div className="flex justify-between pt-4">
+                  <Button
+                    type="button"
+                    variant="outline"
+                    onClick={() => setCurrentStep(Math.max(0, currentStep - 1))}
+                    disabled={currentStep === 0}
+                  >
+                    Previous
+                  </Button>
+                  
+                  {currentStep === advancedSteps.length - 1 ? (
+                    <Button type="submit">Submit</Button>
+                  ) : (
+                    <Button
+                      type="button"
+                      onClick={() => setCurrentStep(Math.min(advancedSteps.length - 1, currentStep + 1))}
+                    >
+                      Next
+                  </Button>
+                  )}
+                </div>
+              </form>
+            </Form>
+          )}
         </CardContent>
       </Card>
     </div>
