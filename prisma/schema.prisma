@@ -83,14 +83,10 @@ model GeneratedPost {
 model ContentSource {
   id             String           @id @default(cuid())
   url            String
-  category       String
-  crawlFrequency String
-  lastCrawled    DateTime?
   createdAt      DateTime         @default(now())
   updatedAt      DateTime         @updatedAt
   userId         String
   user           User             @relation(fields: [userId], references: [id])
-  scrapedContent ScrapedContent[]
 }
 
 model ScrapedContent {
@@ -100,7 +96,6 @@ model ScrapedContent {
   metadata    Json?
   createdAt   DateTime      @default(now())
   sourceId    String
-  source      ContentSource @relation(fields: [sourceId], references: [id], onDelete: Cascade)
 
   @@index([embedding(type: Vector)])
 }
