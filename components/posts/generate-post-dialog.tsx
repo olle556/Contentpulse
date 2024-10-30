@@ -42,6 +42,8 @@ export function GeneratePostDialog({ open, onOpenChange, onSuccess }: GeneratePo
   const [selectedPlatform, setSelectedPlatform] = useState("twitter");
   const [selectedTone, setSelectedTone] = useState("professional");
   const [isScraping, setIsScraping] = useState(false);
+  const [aiInstructions, setAiInstructions] = useState("");
+  const [savedPostId, setSavedPostId] = useState<string | null>(null);
 
   const TONES = [
     { value: "professional", label: "Professional" },
@@ -56,6 +58,11 @@ export function GeneratePostDialog({ open, onOpenChange, onSuccess }: GeneratePo
       value: "twitter", 
       label: "Twitter/X",
       maxLength: 280,
+    },
+    { 
+      value: "threads", 
+      label: "Threads",
+      maxLength: 500,
     },
     { 
       value: "linkedin", 
@@ -98,8 +105,12 @@ export function GeneratePostDialog({ open, onOpenChange, onSuccess }: GeneratePo
 
   // Handle dialog close
   const handleDialogClose = async (open: boolean) => {
-    if (!open && editor?.getText()) {
-      await handleSave(editor.getText());
+    if (!open && editor?.getText() && isEditing) {
+      try {
+        await handleSave(editor.getText());
+      } catch (error) {
+        // Handle error if needed
+      }
     }
     setIsEditing(false);
     onOpenChange(open);
@@ -108,25 +119,30 @@ export function GeneratePostDialog({ open, onOpenChange, onSuccess }: GeneratePo
   // Save content
   const handleSave = async (content: string) => {
     setIsSaving(true);
-    try { //API/post
-      const response = await fetch('/api/posts', {
-        method: 'POST',
+    try {
+      const method = savedPostId ? 'PATCH' : 'POST';
+      const url = savedPostId ? `/api/posts/${savedPostId}` : '/api/posts';
+      
+      const response = await fetch(url, {
+        method,
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({ 
-          content: content.trim(), // Trim any extra whitespace
+          content: content.trim(),
           platform: selectedPlatform,
           status: 'draft'
         }),
       });
       
       const data = await response.json();
-      if (!response.ok) throw new Error('Failed to save');
+      if (!response.ok) throw new Error(data.error || 'Failed to save');
       
       setSavedPost(data.post);
+      setSavedPostId(data.post.id);
       setGeneratedContent(content);
       toast.success('Changes saved');
-      onSuccess?.(); // Call onSuccess after successful save
+      onSuccess?.();
     } catch (error) {
+      console.error('Save error:', error);
       toast.error('Failed to save changes');
     } finally {
       setIsSaving(false);
@@ -147,8 +163,14 @@ export function GeneratePostDialog({ open, onOpenChange, onSuccess }: GeneratePo
   const handleDoneEditing = async () => {
     if (editor) {
       const content = editor.getText();
-      await handleSave(content);
-      setIsEditing(false);
+      try {
+        await handleSave(content);
+        setIsEditing(false);
+        onSuccess?.();
+        onOpenChange(false);
+      } catch (error) {
+        toast.error('Failed to save changes');
+      }
     }
   };
 
@@ -202,6 +224,7 @@ export function GeneratePostDialog({ open, onOpenChange, onSuccess }: GeneratePo
           sourceUrl: selectedSource.url,
           platform: selectedPlatform,
           tone: selectedTone,
+          instructions: aiInstructions,
         }),
       });
 
@@ -215,6 +238,7 @@ export function GeneratePostDialog({ open, onOpenChange, onSuccess }: GeneratePo
       if (!response.ok) throw new Error(data.error || 'Failed to generate post');
 
       setGeneratedContent(data.content);
+      setSavedPostId(data.post.id);
       if (editor) {
         editor.commands.setContent(data.content);
       }
@@ -261,6 +285,16 @@ export function GeneratePostDialog({ open, onOpenChange, onSuccess }: GeneratePo
                 ))}
               </SelectContent>
             </Select>
+          </div>
+
+          <div className="space-y-2">
+            <Label>AI Instructions (Optional)</Label>
+            <textarea
+              className="w-full min-h-[80px] rounded-md border border-input bg-background px-3 py-2 text-sm"
+              placeholder="Add specific instructions for how the AI should generate this post..."
+              value={aiInstructions}
+              onChange={(e) => setAiInstructions(e.target.value)}
+            />
           </div>
 
           <div className="grid grid-cols-2 gap-4">
@@ -344,8 +378,16 @@ export function GeneratePostDialog({ open, onOpenChange, onSuccess }: GeneratePo
                 <Button 
                   variant="outline" 
                   onClick={handleDoneEditing}
+                  disabled={isSaving}
                 >
-                  Done Editing
+                  {isSaving ? (
+                    <>
+                      <Loader2 className="mr-2 h-4 w-4 animate-spin" />
+                      Saving...
+                    </>
+                  ) : (
+                    'Done Editing'
+                  )}
                 </Button>
               </div>
             </div>

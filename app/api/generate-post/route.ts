@@ -68,6 +68,7 @@ export async function POST(request: Request) {
       twitter: '280 characters',
       linkedin: '3000 characters',
       facebook: 'no strict limit, but aim for concise content',
+      threads: '500 characters',
     };
 
     const prompt = `You are a social media content creator. Your task is to create an engaging ${platform} post using a ${tone} tone based on the following source material.
@@ -84,6 +85,7 @@ Instructions:
 5. For Twitter/X, include relevant hashtags
 6. For LinkedIn, focus on professional insights
 7. For Facebook, aim for engaging, shareable content
+8. For Threads, create concise, discussion-worthy content${platform === 'threads' ? ' and consider using emojis appropriately' : ''}
 
 Additional tone guidance for "${tone}":
 ${tone === 'professional' ? '- Use industry-appropriate terminology\n- Maintain business etiquette\n- Focus on value and insights' :

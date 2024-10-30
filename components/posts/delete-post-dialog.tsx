@@ -40,15 +40,14 @@ export function DeletePostDialog({
 
       const data = await response.json();
 
-      if (!response.ok) {
-        throw new Error(data.error || 'Failed to delete post');
+      if (data.success) {
+        onSuccess();
+        onOpenChange(false);
+      } else {
+        console.error('Failed to delete post:', data.error);
       }
-
-      toast.success(data.message);
-      onSuccess();
-      onOpenChange(false);
-    } catch (error: any) {
-      toast.error(error.message);
+    } catch (error) {
+      console.error('Error deleting post:', error);
     } finally {
       setLoading(false);
     }

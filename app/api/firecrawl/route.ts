@@ -18,12 +18,13 @@ export async function POST(request: Request) {
 
     console.log('Attempting to crawl URL:', url);
     const crawlResponse = await app.crawlUrl(url, {
-      maxDepth: 1,
-      limit: 1000,
+      maxDepth: 0,
+      limit: 1,
       allowExternalLinks: false,
       allowBackwardLinks: false,
       scrapeOptions: {
         formats: ["markdown"],
+        onlyMainContent: true,
       },
     });
 

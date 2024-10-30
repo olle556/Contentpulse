@@ -13,6 +13,8 @@ import { GeneratedPost } from "@/types";
 import { format } from "date-fns";
 import { DeletePostDialog } from "./delete-post-dialog";
 import { EditPostDialog } from "./edit-post-dialog";
+import { GeneratePostDialog } from "./generate-post-dialog";
+import { toast } from "react-toastify";
 
 export function PostList() {
   const [posts, setPosts] = useState<GeneratedPost[]>([]);
@@ -20,10 +22,11 @@ export function PostList() {
   const [selectedPost, setSelectedPost] = useState<GeneratedPost | null>(null);
   const [isDeleteOpen, setIsDeleteOpen] = useState(false);
   const [isEditOpen, setIsEditOpen] = useState(false);
+  const [isGenerateOpen, setIsGenerateOpen] = useState(false);
 
   useEffect(() => {
     fetchPosts();
-  }, []);
+  }, [isGenerateOpen]);
 
   async function fetchPosts() {
     try {
@@ -31,11 +34,18 @@ export function PostList() {
       const response = await fetch('/api/posts');
       const data = await response.json();
       
+      console.log('API Response:', data);
+      
       if (data.success) {
+        console.log('Setting posts:', data.posts);
         setPosts(data.posts);
+      } else {
+        console.error('Failed to fetch posts:', data.error);
+        toast.error('Failed to fetch posts');
       }
     } catch (error) {
       console.error('Error fetching posts:', error);
+      toast.error('Failed to fetch posts');
     } finally {
       setLoading(false);
     }
@@ -111,7 +121,10 @@ export function PostList() {
         post={selectedPost}
         open={isDeleteOpen}
         onOpenChange={setIsDeleteOpen}
-        onSuccess={fetchPosts}
+        onSuccess={() => {
+          fetchPosts();
+          setSelectedPost(null);
+        }}
       />
 
       <EditPostDialog
@@ -119,6 +132,14 @@ export function PostList() {
         open={isEditOpen}
         onOpenChange={setIsEditOpen}
         onSuccess={fetchPosts}
+      />
+
+      <GeneratePostDialog
+        open={isGenerateOpen}
+        onOpenChange={setIsGenerateOpen}
+        onSuccess={() => {
+          fetchPosts();
+        }}
       />
     </>
   );

@@ -3,6 +3,32 @@ import { PrismaClient } from '@prisma/client';
 
 const prisma = new PrismaClient();
 
+export async function GET() {
+  try {
+    const posts = await prisma.generatedPost.findMany({
+      orderBy: {
+        createdAt: 'desc'
+      },
+      include: {
+        user: true // Include this if you need user data
+      }
+    });
+
+    return NextResponse.json({ 
+      success: true, 
+      posts 
+    });
+  } catch (error) {
+    console.error('Error fetching posts:', error);
+    return NextResponse.json({ 
+      success: false, 
+      error: error instanceof Error ? error.message : 'Failed to fetch posts' 
+    }, { status: 500 });
+  } finally {
+    await prisma.$disconnect();
+  }
+}
+
 export async function PATCH(
   request: Request,
   { params }: { params: { id: string } }

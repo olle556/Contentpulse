@@ -1,51 +1,50 @@
 import { NextResponse } from 'next/server';
 import { PrismaClient } from '@prisma/client';
+import { getServerSession } from "next-auth/next";
+import { authOptions } from "@/lib/auth-options";
 
 const prisma = new PrismaClient();
 
-// Helper function (should be at the top of the file)
-async function ensureDefaultUser() {
+export async function GET() {
   try {
-    let defaultUser = await prisma.user.findFirst({
-      where: { 
-        email: 'default@example.com'
+    // Get the authenticated user's session
+    const session = await getServerSession(authOptions);
+    
+    if (!session?.user?.email) {
+      return NextResponse.json({ 
+        success: false, 
+        error: 'Unauthorized' 
+      }, { status: 401 });
+    }
+
+    // Find the user in the database
+    const user = await prisma.user.findUnique({
+      where: {
+        email: session.user.email
       }
     });
 
-    if (!defaultUser) {
-      defaultUser = await prisma.user.create({
-        data: {
-          email: 'default@example.com',
-          name: 'Default User',
-        }
-      });
+    if (!user) {
+      return NextResponse.json({ 
+        success: false, 
+        error: 'User not found' 
+      }, { status: 404 });
     }
 
-    return defaultUser;
-  } catch (error) {
-    console.error('Error ensuring default user:', error);
-    throw error;
-  }
-}
-
-export async function GET() {
-  try {
-    const defaultUser = await ensureDefaultUser();
-    console.log('Default user:', defaultUser); // Debug log
-    
+    // Get posts for this specific user
     const posts = await prisma.generatedPost.findMany({
       where: {
-        userId: defaultUser.id // Make sure we're using the correct user ID
+        userId: user.id
       },
       orderBy: {
         createdAt: 'desc'
       },
       include: {
-        user: true // Include user data if needed
+        user: true
       }
     });
 
-    console.log('Found posts:', posts); // Debug log
+    console.log('Found posts for user:', posts); // Debug log
 
     return NextResponse.json({ 
       success: true, 
@@ -64,7 +63,28 @@ export async function GET() {
 
 export async function POST(request: Request) {
   try {
-    const defaultUser = await ensureDefaultUser();
+    const session = await getServerSession(authOptions);
+    
+    if (!session?.user?.email) {
+      return NextResponse.json({ 
+        success: false, 
+        error: 'Unauthorized' 
+      }, { status: 401 });
+    }
+
+    const user = await prisma.user.findUnique({
+      where: {
+        email: session.user.email
+      }
+    });
+
+    if (!user) {
+      return NextResponse.json({ 
+        success: false, 
+        error: 'User not found' 
+      }, { status: 404 });
+    }
+
     const { content, platform, status } = await request.json();
     
     if (!content) {
@@ -79,11 +99,9 @@ export async function POST(request: Request) {
         content,
         platform: platform || 'twitter',
         status: status || 'draft',
-        userId: defaultUser.id,
+        userId: user.id, // Use the authenticated user's ID
       },
     });
-
-    console.log('Created post:', post); // Debug log
 
     return NextResponse.json({ 
       success: true, 
