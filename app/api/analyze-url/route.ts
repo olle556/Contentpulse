@@ -6,30 +6,30 @@ const anthropic = new Anthropic({
   apiKey: process.env.ANTHROPIC_API_KEY,
 });
 
-const prisma = new PrismaClient();
+//const prisma = new PrismaClient();
 
 export async function POST(request: Request) {
   try {
     const { url } = await request.json();
 
     // First, ensure we have a default user
-    let defaultUser = await prisma.user.findFirst({
-      where: {
-        email: 'default@example.com'
-      }
-    });
+    // let defaultUser = await prisma.user.findFirst({
+    //   where: {
+    //     email: 'default@example.com'
+    //   }
+    // });
 
-    if (!defaultUser) {
-      defaultUser = await prisma.user.create({
-        data: {
-          email: 'default@example.com',
-          name: 'Default User',
-        }
-      });
-    }
+    // if (!defaultUser) {
+    //   defaultUser = await prisma.user.create({
+    //     data: {
+    //       email: 'default@example.com',
+    //       name: 'Default User',
+    //     }
+    //   });
+    // }
 
     // Fetch content using firecrawl route
-    const crawlResponse = await fetch(`${process.env.NEXT_PUBLIC_BASE_URL}/api/firecrawl`, {
+    const URLContent = await fetch(`${process.env.NEXT_PUBLIC_BASE_URL}/api/firecrawl`, {
       method: 'POST',
       headers: {
         'Content-Type': 'application/json',
@@ -37,17 +37,14 @@ export async function POST(request: Request) {
       body: JSON.stringify({ url }),
     });
 
-    if (!crawlResponse.ok) {
+    console.log('url api har fåptt response');
+
+    if (!URLContent.ok) {
       throw new Error('Failed to crawl URL');
     }
 
-    const { content: URLContent } = await crawlResponse.json();
-    console.log(URLContent);
-
-    // Create a simple HTML to text converter
-    //const textContent = htmlContent.replace(/<[^>]*>/g, ' ')
-      //.replace(/\s+/g, ' ')
-      //.trim();
+    // Get the response body as text
+    const contentText = await URLContent.text();
 
     // Send to Claude for analysis
     const message = await anthropic.messages.create({
@@ -56,8 +53,7 @@ export async function POST(request: Request) {
       messages: [{
         role: 'user',
         content: `Write a social media post. Analyze the following webpage content and provide a comprehensive summary of its main topics, key points, and overall purpose. If relevant, identify the target audience and content quality. Here's the content:
-
-        ${URLContent.substring(0, 10000)} // Limiting content length to avoid token limits
+        ${contentText.substring(0, 10000)} // Limiting content length to avoid token limits
         `
       }]
     });
@@ -70,19 +66,19 @@ export async function POST(request: Request) {
         : '';
 
     // Save to database using the default user's ID
-    const contentSource = await prisma.contentSource.create({
-      data: {
-        url,
-        category: 'website',
-        crawlFrequency: 'daily',
-        userId: defaultUser.id, // Use the default user's ID
-      },
-    });
+    // const contentSource = await prisma.contentSource.create({
+    //   data: {
+    //     url,
+    //     category: 'website',
+    //     crawlFrequency: 'daily',
+    //     userId: defaultUser.id, // Use the default user's ID
+    //   },
+    // });
 
     return NextResponse.json({ 
       success: true, 
       analysis,
-      source: contentSource
+      //source: contentSource
     });
 
   } catch (error) {
@@ -92,6 +88,6 @@ export async function POST(request: Request) {
       error: error instanceof Error ? error.message : 'Failed to analyze URL'
     }, { status: 500 });
   } finally {
-    await prisma.$disconnect();
+    //await prisma.$disconnect();
   }
 }
