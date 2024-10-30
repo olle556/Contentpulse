@@ -1,0 +1,332 @@
+"use client"
+
+import { useState, useEffect } from "react"
+import { zodResolver } from "@hookform/resolvers/zod"
+import { useForm } from "react-hook-form"
+import * as z from "zod"
+import { format } from "date-fns"
+import { Calendar as CalendarIcon, Clock } from "lucide-react"
+import { Button } from "@/components/ui/button"
+import { Calendar } from "@/components/ui/calendar"
+import { Checkbox } from "@/components/ui/checkbox"
+import {
+  Dialog,
+  DialogContent,
+  DialogHeader,
+  DialogTitle,
+} from "@/components/ui/dialog"
+import {
+  Form,
+  FormControl,
+  FormDescription,
+  FormField,
+  FormItem,
+  FormLabel,
+} from "@/components/ui/form"
+import { Input } from "@/components/ui/input"
+import {
+  Popover,
+  PopoverContent,
+  PopoverTrigger,
+} from "@/components/ui/popover"
+import {
+  Select,
+  SelectContent,
+  SelectItem,
+  SelectTrigger,
+  SelectValue,
+} from "@/components/ui/select"
+import { Switch } from "@/components/ui/switch"
+import { cn } from "@/lib/utils"
+
+const formSchema = z.object({
+  contentSourceId: z.string(),
+  tonality: z.string(),
+  platforms: z.array(z.string()).min(1, "Select at least one platform"),
+  isRecurring: z.boolean(),
+  recurringDays: z.array(z.string()),
+  startDate: z.date().optional(),
+  date: z.date().optional(),
+  time: z.string(),
+})
+
+type ContentSchedulerProps = {
+  open: boolean
+  onOpenChange: (open: boolean) => void
+  contentSources: Array<{ id: string; url: string; category: string }>
+}
+
+const tonalities = ["Warm", "Excited", "Professional", "Casual", "Formal"]
+const platforms = ["X", "LinkedIn", "Threads"]
+const daysOfWeek = ["Mon", "Tue", "Wed", "Thu", "Fri", "Sat", "Sun"]
+
+export function ContentScheduler({ open, onOpenChange, contentSources }: ContentSchedulerProps) {
+  const [isRecurring, setIsRecurring] = useState(false)
+
+  const form = useForm<z.infer<typeof formSchema>>({
+    resolver: zodResolver(formSchema),
+    defaultValues: {
+      contentSourceId: "",
+      tonality: "",
+      platforms: [],
+      isRecurring: false,
+      recurringDays: [],
+      time: "",
+    },
+  })
+
+  useEffect(() => {
+    if (isRecurring) {
+      form.setValue('date', undefined)
+    } else {
+      form.setValue('startDate', undefined)
+    }
+  }, [isRecurring, form])
+
+  const onSubmit = async (values: z.infer<typeof formSchema>) => {
+    console.log(values)
+    onOpenChange(false)
+  }
+
+  return (
+    <Dialog open={open} onOpenChange={onOpenChange}>
+      <DialogContent className="sm:max-w-[550px]">
+        <DialogHeader>
+          <DialogTitle>Schedule Content Generation</DialogTitle>
+        </DialogHeader>
+        <Form {...form}>
+          <form onSubmit={form.handleSubmit(onSubmit)} className="space-y-6">
+            <FormField
+              control={form.control}
+              name="contentSourceId"
+              render={({ field }) => (
+                <FormItem>
+                  <FormLabel>Content Source</FormLabel>
+                  <Select onValueChange={field.onChange} defaultValue={field.value}>
+                    <FormControl>
+                      <SelectTrigger>
+                        <SelectValue placeholder="Select a content source" />
+                      </SelectTrigger>
+                    </FormControl>
+                    <SelectContent>
+                      {contentSources.map((source) => (
+                        <SelectItem key={source.id} value={source.id}>
+                          {source.url} ({source.category})
+                        </SelectItem>
+                      ))}
+                    </SelectContent>
+                  </Select>
+                </FormItem>
+              )}
+            />
+
+            <FormField
+              control={form.control}
+              name="tonality"
+              render={({ field }) => (
+                <FormItem>
+                  <FormLabel>Tonality</FormLabel>
+                  <Select onValueChange={field.onChange} defaultValue={field.value}>
+                    <FormControl>
+                      <SelectTrigger>
+                        <SelectValue placeholder="Select tonality" />
+                      </SelectTrigger>
+                    </FormControl>
+                    <SelectContent>
+                      {tonalities.map((tone) => (
+                        <SelectItem key={tone} value={tone.toLowerCase()}>
+                          {tone}
+                        </SelectItem>
+                      ))}
+                    </SelectContent>
+                  </Select>
+                </FormItem>
+              )}
+            />
+
+            <FormField
+              control={form.control}
+              name="platforms"
+              render={() => (
+                <FormItem>
+                  <FormLabel>Platforms</FormLabel>
+                  <div className="flex flex-wrap gap-4">
+                    {platforms.map((platform) => (
+                      <FormField
+                        key={platform}
+                        control={form.control}
+                        name="platforms"
+                        render={({ field }) => {
+                          return (
+                            <FormItem
+                              key={platform}
+                              className="flex flex-row items-start space-x-3 space-y-0"
+                            >
+                              <FormControl>
+                                <Checkbox
+                                  checked={field.value?.includes(platform)}
+                                  onCheckedChange={(checked) => {
+                                    return checked
+                                      ? field.onChange([...field.value, platform])
+                                      : field.onChange(
+                                          field.value?.filter(
+                                            (value) => value !== platform
+                                          )
+                                        )
+                                  }}
+                                />
+                              </FormControl>
+                              <FormLabel className="font-normal">
+                                {platform}
+                              </FormLabel>
+                            </FormItem>
+                          )
+                        }}
+                      />
+                    ))}
+                  </div>
+                </FormItem>
+              )}
+            />
+
+            <FormField
+              control={form.control}
+              name="isRecurring"
+              render={({ field }) => (
+                <FormItem className="flex flex-row items-center justify-between rounded-lg border p-4">
+                  <div className="space-y-0.5">
+                    <FormLabel className="text-base">Recurring Post</FormLabel>
+                    <FormDescription>
+                      Enable if you want to schedule recurring posts
+                    </FormDescription>
+                  </div>
+                  <FormControl>
+                    <Switch
+                      checked={field.value}
+                      onCheckedChange={(checked) => {
+                        field.onChange(checked)
+                        setIsRecurring(checked)
+                      }}
+                    />
+                  </FormControl>
+                </FormItem>
+              )}
+            />
+
+            {isRecurring && (
+              <FormField
+                control={form.control}
+                name="recurringDays"
+                render={() => (
+                  <FormItem>
+                    <FormLabel>Posting Days</FormLabel>
+                    <div className="flex flex-wrap gap-4">
+                      {daysOfWeek.map((day) => (
+                        <FormField
+                          key={day}
+                          control={form.control}
+                          name="recurringDays"
+                          render={({ field }) => {
+                            return (
+                              <FormItem
+                                key={day}
+                                className="flex flex-row items-start space-x-3 space-y-0"
+                              >
+                                <FormControl>
+                                  <Checkbox
+                                    checked={field.value?.includes(day)}
+                                    onCheckedChange={(checked) => {
+                                      return checked
+                                        ? field.onChange([...field.value, day])
+                                        : field.onChange(
+                                            field.value?.filter(
+                                              (value) => value !== day
+                                            )
+                                          )
+                                    }}
+                                  />
+                                </FormControl>
+                                <FormLabel className="font-normal">
+                                  {day}
+                                </FormLabel>
+                              </FormItem>
+                            )
+                          }}
+                        />
+                      ))}
+                    </div>
+                  </FormItem>
+                )}
+              />
+            )}
+
+            <FormField
+              control={form.control}
+              name={isRecurring ? "startDate" : "date"}
+              render={({ field }) => (
+                <FormItem className="flex flex-col">
+                  <FormLabel>{isRecurring ? "Start Date" : "Date"}</FormLabel>
+                  <Popover>
+                    <PopoverTrigger asChild>
+                      <FormControl>
+                        <Button
+                          variant={"outline"}
+                          className={cn(
+                            "w-[240px] pl-3 text-left font-normal",
+                            !field.value && "text-muted-foreground"
+                          )}
+                        >
+                          {field.value ? (
+                            format(field.value, "PPP")
+                          ) : (
+                            <span>Pick a date</span>
+                          )}
+                          <CalendarIcon className="ml-auto h-4 w-4 opacity-50" />
+                        </Button>
+                      </FormControl>
+                    </PopoverTrigger>
+                    <PopoverContent className="w-auto p-0" align="start">
+                      <Calendar
+                        mode="single"
+                        selected={field.value}
+                        onSelect={field.onChange}
+                        disabled={(date) =>
+                          date < new Date() || date < new Date("1900-01-01")
+                        }
+                        initialFocus
+                      />
+                    </PopoverContent>
+                  </Popover>
+                </FormItem>
+              )}
+            />
+
+            <FormField
+              control={form.control}
+              name="time"
+              render={({ field }) => (
+                <FormItem>
+                  <FormLabel>Time</FormLabel>
+                  <FormControl>
+                    <div className="flex items-center">
+                      <Input
+                        type="time"
+                        {...field}
+                        className="w-[240px]"
+                      />
+                      <Clock className="ml-2 h-4 w-4 opacity-50" />
+                    </div>
+                  </FormControl>
+                </FormItem>
+              )}
+            />
+
+            <Button type="submit" className="w-full">
+              Schedule Content Generation
+            </Button>
+          </form>
+        </Form>
+      </DialogContent>
+    </Dialog>
+  )
+}
