@@ -25,7 +25,6 @@ export default async function RootLayout({
       <body className={inter.className}>
           <Providers>{children}</Providers>
           <Toaster />
-
       </body>
     </html>
   );

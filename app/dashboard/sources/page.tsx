@@ -18,7 +18,7 @@ export default function SourcesPage() {
   const handleAnalyzeUrl = async () => {
     setIsLoading(true);
     try {
-      const response = await fetch('/api/analyze-url', {
+      const response = await fetch('/api/firecrawl', {
         method: 'POST',
         headers: {
           'Content-Type': 'application/json',
@@ -27,6 +27,7 @@ export default function SourcesPage() {
       });
       
       const data = await response.json();
+      console.log('Scraped content:', data.content);
       setAnalysis(data.analysis);
       
       // Refresh the sources list
@@ -67,27 +68,7 @@ export default function SourcesPage() {
         </Button>
       </div>
 
-      <div className="flex gap-4">
-        <Input 
-          placeholder="Enter URL to analyze" 
-          value={url} 
-          onChange={(e) => setUrl(e.target.value)}
-        />
-        <Button 
-          onClick={handleAnalyzeUrl} 
-          disabled={isLoading}
-        >
-          {isLoading ? 'Analyzing...' : 'Analyze'}
-        </Button>
-      </div>
-
-      {analysis && (
-        <div className="mt-4 p-4 bg-gray-50 rounded-lg">
-          <h2 className="text-xl font-semibold mb-2">Analysis Results</h2>
-          <p className="whitespace-pre-wrap">{analysis}</p>
-        </div>
-      )}
-
+  
       <ContentSourceList sources={sources} />
       <AddSourceDialog 
         open={isAddSourceOpen} 

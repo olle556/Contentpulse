@@ -20,7 +20,7 @@ export function AddSourceDialog({ open, onOpenChange, onSuccess }: AddSourceDial
     setIsLoading(true);
 
     try {
-      const response = await fetch('/api/analyze-url', {
+      const response = await fetch('/api/firecrawl', {
         method: 'POST',
         headers: {
           'Content-Type': 'application/json',
@@ -29,6 +29,7 @@ export function AddSourceDialog({ open, onOpenChange, onSuccess }: AddSourceDial
       });
       
       const data = await response.json();
+      console.log('Data:', data);
       
       if (data.success) {
         // Clear the form and close the dialog

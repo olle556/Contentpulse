@@ -15,9 +15,19 @@ export async function POST(request: Request) {
       }, { status: 400 });
     }
 
+    if (!process.env.NEXT_PUBLIC_FIRECRAWL_API_KEY) {
+      console.error('Missing Firecrawl API key');
+      return NextResponse.json({
+        success: false,
+        error: 'Missing API key configuration'
+      }, { status: 500 });
+    }
+
+    console.log('Attempting to crawl URL:', url);
+
     const crawlResponse = await app.crawlUrl(url, {
       maxDepth: 1,
-      limit: 10000,
+      limit: 100000,
       allowExternalLinks: false,
       allowBackwardLinks: false,
       scrapeOptions: {
@@ -25,7 +35,7 @@ export async function POST(request: Request) {
       },
     });
 
-    console.log('hej');
+    console.log('Raw crawl response:', JSON.stringify(crawlResponse, null, 2));
 
     if (!crawlResponse.success) {
       return NextResponse.json({
@@ -34,7 +44,7 @@ export async function POST(request: Request) {
       }, { status: 400 });
     }
 
-    console.log(crawlResponse);
+    console.log('Crawl Response:', crawlResponse);
 
     let markdownContent = "";
 
@@ -49,16 +59,18 @@ export async function POST(request: Request) {
       default:
     }
 
+    console.log('Markdown Content:', markdownContent);
+
     return NextResponse.json({
       success: true,
       content: markdownContent
     });
 
   } catch (error) {
-    console.error('Error processing URL:', error);
+    console.error('Error:', error);
     return NextResponse.json({
       success: false,
-      error: 'Failed to process URL'
+      error: (error as Error).message || 'Failed to process URL'
     }, { status: 500 });
   }
 }
