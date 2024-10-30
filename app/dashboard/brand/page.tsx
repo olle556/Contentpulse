@@ -42,7 +42,7 @@ const basicFields = [
     type: 'select',
     options: ['Professional', 'Casual', 'Friendly', 'Playful', 'Luxurious', 'Motivational','Caring', 'Other']
   },
-  { name: 'usp', label: 'Unique Selling Proposition', type: 'textarea' },
+  { name: 'description', label: 'Description', type: 'textarea' },
 ]
 
 const advancedSteps = [
@@ -51,7 +51,7 @@ const advancedSteps = [
     name: 'Brand Fundamentals',
     fields: [
       { name: 'missionStatement', label: 'Mission Statement', type: 'textarea' },
-      { name: 'slogans', label: 'Existing Slogan(s)', type: 'textarea' },
+      { name: 'slogans', label: 'Existing Slogans', type: 'textarea' },
     ]
   },
   {
@@ -107,7 +107,7 @@ const formSchema = z.object({
   brandName: z.string(),
   brandType: z.string(),
   industry: z.string(),
-  locations: z.string(),
+  language: z.string(),
   website: z.string(),
   missionStatement: z.string(),
   brandVoice: z.string(),
@@ -115,7 +115,7 @@ const formSchema = z.object({
   // Target Audience
   demographics: z.string(),
   psychographics: z.string(),
-  usp: z.string(),
+  description: z.string(),
   currentPromotions: z.string(),
   // Content Preferences
   contentThemes: z.string(),
@@ -140,7 +140,7 @@ export default function BrandInformationPage() {
       brandName: '',
       brandType: '',
       industry: '',
-      locations: '',
+      language: '',
       website: '',
       missionStatement: '',
       brandVoice: '',
@@ -148,7 +148,7 @@ export default function BrandInformationPage() {
       // Target Audience
       demographics: '',
       psychographics: '',
-      usp: '',
+      description: '',
       currentPromotions: '',
       // Content Preferences
       contentThemes: '',
