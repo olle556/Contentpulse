@@ -5,8 +5,19 @@ import { authOptions } from '@/lib/auth-options';
 
 export async function GET() {
   try {
-    // For now, fetch all sources without user filtering
+    const session = await getServerSession(authOptions);
+
+    if (!session?.user) {
+      return NextResponse.json({ 
+        success: false, 
+        error: 'Not authenticated' 
+      }, { status: 401 });
+    }
+
     const sources = await prisma.contentSource.findMany({
+      where: {
+        userId: session.user.id
+      },
       orderBy: {
         createdAt: 'desc',
       },
