@@ -31,7 +31,7 @@ const basicFields = [
     name: 'brandType', 
     label: 'Brand Type', 
     type: 'select',
-    options: ['Company', 'Influencer', 'Personal Brand', 'Non-profit', 'Other']
+    options: ['Manufacturing Company', 'Service Company', 'Influencer', 'Personal Brand', 'Non-profit', 'Other']
   },
   { name: 'industry', label: 'Industry/Market Sector', type: 'text' },
   { name: 'language', label: 'Language', type: 'text' }, // New field
@@ -40,7 +40,7 @@ const basicFields = [
     name: 'brandVoice', 
     label: 'Brand Voice', 
     type: 'select',
-    options: ['Professional', 'Casual', 'Friendly', 'Authoritative', 'Playful']
+    options: ['Professional', 'Casual', 'Friendly', 'Playful', 'Luxurious', 'Motivational','Caring', 'Other']
   },
   { name: 'usp', label: 'Unique Selling Proposition', type: 'textarea' },
 ]
@@ -75,7 +75,7 @@ const advancedSteps = [
     fields: [
       { name: 'contentThemes', label: 'Content Themes to Focus On', type: 'textarea' },
       { name: 'successfulPosts', label: 'Successful Past Posts', type: 'textarea' },
-      { name: 'competitorContent', label: 'Competitor Content that Resonates', type: 'textarea' },
+      { name: 'competitorContent', label: 'Competitor Content that Resonates with your Brand', type: 'textarea' },
     ]
   },
   {
@@ -98,17 +98,7 @@ const advancedSteps = [
       { name: 'upcomingEvents', label: 'Upcoming Events/Launches', type: 'textarea' },
       { name: 'testimonials', label: 'Customer Testimonials/Success Stories', type: 'textarea' },
       { name: 'brandStory', label: 'Brand Story/History', type: 'textarea' },
-    ]
-  },
-  {
-    id: 'compliance',
-    name: 'Compliance & Guidelines',
-    fields: [
-      { name: 'regulations', label: 'Industry Regulations', type: 'textarea' },
-      { name: 'restrictedTerms', label: 'Restricted Terms or Topics', type: 'textarea' },
-      { name: 'disclaimers', label: 'Required Disclaimers', type: 'textarea' },
       { name: 'hashtagPreferences', label: 'Hashtag Preferences', type: 'textarea' },
-      { name: 'imageRights', label: 'Image Rights/Usage Guidelines', type: 'textarea' },
     ]
   }
 ]
@@ -119,7 +109,6 @@ const formSchema = z.object({
   industry: z.string(),
   locations: z.string(),
   website: z.string(),
-  socialMedia: z.string(),
   missionStatement: z.string(),
   brandVoice: z.string(),
   slogans: z.string(),
@@ -139,12 +128,7 @@ const formSchema = z.object({
   upcomingEvents: z.string(),
   testimonials: z.string(),
   brandStory: z.string(),
-  // Compliance
-  regulations: z.string(),
-  restrictedTerms: z.string(),
-  disclaimers: z.string(),
   hashtagPreferences: z.string(),
-  imageRights: z.string(),
 })
 
 export default function BrandInformationPage() {
@@ -158,7 +142,6 @@ export default function BrandInformationPage() {
       industry: '',
       locations: '',
       website: '',
-      socialMedia: '',
       missionStatement: '',
       brandVoice: '',
       slogans: '',
@@ -177,13 +160,8 @@ export default function BrandInformationPage() {
       // Additional Context
       upcomingEvents: '',
       testimonials: '',
-      brandStory: '',
-      // Compliance
-      regulations: '',
-      restrictedTerms: '',
-      disclaimers: '',
+      brandStory: '',     
       hashtagPreferences: '',
-      imageRights: '',
     },
   })
 
@@ -302,7 +280,7 @@ export default function BrandInformationPage() {
                   </div>
                 ))}
                 <div className="flex justify-end pt-4">
-                  <Button type="submit">Submit</Button>
+                  <Button type="submit" onClick={form.handleSubmit(onSubmit)}>Submit</Button>
                 </div>
               </form>
             </Form>
