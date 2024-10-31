@@ -58,6 +58,7 @@ type ContentSchedulerProps = {
   onOpenChange: (open: boolean) => void
   contentSources: Array<{ id: string; url: string; category: string }>
   editSchedule?: ContentSchedule | null
+  onScheduleUpdate?: () => void
 }
 
 const tonalities = [
@@ -71,7 +72,7 @@ const platforms = ["X", "LinkedIn", "Threads", "Facebook"]
 
 const daysOfWeek = ["Mon", "Tue", "Wed", "Thu", "Fri", "Sat", "Sun"]
 
-export function ContentScheduler({ open, onOpenChange, contentSources, editSchedule }: ContentSchedulerProps) {
+export function ContentScheduler({ open, onOpenChange, contentSources, editSchedule, onScheduleUpdate }: ContentSchedulerProps) {
   const { data: session } = useSession()
   const [isRecurring, setIsRecurring] = useState(false)
 
@@ -125,6 +126,7 @@ export function ContentScheduler({ open, onOpenChange, contentSources, editSched
         throw new Error('Failed to schedule content');
       }
 
+      onScheduleUpdate?.();
       onOpenChange(false);
     } catch (error) {
       console.error('Error scheduling content:', error);
@@ -147,7 +149,7 @@ export function ContentScheduler({ open, onOpenChange, contentSources, editSched
               render={({ field }) => (
                 <FormItem>
                   <FormLabel>Content Source</FormLabel>
-                  <Select onValueChange={field.onChange} defaultValue={field.value}>
+                  <Select onValueChange={field.onChange} value={field.value}>
                     <FormControl>
                       <SelectTrigger>
                         <SelectValue placeholder="Select a content source" />

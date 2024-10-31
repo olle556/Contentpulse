@@ -83,6 +83,10 @@ export function ScheduledPostList() {
     setScheduleToEdit(schedule);
   };
 
+  const handleScheduleUpdate = () => {
+    fetchSchedules();
+  };
+
   return (
     <Card>
       <CardHeader>
@@ -144,8 +148,9 @@ export function ScheduledPostList() {
         <ContentScheduler
           open={!!scheduleToEdit}
           onOpenChange={(open) => !open && setScheduleToEdit(null)}
-          contentSources={[]} // You'll need to pass content sources here
+          contentSources={[]}
           editSchedule={scheduleToEdit}
+          onScheduleUpdate={handleScheduleUpdate}
         />
       )}
     </Card>
