@@ -3,6 +3,7 @@ import { PrismaClient } from '@prisma/client';
 import { Anthropic } from '@anthropic-ai/sdk';
 import { getServerSession } from "next-auth/next";
 import { authOptions } from "@/lib/auth-options";
+import { getRelevantBrandContext } from '@/utils/getBrandContext';
 
 const prisma = new PrismaClient();
 const anthropic = new Anthropic({
@@ -63,6 +64,16 @@ export async function POST(request: Request) {
       throw new Error('No content scraped from URL');
     }
 
+    // Get brand context for the authenticated user
+    const brandContext = await getRelevantBrandContext(session.user.id);
+    
+    if (!brandContext) {
+      return NextResponse.json({
+        success: false,
+        error: 'No brand found for user'
+      }, { status: 404 });
+    }
+
     // 2. Create a platform-specific prompt
     const platformLimits = {
       twitter: '280 characters',
@@ -71,7 +82,10 @@ export async function POST(request: Request) {
       threads: '500 characters',
     };
 
-    const prompt = `You are a social media content creator. Your task is to create an engaging ${platform} post using a ${tone} tone based on the following source material.
+    const prompt = `You are a social media content creator. Your task is to create an engaging ${platform} post using a ${tone} tone based on the following brand context and source material.
+
+Brand Context:
+${brandContext}
 
 Source URL: ${sourceUrl}
 Scraped Content:
@@ -79,13 +93,13 @@ ${scrapedContent}
 
 Instructions:
 1. Create a single, engaging post for ${platform} (limit: ${platformLimits[platform as keyof typeof platformLimits]})
-2. Maintain a ${tone} tone throughout the post
-3. Include key information and insights from the source
-4. Make it conversational and engaging
-5. For Twitter/X, include relevant hashtags
-6. For LinkedIn, focus on professional insights
-7. For Facebook, aim for engaging, shareable content
-8. For Threads, create concise, discussion-worthy content${platform === 'threads' ? ' and consider using emojis appropriately' : ''}
+2. Maintain the brand voice and ${tone} tone throughout
+3. Include key information that aligns with the brand's mission and USP
+4. Make it conversational and engaging while staying true to brand identity
+5. For Twitter/X, include relevant hashtags that match brand preferences
+6. For LinkedIn, focus on professional insights that reinforce brand positioning
+7. For Facebook, aim for engaging, shareable content that builds brand awareness
+8. For Threads, create concise, discussion-worthy content that reflects brand values
 
 Additional tone guidance for "${tone}":
 ${tone === 'professional' ? '- Use industry-appropriate terminology\n- Maintain business etiquette\n- Focus on value and insights' :
@@ -93,7 +107,8 @@ ${tone === 'professional' ? '- Use industry-appropriate terminology\n- Maintain 
   tone === 'funny' ? '- Include appropriate humor\n- Use wordplay or puns if relevant\n- Keep it light but informative' :
   tone === 'creative' ? '- Use unique perspectives\n- Include metaphors or analogies\n- Be imaginative in presentation' :
   '- Use formal language\n- Maintain strict professionalism\n- Focus on facts and accuracy'}
-In you answer, exclude the following:
+
+In your answer, exclude the following:
 Any explanation of the content, just the post.
 
 Please generate the post now:`;

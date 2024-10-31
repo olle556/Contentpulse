@@ -1,36 +1,70 @@
 import { prisma } from '@/lib/prisma'
-import { generateBrandEmbedding } from './embeddings'
 
-// Define the type for the raw query result
 interface BrandQueryResult {
   id: string
   brandName: string
+  brandType: string
+  industry: string
+  language: string | null
+  website: string | null
   brandVoice: string
   usp: string | null
   missionStatement: string | null
-  distance: number
+  slogans: string | null
+  demographics: string | null
+  psychographics: string | null
+  contentThemes: string | null
+  primaryObjectives: string | null
+  brandStory: string | null
 }
 
-export async function getRelevantBrandContext(prompt: string) {
-  // Generate embedding for the input prompt
-  const promptEmbedding = await generateBrandEmbedding({ brandName: prompt })
-  
-  // Find similar brand contexts using vector similarity
-  const similarBrands = await prisma.$queryRaw<BrandQueryResult[]>`
-    SELECT id, "brandName", "brandVoice", usp, "missionStatement",
-           embedding <-> ${promptEmbedding}::vector as distance
-    FROM "Brand"
-    ORDER BY distance
-    LIMIT 3;
-  `
+export async function getRelevantBrandContext(userId: string) {
+  try {
+    const brands = await prisma.$queryRaw<BrandQueryResult[]>`
+      SELECT 
+        id, 
+        "brandName",
+        "brandType",
+        industry,
+        language,
+        website,
+        "brandVoice",
+        usp,
+        "missionStatement",
+        slogans,
+        demographics,
+        psychographics,
+        "contentThemes",
+        "primaryObjectives",
+        "brandStory"
+      FROM "Brand"
+      WHERE "userId" = ${userId}
+      LIMIT 1;
+    `
 
-  // Format the context for Claude
-  const context = similarBrands.map((brand) => `
-    Brand: ${brand.brandName}
-    Voice: ${brand.brandVoice}
-    USP: ${brand.usp ?? 'N/A'}
-    Mission: ${brand.missionStatement ?? 'N/A'}
-  `).join('\n\n')
+    if (!brands.length) {
+      return null;
+    }
 
-  return context
+    const brand = brands[0];
+    return `
+      Brand: ${brand.brandName}
+      Type: ${brand.brandType}
+      Industry: ${brand.industry}
+      Language: ${brand.language ?? 'N/A'}
+      Website: ${brand.website ?? 'N/A'}
+      Voice: ${brand.brandVoice}
+      USP: ${brand.usp ?? 'N/A'}
+      Mission: ${brand.missionStatement ?? 'N/A'}
+      Slogans: ${brand.slogans ?? 'N/A'}
+      Demographics: ${brand.demographics ?? 'N/A'}
+      Psychographics: ${brand.psychographics ?? 'N/A'}
+      Content Themes: ${brand.contentThemes ?? 'N/A'}
+      Primary Objectives: ${brand.primaryObjectives ?? 'N/A'}
+      Brand Story: ${brand.brandStory ?? 'N/A'}
+    `.trim();
+  } catch (error) {
+    console.error('Error getting brand context:', error);
+    return null;
+  }
 }
