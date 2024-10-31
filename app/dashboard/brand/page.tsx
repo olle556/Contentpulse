@@ -1,6 +1,6 @@
 'use client'
 
-import { useState } from 'react'
+import { useState, useEffect } from 'react'
 import { Card, CardContent } from '@/components/ui/card'
 import { Button } from '@/components/ui/button'
 import {
@@ -23,6 +23,36 @@ import {
 import { zodResolver } from '@hookform/resolvers/zod'
 import { useForm } from 'react-hook-form'
 import * as z from 'zod'
+import { useSession } from "next-auth/react"
+import { prisma } from '@/lib/prisma'
+import { Brand, Prisma } from '@prisma/client'
+import { generateBrandEmbedding } from '@/utils/embeddings'
+import debounce from 'lodash/debounce'
+import { useRouter } from 'next/navigation'
+
+// Define custom interfaces for your brand data
+interface BrandInput {
+  brandName: string
+  brandType: string
+  industry: string
+  language?: string
+  website?: string
+  brandVoice: string
+  usp?: string
+  missionStatement?: string
+  slogans?: string
+  demographics?: string
+  psychographics?: string
+  contentThemes?: string
+  primaryObjectives?: string
+  brandStory?: string
+  userId: string
+}
+
+interface BrandUpdateInput extends Partial<BrandInput> {
+  embedding?: number[]
+  updatedAt?: Date
+}
 
 // Split steps into basic and advanced
 const basicFields = [
@@ -104,35 +134,32 @@ const advancedSteps = [
 ]
 
 const formSchema = z.object({
-  brandName: z.string(),
-  brandType: z.string(),
-  industry: z.string(),
-  locations: z.string(),
-  website: z.string(),
-  missionStatement: z.string(),
-  brandVoice: z.string(),
-  slogans: z.string(),
-  // Target Audience
-  demographics: z.string(),
-  psychographics: z.string(),
-  usp: z.string(),
-  currentPromotions: z.string(),
-  // Content Preferences
-  contentThemes: z.string(),
-  successfulPosts: z.string(),
-  competitorContent: z.string(),
-  // Marketing Goals
-  primaryObjectives: z.string(),
-  callToActions: z.string(),
-  // Additional Context
-  upcomingEvents: z.string(),
-  testimonials: z.string(),
-  brandStory: z.string(),
-  hashtagPreferences: z.string(),
+  brandName: z.string().min(1, "Brand name is required"),
+  brandType: z.string().min(1, "Brand type is required"),
+  industry: z.string().min(1, "Industry is required"),
+  brandVoice: z.string().min(1, "Brand voice is required"),
+  language: z.string().optional(),
+  website: z.string().optional(),
+  usp: z.string().optional(),
+  missionStatement: z.string().optional(),
+  slogans: z.string().optional(),
+  demographics: z.string().optional(),
+  psychographics: z.string().optional(),
+  contentThemes: z.string().optional(),
+  primaryObjectives: z.string().optional(),
+  brandStory: z.string().optional(),
+  successfulPosts: z.string().optional(),
+  competitorContent: z.string().optional(),
+  callToActions: z.string().optional(),
+  upcomingEvents: z.string().optional(),
+  testimonials: z.string().optional(),
+  hashtagPreferences: z.string().optional(),
 })
 
 export default function BrandInformationPage() {
   const [showAdvanced, setShowAdvanced] = useState(false)
+  const { data: session } = useSession()
+  const router = useRouter()
   
   const form = useForm<z.infer<typeof formSchema>>({
     resolver: zodResolver(formSchema),
@@ -140,7 +167,6 @@ export default function BrandInformationPage() {
       brandName: '',
       brandType: '',
       industry: '',
-      locations: '',
       website: '',
       missionStatement: '',
       brandVoice: '',
@@ -149,7 +175,6 @@ export default function BrandInformationPage() {
       demographics: '',
       psychographics: '',
       usp: '',
-      currentPromotions: '',
       // Content Preferences
       contentThemes: '',
       successfulPosts: '',
@@ -165,9 +190,106 @@ export default function BrandInformationPage() {
     },
   })
 
+  // Initialize form with saved data if it exists
+  useEffect(() => {
+    const savedData = localStorage.getItem('brandFormData')
+    if (savedData) {
+      const parsedData = JSON.parse(savedData)
+      form.reset(parsedData)
+    }
+  }, [])
+
+  // Add a save status indicator
+  const [saveStatus, setSaveStatus] = useState<'saved' | 'saving' | 'error'>('saved')
+
+  // Auto-save to localStorage
+  const autoSaveToStorage = debounce((values: z.infer<typeof formSchema>) => {
+    localStorage.setItem('brandFormData', JSON.stringify(values))
+  }, 1000) // Save after 1 second of inactivity
+
+  // Auto-save to DB
+  const autoSaveToDb = debounce(async (values: z.infer<typeof formSchema>) => {
+    try {
+      setSaveStatus('saving')
+      if (!session?.user?.id) return
+
+      const brandId = localStorage.getItem('brandId')
+      
+      const response = await fetch('/api/brand/save', {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json',
+        },
+        body: JSON.stringify({ values, brandId }),
+      })
+
+      if (!response.ok) {
+        throw new Error('Failed to save')
+      }
+
+      const data = await response.json()
+      
+      if (data.id) {
+        localStorage.setItem('brandId', data.id)
+      }
+      
+      setSaveStatus('saved')
+    } catch (error) {
+      setSaveStatus('error')
+      console.error('Failed to auto-save:', error)
+    }
+  }, 2000) // Save to DB after 2 seconds of inactivity
+
+  // Watch form changes
+  useEffect(() => {
+    const subscription = form.watch((values) => {
+      autoSaveToStorage(values as z.infer<typeof formSchema>)
+      autoSaveToDb(values as z.infer<typeof formSchema>)
+    })
+    
+    return () => subscription.unsubscribe()
+  }, [form.watch])
+
+  // Final submit handler
   const onSubmit = async (values: z.infer<typeof formSchema>) => {
-    console.log(values)
-    // Handle form submission
+    try {
+      if (!session?.user?.id) {
+        throw new Error("You must be logged in to create a brand")
+      }
+
+      // Generate embedding
+      const embedding = await generateBrandEmbedding(values)
+      
+      const brandId = localStorage.getItem('brandId')
+      
+      const response = await fetch('/api/brand/save', {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json',
+        },
+        body: JSON.stringify({ 
+          values: {
+            ...values,
+            embedding,
+          },
+          brandId 
+        }),
+      })
+
+      if (!response.ok) {
+        throw new Error('Failed to save brand')
+      }
+      
+      // Clear localStorage
+      localStorage.removeItem('brandFormData')
+      localStorage.removeItem('brandId')
+      
+      // Redirect to brands page
+      router.push('/dashboard/brands')
+      
+    } catch (error) {
+      console.error('Failed to create brand:', error)
+    }
   }
 
   return (
@@ -287,6 +409,11 @@ export default function BrandInformationPage() {
           )}
         </CardContent>
       </Card>
+      <div className="text-sm text-gray-500">
+        {saveStatus === 'saving' && 'Saving...'}
+        {saveStatus === 'saved' && 'All changes saved'}
+        {saveStatus === 'error' && 'Error saving changes'}
+      </div>
     </div>
   )
 }

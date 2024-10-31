@@ -10,7 +10,7 @@ datasource db {
   provider = "postgresql"
   url      = env("POSTGRES_PRISMA_URL")
   directUrl = env("POSTGRES_URL_NON_POOLING")
-  extensions = [pgvector(map: "vector")]
+  extensions = [vector]
 }
 
 model Account {
@@ -56,6 +56,7 @@ model User {
   preferences   Json?
   accounts      Account[]
   sessions      Session[]
+  brands        Brand[]
 }
 
 model VerificationToken {
@@ -98,4 +99,35 @@ model ScrapedContent {
   sourceId    String
 
   @@index([embedding(type: Vector)])
+}
+
+model Brand {
+  id              String    @id @default(cuid())
+  brandName       String
+  brandType       String
+  industry        String
+  language        String?
+  website         String?
+  brandVoice      String
+  usp             String?
+  missionStatement String?
+  slogans         String?
+  demographics    String?
+  psychographics  String?
+  contentThemes   String?
+  primaryObjectives String?
+  brandStory      String?
+  embedding_1     Unsupported("vector(384)")
+  embedding_2     Unsupported("vector(384)")
+  embedding_3     Unsupported("vector(384)")
+  embedding_4     Unsupported("vector(384)")
+  userId          String
+  user            User     @relation(fields: [userId], references: [id])
+  createdAt       DateTime @default(now())
+  updatedAt       DateTime @updatedAt
+
+  @@index([embedding_1(type: Vector)])
+  @@index([embedding_2(type: Vector)])
+  @@index([embedding_3(type: Vector)])
+  @@index([embedding_4(type: Vector)])
 }
