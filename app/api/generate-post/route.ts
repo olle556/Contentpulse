@@ -22,7 +22,7 @@ export async function POST(request: Request) {
       }, { status: 401 });
     }
 
-    const { sourceUrl, platform, tone } = await request.json();
+    const { sourceUrl, platform, tone, useEmojis } = await request.json();
 
     if (!sourceUrl || !platform || !tone) {
       return NextResponse.json({
@@ -100,13 +100,15 @@ Instructions:
 6. For LinkedIn, focus on professional insights that reinforce brand positioning
 7. For Facebook, aim for engaging, shareable content that builds brand awareness
 8. For Threads, create concise, discussion-worthy content that reflects brand values
+${useEmojis ? '9. Include relevant emojis throughout the post to enhance engagement and readability' : '9. Do not use any emojis in the post'}
 
 Additional tone guidance for "${tone}":
 ${tone === 'professional' ? '- Use industry-appropriate terminology\n- Maintain business etiquette\n- Focus on value and insights' :
-  tone === 'casual' ? '- Use conversational language\n- Be friendly and approachable\n- Feel free to use common expressions' :
+  tone === 'casual' ? '- Use conversational language\n- Be friendly and approachable\n- Use common expressions' :
   tone === 'funny' ? '- Include appropriate humor\n- Use wordplay or puns if relevant\n- Keep it light but informative' :
   tone === 'creative' ? '- Use unique perspectives\n- Include metaphors or analogies\n- Be imaginative in presentation' :
   '- Use formal language\n- Maintain strict professionalism\n- Focus on facts and accuracy'}
+${useEmojis ? '\nEmoji usage:\n- Use emojis naturally and strategically\n- Don\'t overuse emojis\n- Ensure emojis complement the message' : ''}
 
 In your answer, exclude the following:
 Any explanation of the content, just the post.

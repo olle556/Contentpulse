@@ -44,6 +44,7 @@ export function GeneratePostDialog({ open, onOpenChange, onSuccess }: GeneratePo
   const [isScraping, setIsScraping] = useState(false);
   const [aiInstructions, setAiInstructions] = useState("");
   const [savedPostId, setSavedPostId] = useState<string | null>(null);
+  const [useEmojis, setUseEmojis] = useState(false);
 
   const TONES = [
     { value: "professional", label: "Professional" },
@@ -225,6 +226,7 @@ export function GeneratePostDialog({ open, onOpenChange, onSuccess }: GeneratePo
           platform: selectedPlatform,
           tone: selectedTone,
           instructions: aiInstructions,
+          useEmojis,
         }),
       });
 
@@ -295,6 +297,15 @@ export function GeneratePostDialog({ open, onOpenChange, onSuccess }: GeneratePo
               value={aiInstructions}
               onChange={(e) => setAiInstructions(e.target.value)}
             />
+          </div>
+
+          <div className="flex items-center space-x-2">
+            <Checkbox
+              id="useEmojis"
+              checked={useEmojis}
+              onCheckedChange={(checked) => setUseEmojis(checked as boolean)}
+            />
+            <Label htmlFor="useEmojis">Include emojis in the post</Label>
           </div>
 
           <div className="grid grid-cols-2 gap-4">
