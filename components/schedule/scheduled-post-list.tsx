@@ -1,5 +1,6 @@
 "use client";
 
+import { useEffect, useState } from "react";
 import { Card, CardContent, CardHeader } from "@/components/ui/card";
 import {
   Table,
@@ -13,31 +14,50 @@ import { Calendar, Clock, Trash2 } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { format } from "date-fns";
 
-// You'll want to move this to your types file
-type ScheduledPost = {
+// Update the type to match your Prisma schema
+type ContentSchedule = {
   id: string;
-  title: string;
-  platform: string;
-  scheduledDate: Date;
-  scheduledTime: string;
+  contentSourceId: string;
+  platforms: string[];
+  date: Date;
+  time: string;
+  tonality: string;
+  isRecurring: boolean;
+  recurringDays: string[];
+  aiInstructions: string;
 };
 
 export function ScheduledPostList() {
-  // This is mock data - replace with your actual data fetching logic
-  const scheduledPosts: ScheduledPost[] = [
-    {
-      id: "1",
-      title: "10 Tips for Better Programming",
-      platform: "Twitter",
-      scheduledDate: new Date("2024-03-25"),
-      scheduledTime: "09:00",
-    },
-    // Add more mock posts as needed
-  ];
+  const [schedules, setSchedules] = useState<ContentSchedule[]>([]);
+  const [isLoading, setIsLoading] = useState(true);
 
-  const handleDelete = (id: string) => {
-    // Implement delete functionality
-    console.log("Delete post:", id);
+  useEffect(() => {
+    fetchSchedules();
+  }, []);
+
+  const fetchSchedules = async () => {
+    try {
+      const response = await fetch('/api/schedule');
+      if (!response.ok) throw new Error('Failed to fetch schedules');
+      const data = await response.json();
+      setSchedules(data);
+    } catch (error) {
+      console.error('Error fetching schedules:', error);
+    } finally {
+      setIsLoading(false);
+    }
+  };
+
+  const handleDelete = async (id: string) => {
+    try {
+      const response = await fetch(`/api/schedule/${id}`, {
+        method: 'DELETE',
+      });
+      if (!response.ok) throw new Error('Failed to delete schedule');
+      setSchedules(schedules.filter(schedule => schedule.id !== id));
+    } catch (error) {
+      console.error('Error deleting schedule:', error);
+    }
   };
 
   return (
@@ -45,40 +65,46 @@ export function ScheduledPostList() {
       <CardHeader>
         <div className="flex items-center space-x-2">
           <Calendar className="h-5 w-5" />
-          <h2 className="text-xl font-semibold">Upcoming Posts</h2>
+          <h2 className="text-xl font-semibold">Scheduled Content</h2>
         </div>
       </CardHeader>
       <CardContent>
-        <Table>
-          <TableHeader>
-            <TableRow>
-              <TableHead>Post Title</TableHead>
-              <TableHead>Platform</TableHead>
-              <TableHead>Date</TableHead>
-              <TableHead>Time</TableHead>
-              <TableHead className="w-[100px]">Actions</TableHead>
-            </TableRow>
-          </TableHeader>
-          <TableBody>
-            {scheduledPosts.map((post) => (
-              <TableRow key={post.id}>
-                <TableCell className="font-medium">{post.title}</TableCell>
-                <TableCell>{post.platform}</TableCell>
-                <TableCell>{format(post.scheduledDate, "MMM dd, yyyy")}</TableCell>
-                <TableCell>{post.scheduledTime}</TableCell>
-                <TableCell>
-                  <Button
-                    variant="ghost"
-                    size="icon"
-                    onClick={() => handleDelete(post.id)}
-                  >
-                    <Trash2 className="h-4 w-4" />
-                  </Button>
-                </TableCell>
+        {isLoading ? (
+          <div>Loading...</div>
+        ) : (
+          <Table>
+            <TableHeader>
+              <TableRow>
+                <TableHead>Platforms</TableHead>
+                <TableHead>Date</TableHead>
+                <TableHead>Time</TableHead>
+                <TableHead>Recurring</TableHead>
+                <TableHead className="w-[100px]">Actions</TableHead>
               </TableRow>
-            ))}
-          </TableBody>
-        </Table>
+            </TableHeader>
+            <TableBody>
+              {schedules.map((schedule) => (
+                <TableRow key={schedule.id}>
+                  <TableCell>{schedule.platforms.join(", ")}</TableCell>
+                  <TableCell>{format(new Date(schedule.date), "MMM dd, yyyy")}</TableCell>
+                  <TableCell>{schedule.time}</TableCell>
+                  <TableCell>{schedule.isRecurring ? "Yes" : "No"}</TableCell>
+                  <TableCell>
+                    <div className="flex space-x-2">
+                      <Button
+                        variant="ghost"
+                        size="icon"
+                        onClick={() => handleDelete(schedule.id)}
+                      >
+                        <Trash2 className="h-4 w-4" />
+                      </Button>
+                    </div>
+                  </TableCell>
+                </TableRow>
+              ))}
+            </TableBody>
+          </Table>
+        )}
       </CardContent>
     </Card>
   );

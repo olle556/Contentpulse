@@ -42,3 +42,31 @@ export async function POST(req: Request) {
     return new NextResponse("Internal error", { status: 500 })
   }
 }
+
+export async function GET() {
+  try {
+    const session = await getServerSession(authOptions);
+    
+    if (!session?.user?.email) {
+      return new NextResponse("Unauthorized", { status: 401 });
+    }
+
+    const user = await prisma.user.findUnique({
+      where: { email: session.user.email },
+    });
+
+    if (!user) {
+      return new NextResponse("User not found", { status: 404 });
+    }
+
+    const schedules = await prisma.contentSchedule.findMany({
+      where: { userId: user.id },
+      orderBy: { date: 'asc' },
+    });
+
+    return NextResponse.json(schedules);
+  } catch (error) {
+    console.error('Error fetching schedules:', error);
+    return new NextResponse("Internal error", { status: 500 });
+  }
+}
