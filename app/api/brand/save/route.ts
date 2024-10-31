@@ -9,23 +9,48 @@ const openai = new OpenAI({
 })
 
 async function generateEmbedding(brandData: any) {
-  const brandText = `
-    Brand: ${brandData.brandName}
-    Type: ${brandData.brandType}
-    Industry: ${brandData.industry}
-    Voice: ${brandData.brandVoice}
-    USP: ${brandData.usp}
-    Mission: ${brandData.missionStatement}
-    Target Audience: ${brandData.demographics} ${brandData.psychographics}
-    Story: ${brandData.brandStory}
-  `.trim()
+  try {
+    const brandText = `
+      Brand: ${brandData.brandName}
+      Type: ${brandData.brandType}
+      Industry: ${brandData.industry}
+      Voice: ${brandData.brandVoice}
+      Language: ${brandData.language}
+      Website: ${brandData.website}
+      Description: ${brandData.description}
+      Mission: ${brandData.missionStatement}
+      Slogans: ${brandData.slogans}
+      Demographics: ${brandData.demographics}
+      Psychographics: ${brandData.psychographics}
+      Content Themes: ${brandData.contentThemes}
+      Primary Objectives: ${brandData.primaryObjectives}
+      Call to Actions: ${brandData.callToActions}
+      Upcoming Events: ${brandData.upcomingEvents}
+      Testimonials: ${brandData.testimonials}
+      Brand Story: ${brandData.brandStory}
+      Hashtag Preferences: ${brandData.hashtagPreferences}
+      Successful Posts: ${brandData.successfulPosts}
+      Competitor Content: ${brandData.competitorContent}
+      Current Promotions: ${brandData.currentPromotions}
+    `.trim()
 
-  const embedding = await openai.embeddings.create({
-    model: "text-embedding-ada-002",
-    input: brandText,
-  })
+    console.log('Generated brand text:', brandText);
+    console.log('Calling OpenAI API...');
+    
+    const embedding = await openai.embeddings.create({
+      model: "text-embedding-ada-002",
+      input: brandText,
+    })
 
-  return embedding.data[0].embedding
+    console.log('OpenAI API response received');
+    console.log('Embedding length:', embedding.data[0].embedding.length);
+    console.log('First few values:', embedding.data[0].embedding.slice(0, 5));
+
+    return embedding.data[0].embedding
+  } catch (error) {
+    console.error('Error in generateEmbedding:', error);
+    throw error;
+  }
 }
 
 export async function POST(req: Request) {
@@ -45,15 +70,25 @@ export async function POST(req: Request) {
     }
 
     try {
-      // Generate embedding directly
-      console.log('Generating embeddings...');
+      console.log('Starting embedding generation...');
+      console.log('OpenAI API Key exists:', !!process.env.OPENAI_API_KEY);
+      
       const embedding = await generateEmbedding(values);
       
-      // Split the embedding into chunks
+      console.log('Embedding generated successfully');
+      console.log('Splitting embeddings into chunks...');
+      
       const embedding_1 = embedding.slice(0, 384);
       const embedding_2 = embedding.slice(384, 768);
       const embedding_3 = embedding.slice(768, 1152);
       const embedding_4 = embedding.slice(1152, 1536);
+
+      console.log('Chunks created. Lengths:', {
+        chunk1: embedding_1.length,
+        chunk2: embedding_2.length,
+        chunk3: embedding_3.length,
+        chunk4: embedding_4.length
+      });
 
       if (brandId) {
         // Update existing brand with new embeddings
