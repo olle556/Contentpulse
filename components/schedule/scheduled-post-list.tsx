@@ -14,20 +14,36 @@ import { Calendar, Clock, Trash2, Pencil } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { format } from "date-fns";
 import { ContentScheduler } from "./content-scheduler";
-import { ContentSchedule } from "@/types";
+//import { ContentSchedule } from "@/types";
 
 // Update the type to match your Prisma schema
-// type ContentSchedule = {
-//   id: string;
-//   contentSourceId: string;
-//   platforms: string[];
-//   date: Date;
-//   time: string;
-//   tonality: string;
-//   isRecurring: boolean;
-//   recurringDays: string[];
-//   aiInstructions: string;
-// };
+//  type ContentSchedule = {
+//    id: string;
+//    contentSourceId: string;
+//    platforms: string[];
+//    date: Date;
+//    time: string;
+//    tonality: string;
+//    isRecurring: boolean;
+//    recurringDays: string[];
+//    aiInstructions: string;
+//  };
+
+type ContentSchedule = {
+  id: string;
+  userId: string;
+  contentSourceId: string;
+  platforms: string[];
+  date: Date;
+  time: string;
+  tonality: string;
+  isRecurring: boolean;
+  recurringDays: string[];
+  aiInstructions: string;
+  startDate?: Date | null;
+  createdAt: Date;
+  updatedAt: Date;
+};
 
 export function ScheduledPostList() {
   const [schedules, setSchedules] = useState<ContentSchedule[]>([]);
