@@ -346,9 +346,9 @@ export function GeneratePostDialog({ open, onOpenChange, onSuccess }: GeneratePo
           )}
 
           {generatedContent && !isEditing ? (
-            // View mode - update to use plain text
+            // View mode - update to add max-height and scrolling
             <div className="space-y-4">
-              <div className="prose max-w-none whitespace-pre-wrap">
+              <div className="prose max-w-none whitespace-pre-wrap max-h-[400px] overflow-y-auto border rounded-md p-4">
                 {generatedContent}
               </div>
               <div className="flex justify-end space-x-2">
@@ -365,9 +365,11 @@ export function GeneratePostDialog({ open, onOpenChange, onSuccess }: GeneratePo
               </div>
             </div>
           ) : isEditing ? (
-            // Edit mode with TipTap
+            // Edit mode - update TipTap container styles
             <div className="space-y-4">
-              <EditorContent editor={editor} />
+              <div className="max-h-[400px] overflow-y-auto">
+                <EditorContent editor={editor} />
+              </div>
               <div className="flex justify-end space-x-2">
                 {isSaving && (
                   <span className="text-sm text-muted-foreground">
