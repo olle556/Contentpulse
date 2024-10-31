@@ -57,6 +57,7 @@ model User {
   accounts      Account[]
   sessions      Session[]
   brands        Brand[]
+  contentSchedules ContentSchedule[]
 }
 
 model VerificationToken {
@@ -130,4 +131,21 @@ model Brand {
   @@index([embedding_2(type: Vector)])
   @@index([embedding_3(type: Vector)])
   @@index([embedding_4(type: Vector)])
+}
+
+model ContentSchedule {
+  id              String    @id @default(cuid())
+  userId          String
+  user            User      @relation(fields: [userId], references: [id])
+  contentSourceId String
+  tonality        String
+  platforms       String[]
+  isRecurring     Boolean   @default(false)
+  recurringDays   String[]
+  startDate       DateTime?
+  date            DateTime?
+  time            String
+  aiInstructions  String?
+  createdAt       DateTime  @default(now())
+  updatedAt       DateTime  @updatedAt
 }

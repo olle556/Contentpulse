@@ -38,6 +38,7 @@ import {
 } from "@/components/ui/select"
 import { Switch } from "@/components/ui/switch"
 import { cn } from "@/lib/utils"
+import { useSession } from "next-auth/react"
 
 const formSchema = z.object({
   contentSourceId: z.string(),
@@ -48,6 +49,7 @@ const formSchema = z.object({
   startDate: z.date().optional(),
   date: z.date().optional(),
   time: z.string(),
+  aiInstructions: z.string().optional(),
 })
 
 type ContentSchedulerProps = {
@@ -56,11 +58,19 @@ type ContentSchedulerProps = {
   contentSources: Array<{ id: string; url: string; category: string }>
 }
 
-const tonalities = ["Warm", "Excited", "Professional", "Casual", "Formal"]
-const platforms = ["X", "LinkedIn", "Threads"]
+const tonalities = [
+  "Professional",
+  "Casual",
+  "Funny",
+  "Creative",
+  "Formal"
+]
+const platforms = ["X", "LinkedIn", "Threads", "Facebook"]
+
 const daysOfWeek = ["Mon", "Tue", "Wed", "Thu", "Fri", "Sat", "Sun"]
 
 export function ContentScheduler({ open, onOpenChange, contentSources }: ContentSchedulerProps) {
+  const { data: session } = useSession()
   const [isRecurring, setIsRecurring] = useState(false)
 
   const form = useForm<z.infer<typeof formSchema>>({
@@ -72,6 +82,7 @@ export function ContentScheduler({ open, onOpenChange, contentSources }: Content
       isRecurring: false,
       recurringDays: [],
       time: "",
+      aiInstructions: "",
     },
   })
 
@@ -84,8 +95,24 @@ export function ContentScheduler({ open, onOpenChange, contentSources }: Content
   }, [isRecurring, form])
 
   const onSubmit = async (values: z.infer<typeof formSchema>) => {
-    console.log(values)
-    onOpenChange(false)
+    try {
+      const response = await fetch('/api/schedule', {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json',
+        },
+        body: JSON.stringify(values),
+      })
+
+      if (!response.ok) {
+        throw new Error('Failed to schedule content')
+      }
+
+      onOpenChange(false)
+    } catch (error) {
+      console.error('Error scheduling content:', error)
+      // Add error handling UI feedback here
+    }
   }
 
   return (
@@ -316,6 +343,23 @@ export function ContentScheduler({ open, onOpenChange, contentSources }: Content
                       />
                       <Clock className="ml-2 h-4 w-4 opacity-50" />
                     </div>
+                  </FormControl>
+                </FormItem>
+              )}
+            />
+
+            <FormField
+              control={form.control}
+              name="aiInstructions"
+              render={({ field }) => (
+                <FormItem>
+                  <FormLabel>AI Instructions (Optional)</FormLabel>
+                  <FormControl>
+                    <textarea
+                      {...field}
+                      className="min-h-[80px] w-full rounded-md border border-input bg-background px-3 py-2 text-sm"
+                      placeholder="Add specific instructions for how the AI should generate posts..."
+                    />
                   </FormControl>
                 </FormItem>
               )}
