@@ -3,7 +3,6 @@
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { UserSettings } from "@/components/settings/user-settings";
-import { ApiSettings } from "@/components/settings/api-settings";
 import { NotificationSettings } from "@/components/settings/notification-settings";
 import { IntegrationSettings } from "@/components/settings/integration-settings";
 
@@ -17,7 +16,6 @@ export default function SettingsPage() {
           <TabsTrigger value="profile">Profile</TabsTrigger>
           <TabsTrigger value="notifications">Notifications</TabsTrigger>
           <TabsTrigger value="integrations">Integrations</TabsTrigger>
-          <TabsTrigger value="api">API</TabsTrigger>
         </TabsList>
 
         <TabsContent value="profile" className="space-y-6">
@@ -49,17 +47,6 @@ export default function SettingsPage() {
             </CardHeader>
             <CardContent>
               <IntegrationSettings />
-            </CardContent>
-          </Card>
-        </TabsContent>
-
-        <TabsContent value="api" className="space-y-6">
-          <Card>
-            <CardHeader>
-              <CardTitle>API Configuration</CardTitle>
-            </CardHeader>
-            <CardContent>
-              <ApiSettings />
             </CardContent>
           </Card>
         </TabsContent>

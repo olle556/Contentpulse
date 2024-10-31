@@ -77,8 +77,8 @@ export function PostList() {
     <>
       <div className="grid gap-6 md:grid-cols-2 lg:grid-cols-3">
         {posts.map((post) => (
-          <Card key={post.id}>
-            <CardHeader className="flex flex-row items-center justify-between space-y-0">
+          <Card key={post.id} className="flex flex-col h-[400px]">
+            <CardHeader className="flex flex-row items-center justify-between space-y-0 flex-shrink-0">
               <div className="space-y-1">
                 <Badge variant={getStatusVariant(post.status)}>
                   {post.status.charAt(0).toUpperCase() + post.status.slice(1)}
@@ -104,15 +104,20 @@ export function PostList() {
                 </Button>
               </div>
             </CardHeader>
-            <CardContent>
+            <CardContent className="overflow-y-auto flex-grow">
               <div 
                 className="prose prose-sm dark:prose-invert"
                 dangerouslySetInnerHTML={{ __html: post.content }}
               />
-              <div className="mt-2">
+            </CardContent>
+            <div className="p-4 border-t flex items-center justify-between flex-shrink-0">
+              <div className="flex gap-2">
                 <Badge variant="outline">{post.platform}</Badge>
               </div>
-            </CardContent>
+              <Button size="sm" variant="default">
+                Post
+              </Button>
+            </div>
           </Card>
         ))}
       </div>

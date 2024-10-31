@@ -10,7 +10,7 @@ import {
 } from "@/components/ui/card";
 import { Switch } from "@/components/ui/switch";
 import { useState } from "react";
-import { Twitter, Instagram, Linkedin, Youtube } from "lucide-react";
+import { X, Linkedin, Instagram } from "lucide-react";
 
 interface Platform {
   id: string;
@@ -24,12 +24,12 @@ export function IntegrationSettings() {
     {
       id: "twitter",
       name: "Twitter",
-      icon: <Twitter className="h-6 w-6" />,
+      icon: <X className="h-6 w-6" />,
       connected: false,
     },
     {
-      id: "instagram",
-      name: "Instagram",
+      id: "threads",
+      name: "Threads",
       icon: <Instagram className="h-6 w-6" />,
       connected: true,
     },
@@ -39,12 +39,7 @@ export function IntegrationSettings() {
       icon: <Linkedin className="h-6 w-6" />,
       connected: false,
     },
-    {
-      id: "youtube",
-      name: "YouTube",
-      icon: <Youtube className="h-6 w-6" />,
-      connected: false,
-    },
+  
   ]);
 
   const toggleConnection = (platformId: string) => {
