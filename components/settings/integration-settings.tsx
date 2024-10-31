@@ -9,7 +9,7 @@ import {
   CardTitle,
 } from "@/components/ui/card";
 import { Switch } from "@/components/ui/switch";
-import { useState } from "react";
+import { useState, useCallback } from "react";
 import { X, Linkedin, Instagram } from "lucide-react";
 
 interface Platform {
@@ -42,7 +42,34 @@ export function IntegrationSettings() {
   
   ]);
 
+  const initiateThreadsAuth = useCallback(() => {
+    const FACEBOOK_APP_ID = "3745203395697482";
+    const APP_URL = "http://localhost:3000";
+    const REDIRECT_URI = `${APP_URL}/api/auth/threads/callback`;
+
+    console.log('InitiateThreadsAuth called with ID:', FACEBOOK_APP_ID);
+    console.log('Redirect URI:', REDIRECT_URI);
+
+    const authUrl = `https://www.facebook.com/v18.0/dialog/oauth?`
+      + `client_id=${FACEBOOK_APP_ID}`
+      + `&redirect_uri=${encodeURIComponent(REDIRECT_URI)}`
+      + `&scope=threads_basic,threads_content_publish`
+      + `&response_type=code`;
+    
+    console.log('Auth URL:', authUrl);
+    
+    window.location.href = authUrl;
+  }, []);
+
   const toggleConnection = (platformId: string) => {
+    console.log('Toggle connection called for:', platformId);
+
+    if (platformId === 'threads' && !platforms.find(p => p.id === 'threads')?.connected) {
+      console.log('Initiating Threads auth...');
+      initiateThreadsAuth();
+      return;
+    }
+
     setPlatforms(platforms.map(platform => 
       platform.id === platformId 
         ? { ...platform, connected: !platform.connected }
@@ -61,7 +88,10 @@ export function IntegrationSettings() {
             </div>
             <Switch
               checked={platform.connected}
-              onCheckedChange={() => toggleConnection(platform.id)}
+              onCheckedChange={() => {
+                console.log('Switch clicked for:', platform.id);
+                toggleConnection(platform.id);
+              }}
             />
           </CardHeader>
           <CardContent>
@@ -73,7 +103,10 @@ export function IntegrationSettings() {
             <div className="mt-4">
               <Button
                 variant={platform.connected ? "destructive" : "secondary"}
-                onClick={() => toggleConnection(platform.id)}
+                onClick={() => {
+                  console.log('Button clicked for:', platform.id);
+                  toggleConnection(platform.id);
+                }}
               >
                 {platform.connected ? "Disconnect" : "Connect"}
               </Button>
