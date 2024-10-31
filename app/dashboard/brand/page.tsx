@@ -72,7 +72,7 @@ const basicFields = [
     type: 'select',
     options: ['Professional', 'Casual', 'Friendly', 'Playful', 'Luxurious', 'Motivational','Caring', 'Other']
   },
-  { name: 'usp', label: 'Unique Selling Proposition', type: 'textarea' },
+  { name: 'description', label: 'Description', type: 'textarea' },
 ]
 
 const advancedSteps = [
@@ -81,7 +81,7 @@ const advancedSteps = [
     name: 'Brand Fundamentals',
     fields: [
       { name: 'missionStatement', label: 'Mission Statement', type: 'textarea' },
-      { name: 'slogans', label: 'Existing Slogan(s)', type: 'textarea' },
+      { name: 'slogans', label: 'Existing Slogans', type: 'textarea' },
     ]
   },
   {
@@ -134,26 +134,31 @@ const advancedSteps = [
 ]
 
 const formSchema = z.object({
-  brandName: z.string().min(1, "Brand name is required"),
-  brandType: z.string().min(1, "Brand type is required"),
-  industry: z.string().min(1, "Industry is required"),
-  brandVoice: z.string().min(1, "Brand voice is required"),
-  language: z.string().optional(),
-  website: z.string().optional(),
-  usp: z.string().optional(),
-  missionStatement: z.string().optional(),
-  slogans: z.string().optional(),
-  demographics: z.string().optional(),
-  psychographics: z.string().optional(),
-  contentThemes: z.string().optional(),
-  primaryObjectives: z.string().optional(),
-  brandStory: z.string().optional(),
-  successfulPosts: z.string().optional(),
-  competitorContent: z.string().optional(),
-  callToActions: z.string().optional(),
-  upcomingEvents: z.string().optional(),
-  testimonials: z.string().optional(),
-  hashtagPreferences: z.string().optional(),
+  brandName: z.string(),
+  brandType: z.string(),
+  industry: z.string(),
+  language: z.string(),
+  website: z.string(),
+  missionStatement: z.string(),
+  brandVoice: z.string(),
+  slogans: z.string(),
+  // Target Audience
+  demographics: z.string(),
+  psychographics: z.string(),
+  description: z.string(),
+  currentPromotions: z.string(),
+  // Content Preferences
+  contentThemes: z.string(),
+  successfulPosts: z.string(),
+  competitorContent: z.string(),
+  // Marketing Goals
+  primaryObjectives: z.string(),
+  callToActions: z.string(),
+  // Additional Context
+  upcomingEvents: z.string(),
+  testimonials: z.string(),
+  brandStory: z.string(),
+  hashtagPreferences: z.string(),
 })
 
 export default function BrandInformationPage() {
@@ -167,6 +172,7 @@ export default function BrandInformationPage() {
       brandName: '',
       brandType: '',
       industry: '',
+      language: '',
       website: '',
       missionStatement: '',
       brandVoice: '',
@@ -174,7 +180,8 @@ export default function BrandInformationPage() {
       // Target Audience
       demographics: '',
       psychographics: '',
-      usp: '',
+      description: '',
+      currentPromotions: '',
       // Content Preferences
       contentThemes: '',
       successfulPosts: '',
