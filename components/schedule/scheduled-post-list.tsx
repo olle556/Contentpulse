@@ -47,11 +47,14 @@ type ContentSchedule = {
 
 export function ScheduledPostList() {
   const [schedules, setSchedules] = useState<ContentSchedule[]>([]);
+  const [contentSources, setContentSources] = useState([]);
   const [isLoading, setIsLoading] = useState(true);
   const [scheduleToEdit, setScheduleToEdit] = useState<ContentSchedule | null>(null);
+  const [isCreating, setIsCreating] = useState(false);
 
   useEffect(() => {
     fetchSchedules();
+    fetchContentSources();
   }, []);
 
   const fetchSchedules = async () => {
@@ -64,6 +67,18 @@ export function ScheduledPostList() {
       console.error('Error fetching schedules:', error);
     } finally {
       setIsLoading(false);
+    }
+  };
+
+  const fetchContentSources = async () => {
+    try {
+      const response = await fetch('/api/sources');
+      const data = await response.json();
+      if (data.success) {
+        setContentSources(data.sources);
+      }
+    } catch (error) {
+      console.error('Error fetching content sources:', error);
     }
   };
 
@@ -90,9 +105,14 @@ export function ScheduledPostList() {
   return (
     <Card>
       <CardHeader>
-        <div className="flex items-center space-x-2">
-          <Calendar className="h-5 w-5" />
-          <h2 className="text-xl font-semibold">Scheduled Content</h2>
+        <div className="flex items-center justify-between">
+          <div className="flex items-center space-x-2">
+            <Calendar className="h-5 w-5" />
+            <h2 className="text-xl font-semibold">Scheduled Content</h2>
+          </div>
+          <Button onClick={() => setIsCreating(true)}>
+            Create Schedule
+          </Button>
         </div>
       </CardHeader>
       <CardContent>
@@ -144,11 +164,17 @@ export function ScheduledPostList() {
           </Table>
         )}
       </CardContent>
+      <ContentScheduler
+        open={isCreating}
+        onOpenChange={(open) => setIsCreating(open)}
+        contentSources={contentSources}
+        onScheduleUpdate={handleScheduleUpdate}
+      />
       {scheduleToEdit && (
         <ContentScheduler
           open={!!scheduleToEdit}
           onOpenChange={(open) => !open && setScheduleToEdit(null)}
-          contentSources={[]}
+          contentSources={contentSources}
           editSchedule={scheduleToEdit}
           onScheduleUpdate={handleScheduleUpdate}
         />

@@ -149,7 +149,7 @@ export function ContentScheduler({ open, onOpenChange, contentSources, editSched
               render={({ field }) => (
                 <FormItem>
                   <FormLabel>Content Source</FormLabel>
-                  <Select onValueChange={field.onChange} value={field.value}>
+                  <Select onValueChange={field.onChange} defaultValue={field.value}>
                     <FormControl>
                       <SelectTrigger>
                         <SelectValue placeholder="Select a content source" />
