@@ -39,6 +39,7 @@ import {
 import { Switch } from "@/components/ui/switch"
 import { cn } from "@/lib/utils"
 import { useSession } from "next-auth/react"
+import { ContentSchedule } from "@/types";
 
 const formSchema = z.object({
   contentSourceId: z.string(),
@@ -56,6 +57,7 @@ type ContentSchedulerProps = {
   open: boolean
   onOpenChange: (open: boolean) => void
   contentSources: Array<{ id: string; url: string; category: string }>
+  editSchedule?: ContentSchedule | null
 }
 
 const tonalities = [
@@ -69,7 +71,7 @@ const platforms = ["X", "LinkedIn", "Threads", "Facebook"]
 
 const daysOfWeek = ["Mon", "Tue", "Wed", "Thu", "Fri", "Sat", "Sun"]
 
-export function ContentScheduler({ open, onOpenChange, contentSources }: ContentSchedulerProps) {
+export function ContentScheduler({ open, onOpenChange, contentSources, editSchedule }: ContentSchedulerProps) {
   const { data: session } = useSession()
   const [isRecurring, setIsRecurring] = useState(false)
 
@@ -87,39 +89,55 @@ export function ContentScheduler({ open, onOpenChange, contentSources }: Content
   })
 
   useEffect(() => {
-    if (isRecurring) {
-      form.setValue('date', undefined)
-    } else {
-      form.setValue('startDate', undefined)
+    if (editSchedule) {
+      setIsRecurring(editSchedule.isRecurring);
+      form.reset({
+        contentSourceId: editSchedule.contentSourceId,
+        tonality: editSchedule.tonality,
+        platforms: editSchedule.platforms,
+        isRecurring: editSchedule.isRecurring,
+        recurringDays: editSchedule.recurringDays,
+        startDate: editSchedule.startDate ? new Date(editSchedule.startDate) : undefined,
+        date: editSchedule.date ? new Date(editSchedule.date) : undefined,
+        time: editSchedule.time,
+        aiInstructions: editSchedule.aiInstructions || "",
+      });
     }
-  }, [isRecurring, form])
+  }, [editSchedule, form]);
 
   const onSubmit = async (values: z.infer<typeof formSchema>) => {
     try {
-      const response = await fetch('/api/schedule', {
-        method: 'POST',
+      const url = editSchedule 
+        ? `/api/schedule/${editSchedule.id}`
+        : '/api/schedule';
+      
+      const method = editSchedule ? 'PUT' : 'POST';
+
+      const response = await fetch(url, {
+        method,
         headers: {
           'Content-Type': 'application/json',
         },
         body: JSON.stringify(values),
-      })
+      });
 
       if (!response.ok) {
-        throw new Error('Failed to schedule content')
+        throw new Error('Failed to schedule content');
       }
 
-      onOpenChange(false)
+      onOpenChange(false);
     } catch (error) {
-      console.error('Error scheduling content:', error)
-      // Add error handling UI feedback here
+      console.error('Error scheduling content:', error);
     }
-  }
+  };
 
   return (
     <Dialog open={open} onOpenChange={onOpenChange}>
       <DialogContent className="sm:max-w-[550px]">
         <DialogHeader>
-          <DialogTitle>Schedule Content Generation</DialogTitle>
+          <DialogTitle>
+            {editSchedule ? 'Edit Schedule' : 'Schedule Content Generation'}
+          </DialogTitle>
         </DialogHeader>
         <Form {...form}>
           <form onSubmit={form.handleSubmit(onSubmit)} className="space-y-6">

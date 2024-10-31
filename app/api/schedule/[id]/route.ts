@@ -24,3 +24,40 @@ export async function DELETE(
     return new NextResponse("Internal error", { status: 500 });
   }
 }
+
+// EDIT schedule fucntionality
+
+export async function PUT(
+  req: Request,
+  { params }: { params: { id: string } }
+) {
+  try {
+    const session = await getServerSession(authOptions);
+    
+    if (!session?.user?.email) {
+      return new NextResponse("Unauthorized", { status: 401 });
+    }
+
+    const body = await req.json();
+
+    const schedule = await prisma.contentSchedule.update({
+      where: { id: params.id },
+      data: {
+        contentSourceId: body.contentSourceId,
+        tonality: body.tonality,
+        platforms: body.platforms,
+        isRecurring: body.isRecurring,
+        recurringDays: body.recurringDays,
+        startDate: body.startDate,
+        date: body.date,
+        time: body.time,
+        aiInstructions: body.aiInstructions,
+      },
+    });
+
+    return NextResponse.json(schedule);
+  } catch (error) {
+    console.error('Error updating schedule:', error);
+    return new NextResponse("Internal error", { status: 500 });
+  }
+}

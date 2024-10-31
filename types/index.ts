@@ -70,3 +70,20 @@ export interface PostHistory {
   status: string;
   platformPostId: string;
 }
+
+// Create a new file if it doesn't exist: types/index.ts
+export type ContentSchedule = {
+  id: string;
+  userId: string;
+  contentSourceId: string;
+  tonality: string;
+  platforms: string[];
+  isRecurring: boolean;
+  recurringDays: string[];
+  startDate?: Date | null;
+  date?: Date | null;
+  time: string;
+  aiInstructions?: string | null;
+  createdAt: Date;
+  updatedAt: Date;
+}

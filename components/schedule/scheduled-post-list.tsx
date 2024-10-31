@@ -10,26 +10,29 @@ import {
   TableHeader,
   TableRow,
 } from "@/components/ui/table";
-import { Calendar, Clock, Trash2 } from "lucide-react";
+import { Calendar, Clock, Trash2, Pencil } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { format } from "date-fns";
+import { ContentScheduler } from "./content-scheduler";
+import { ContentSchedule } from "@/types";
 
 // Update the type to match your Prisma schema
-type ContentSchedule = {
-  id: string;
-  contentSourceId: string;
-  platforms: string[];
-  date: Date;
-  time: string;
-  tonality: string;
-  isRecurring: boolean;
-  recurringDays: string[];
-  aiInstructions: string;
-};
+// type ContentSchedule = {
+//   id: string;
+//   contentSourceId: string;
+//   platforms: string[];
+//   date: Date;
+//   time: string;
+//   tonality: string;
+//   isRecurring: boolean;
+//   recurringDays: string[];
+//   aiInstructions: string;
+// };
 
 export function ScheduledPostList() {
   const [schedules, setSchedules] = useState<ContentSchedule[]>([]);
   const [isLoading, setIsLoading] = useState(true);
+  const [scheduleToEdit, setScheduleToEdit] = useState<ContentSchedule | null>(null);
 
   useEffect(() => {
     fetchSchedules();
@@ -60,6 +63,10 @@ export function ScheduledPostList() {
     }
   };
 
+  const handleEdit = (schedule: ContentSchedule) => {
+    setScheduleToEdit(schedule);
+  };
+
   return (
     <Card>
       <CardHeader>
@@ -75,6 +82,7 @@ export function ScheduledPostList() {
           <Table>
             <TableHeader>
               <TableRow>
+                <TableHead>Content Source</TableHead>
                 <TableHead>Platforms</TableHead>
                 <TableHead>Date</TableHead>
                 <TableHead>Time</TableHead>
@@ -85,12 +93,22 @@ export function ScheduledPostList() {
             <TableBody>
               {schedules.map((schedule) => (
                 <TableRow key={schedule.id}>
+                  <TableCell>{schedule.contentSourceId}</TableCell>
                   <TableCell>{schedule.platforms.join(", ")}</TableCell>
-                  <TableCell>{format(new Date(schedule.date), "MMM dd, yyyy")}</TableCell>
+                  <TableCell>
+                    {schedule.date ? format(new Date(schedule.date), "MMM dd, yyyy") : "N/A"}
+                  </TableCell>
                   <TableCell>{schedule.time}</TableCell>
                   <TableCell>{schedule.isRecurring ? "Yes" : "No"}</TableCell>
                   <TableCell>
                     <div className="flex space-x-2">
+                      <Button
+                        variant="ghost"
+                        size="icon"
+                        onClick={() => handleEdit(schedule)}
+                      >
+                        <Pencil className="h-4 w-4" />
+                      </Button>
                       <Button
                         variant="ghost"
                         size="icon"
@@ -106,6 +124,14 @@ export function ScheduledPostList() {
           </Table>
         )}
       </CardContent>
+      {scheduleToEdit && (
+        <ContentScheduler
+          open={!!scheduleToEdit}
+          onOpenChange={(open) => !open && setScheduleToEdit(null)}
+          contentSources={[]} // You'll need to pass content sources here
+          editSchedule={scheduleToEdit}
+        />
+      )}
     </Card>
   );
 }
