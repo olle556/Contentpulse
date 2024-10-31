@@ -1,37 +1,59 @@
 "use client";
 
-import { useState } from "react";
+import { useState, useEffect } from "react";
 import { Button } from "@/components/ui/button";
 import { Calendar } from "lucide-react";
 import { SchedulePostDialog } from "@/components/schedule/schedule-post-dialog";
 import { ScheduledPostList } from "@/components/schedule/scheduled-post-list";
 import { ContentScheduler } from "@/components/schedule/content-scheduler";
 
-// Add mock data or fetch from your API
-const contentSources = [
-  { id: "1", url: "https://example.com/blog1", category: "Blog" },
-  { id: "2", url: "https://example.com/blog2", category: "Newsletter" },
-];
-
 export default function SchedulePage() {
   const [isScheduleOpen, setIsScheduleOpen] = useState(false);
+  const [contentSources, setContentSources] = useState([]);
+  const [loading, setLoading] = useState(true);
+
+  useEffect(() => {
+    const fetchContentSources = async () => {
+      try {
+        const response = await fetch('/api/sources');
+        const data = await response.json();
+        
+        if (data.success) {
+          setContentSources(data.sources);
+        } else {
+          console.error('Failed to fetch sources:', data.error);
+        }
+      } catch (error) {
+        console.error('Failed to fetch sources:', error);
+      } finally {
+        setLoading(false);
+      }
+    };
+
+    fetchContentSources();
+  }, []);
 
   return (
     <div className="space-y-6">
       <div className="flex justify-between items-center">
-        <h1 className="text-3xl font-bold">Scheduled Posts</h1>
-        <Button onClick={() => setIsScheduleOpen(true)}>
+        <h1 className="text-3xl font-bold">Scheduled Post Generations</h1>
+        <Button 
+          onClick={() => setIsScheduleOpen(true)}
+          disabled={contentSources.length === 0}
+        >
           <Calendar className="h-4 w-4 mr-2" />
-          Schedule Post
+          Schedule Generation
         </Button>
       </div>
 
       <ScheduledPostList />
-      <ContentScheduler 
-        open={isScheduleOpen} 
-        onOpenChange={setIsScheduleOpen}
-        contentSources={contentSources}
-      />
+      {!loading && (
+        <ContentScheduler 
+          open={isScheduleOpen} 
+          onOpenChange={setIsScheduleOpen}
+          contentSources={contentSources}
+        />
+      )}
     </div>
   );
 }
