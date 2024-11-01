@@ -86,4 +86,5 @@ export type ContentSchedule = {
   aiInstructions?: string | null;
   createdAt: Date;
   updatedAt: Date;
+  useEmojis?: boolean;
 }
