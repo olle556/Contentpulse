@@ -392,10 +392,7 @@ export function ContentScheduler({ open, onOpenChange, contentSources, editSched
                     />
                   </FormControl>
                   <div className="space-y-1 leading-none">
-                    <FormLabel>Include emojis</FormLabel>
-                    <FormDescription>
-                      Add relevant emojis to generated posts
-                    </FormDescription>
+                    <FormLabel>Include emojis in the generated posts</FormLabel>
                   </div>
                 </FormItem>
               )}

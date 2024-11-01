@@ -29,6 +29,7 @@ type ContentSchedule = {
   startDate?: Date | null;
   createdAt: Date;
   updatedAt: Date;
+  useEmojis: boolean; 
 };
 
 // Add this type to help with the content source mapping
@@ -131,6 +132,7 @@ export function ScheduledPostList() {
                 <TableHead>Time</TableHead>
                 <TableHead>Recurring</TableHead>
                 <TableHead>AI Instructions</TableHead>
+                <TableHead>Emojis</TableHead>
                 <TableHead className="w-[100px]">Actions</TableHead>
               </TableRow>
             </TableHeader>
@@ -150,6 +152,7 @@ export function ScheduledPostList() {
                       : "No"}
                   </TableCell>
                   <TableCell>{schedule.aiInstructions ? "Yes" : "No"}</TableCell>
+                  <TableCell>{schedule.useEmojis ? "Yes" : "No"}</TableCell>
                   <TableCell>
                     <div className="flex space-x-2">
                       <Button
