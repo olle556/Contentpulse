@@ -105,14 +105,9 @@ export function ScheduledPostList() {
   return (
     <Card>
       <CardHeader>
-        <div className="flex items-center justify-between">
-          <div className="flex items-center space-x-2">
-            <Calendar className="h-5 w-5" />
-            <h2 className="text-xl font-semibold">Scheduled Content</h2>
-          </div>
-          <Button onClick={() => setIsCreating(true)}>
-            Create Schedule
-          </Button>
+        <div className="flex items-center">
+          <Calendar className="h-5 w-5" />
+          <h2 className="text-xl font-semibold ml-2">Scheduled Content</h2>
         </div>
       </CardHeader>
       <CardContent>

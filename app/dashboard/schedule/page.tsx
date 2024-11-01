@@ -16,6 +16,7 @@ export default function SchedulePage() {
   const [isScheduleOpen, setIsScheduleOpen] = useState(false);
   const [contentSources, setContentSources] = useState([]);
   const [loading, setLoading] = useState(true);
+  const [refreshTrigger, setRefreshTrigger] = useState(0);
 
   useEffect(() => {
     const fetchContentSources = async () => {
@@ -38,6 +39,10 @@ export default function SchedulePage() {
     fetchContentSources();
   }, []);
 
+  const handleScheduleUpdate = () => {
+    setRefreshTrigger(prev => prev + 1);
+  };
+
   return (
     <div className="space-y-6">
       <div className="flex justify-between items-center">
@@ -51,12 +56,13 @@ export default function SchedulePage() {
         </Button>
       </div>
 
-      <ScheduledPostList />
+      <ScheduledPostList key={refreshTrigger} />
       {!loading && (
         <ContentScheduler 
           open={isScheduleOpen} 
           onOpenChange={setIsScheduleOpen}
           contentSources={contentSources}
+          onScheduleUpdate={handleScheduleUpdate}
         />
       )}
     </div>
