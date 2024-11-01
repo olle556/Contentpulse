@@ -45,9 +45,16 @@ type ContentSchedule = {
   updatedAt: Date;
 };
 
+// Add this type to help with the content source mapping
+type ContentSource = {
+  id: string
+  url: string
+  category: string
+}
+
 export function ScheduledPostList() {
   const [schedules, setSchedules] = useState<ContentSchedule[]>([]);
-  const [contentSources, setContentSources] = useState([]);
+  const [contentSources, setContentSources] = useState<ContentSource[]>([]);
   const [isLoading, setIsLoading] = useState(true);
   const [scheduleToEdit, setScheduleToEdit] = useState<ContentSchedule | null>(null);
   const [isCreating, setIsCreating] = useState(false);
@@ -102,6 +109,12 @@ export function ScheduledPostList() {
     fetchSchedules();
   };
 
+  // Find the corresponding content source URL
+  const getContentSourceUrl = (sourceId: string) => {
+    const source = contentSources.find(source => source.id === sourceId);
+    return source?.url || 'Unknown Source';
+  };
+
   return (
     <Card>
       <CardHeader>
@@ -119,22 +132,30 @@ export function ScheduledPostList() {
               <TableRow>
                 <TableHead>Content Source</TableHead>
                 <TableHead>Platforms</TableHead>
-                <TableHead>Date</TableHead>
+                <TableHead>Tonality</TableHead>
+                <TableHead>Start Date</TableHead>
                 <TableHead>Time</TableHead>
                 <TableHead>Recurring</TableHead>
+                <TableHead>AI Instructions</TableHead>
                 <TableHead className="w-[100px]">Actions</TableHead>
               </TableRow>
             </TableHeader>
             <TableBody>
               {schedules.map((schedule) => (
                 <TableRow key={schedule.id}>
-                  <TableCell>{schedule.contentSourceId}</TableCell>
+                  <TableCell>{getContentSourceUrl(schedule.contentSourceId)}</TableCell>
                   <TableCell>{schedule.platforms.join(", ")}</TableCell>
+                  <TableCell>{schedule.tonality || "Default"}</TableCell>
                   <TableCell>
-                    {schedule.date ? format(new Date(schedule.date), "MMM dd, yyyy") : "N/A"}
+                    {schedule.date ? format(new Date(schedule.date), "MMM dd") : "N/A"}
                   </TableCell>
-                  <TableCell>{schedule.time}</TableCell>
-                  <TableCell>{schedule.isRecurring ? "Yes" : "No"}</TableCell>
+                  <TableCell>{schedule.time || "N/A"}</TableCell>
+                  <TableCell>
+                    {schedule.isRecurring 
+                      ? schedule.recurringDays.join(", ")
+                      : "No"}
+                  </TableCell>
+                  <TableCell>{schedule.aiInstructions ? "Yes" : "No"}</TableCell>
                   <TableCell>
                     <div className="flex space-x-2">
                       <Button

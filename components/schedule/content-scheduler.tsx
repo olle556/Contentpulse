@@ -108,10 +108,10 @@ export function ContentScheduler({ open, onOpenChange, contentSources, editSched
 
   const onSubmit = async (values: z.infer<typeof formSchema>) => {
     try {
-      const url = editSchedule 
+      const url = editSchedule
         ? `/api/schedule/${editSchedule.id}`
         : '/api/schedule';
-      
+
       const method = editSchedule ? 'PUT' : 'POST';
 
       const response = await fetch(url, {
@@ -157,8 +157,17 @@ export function ContentScheduler({ open, onOpenChange, contentSources, editSched
                     </FormControl>
                     <SelectContent>
                       {contentSources.map((source) => (
-                        <SelectItem key={source.id} value={source.id}>
-                          {source.url} ({source.category})
+                        <SelectItem
+                          key={source.id}
+                          value={source.id}
+                          className="flex flex-col items-start py-2"
+                        >
+                          <div className="max-w-[500px] break-all">
+                            {source.url}
+                          </div>
+                          <span className="text-xs text-muted-foreground">
+                            {source.category}
+                          </span>
                         </SelectItem>
                       ))}
                     </SelectContent>
@@ -216,10 +225,10 @@ export function ContentScheduler({ open, onOpenChange, contentSources, editSched
                                     return checked
                                       ? field.onChange([...field.value, platform])
                                       : field.onChange(
-                                          field.value?.filter(
-                                            (value) => value !== platform
-                                          )
+                                        field.value?.filter(
+                                          (value) => value !== platform
                                         )
+                                      )
                                   }}
                                 />
                               </FormControl>
@@ -286,10 +295,10 @@ export function ContentScheduler({ open, onOpenChange, contentSources, editSched
                                       return checked
                                         ? field.onChange([...field.value, day])
                                         : field.onChange(
-                                            field.value?.filter(
-                                              (value) => value !== day
-                                            )
+                                          field.value?.filter(
+                                            (value) => value !== day
                                           )
+                                        )
                                     }}
                                   />
                                 </FormControl>
@@ -386,7 +395,7 @@ export function ContentScheduler({ open, onOpenChange, contentSources, editSched
             />
 
             <Button type="submit" className="w-full">
-              Schedule Content Generation
+              {editSchedule ? "Submit Changes" : "Schedule Content Generation"}
             </Button>
           </form>
         </Form>
