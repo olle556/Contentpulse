@@ -68,7 +68,7 @@ export function PostList() {
   if (posts.length === 0) {
     return (
       <div className="text-center py-10 text-muted-foreground">
-        No posts generated yet. Click "Generate New Post" to get started.
+        No posts generated yet. Click &quot;Generate New Post&quot; to get started.
       </div>
     );
   }

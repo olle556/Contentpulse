@@ -115,6 +115,14 @@ export function ScheduledPostList() {
     return source?.url || 'Unknown Source';
   };
 
+  if (schedules.length === 0) {
+    return (
+      <div className="text-center py-10 text-muted-foreground">
+        No schedules generated yet. Click &quot;Generate New Schedule&quot; to get started.
+      </div>
+    );
+  }
+
   return (
     <Card>
       <CardHeader>
