@@ -51,6 +51,7 @@ const formSchema = z.object({
   date: z.date().optional(),
   time: z.string(),
   aiInstructions: z.string().optional(),
+  useEmojis: z.boolean().default(false),
 })
 
 type ContentSchedulerProps = {
@@ -86,6 +87,7 @@ export function ContentScheduler({ open, onOpenChange, contentSources, editSched
       recurringDays: [],
       time: "",
       aiInstructions: "",
+      useEmojis: false,
     },
   })
 
@@ -102,6 +104,7 @@ export function ContentScheduler({ open, onOpenChange, contentSources, editSched
         date: editSchedule.date ? new Date(editSchedule.date) : undefined,
         time: editSchedule.time,
         aiInstructions: editSchedule.aiInstructions || "",
+        useEmojis: editSchedule.useEmojis || false,
       });
     }
   }, [editSchedule, form]);
@@ -373,6 +376,27 @@ export function ContentScheduler({ open, onOpenChange, contentSources, editSched
                       <Clock className="ml-2 h-4 w-4 opacity-50" />
                     </div>
                   </FormControl>
+                </FormItem>
+              )}
+            />
+
+            <FormField
+              control={form.control}
+              name="useEmojis"
+              render={({ field }) => (
+                <FormItem className="flex flex-row items-center space-x-3 space-y-0">
+                  <FormControl>
+                    <Checkbox
+                      checked={field.value}
+                      onCheckedChange={field.onChange}
+                    />
+                  </FormControl>
+                  <div className="space-y-1 leading-none">
+                    <FormLabel>Include emojis</FormLabel>
+                    <FormDescription>
+                      Add relevant emojis to generated posts
+                    </FormDescription>
+                  </div>
                 </FormItem>
               )}
             />

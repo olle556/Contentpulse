@@ -148,4 +148,5 @@ model ContentSchedule {
   aiInstructions  String?
   createdAt       DateTime  @default(now())
   updatedAt       DateTime  @updatedAt
+  useEmojis    Boolean   @default(false)
 }

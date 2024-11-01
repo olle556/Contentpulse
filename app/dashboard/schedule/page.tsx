@@ -7,11 +7,6 @@ import { SchedulePostDialog } from "@/components/schedule/schedule-post-dialog";
 import { ScheduledPostList } from "@/components/schedule/scheduled-post-list";
 import { ContentScheduler } from "@/components/schedule/content-scheduler";
 
-// Todo! Nu är dte två create knappar. Tror dte är bäst att bara ha knappen i ScheduledPostList och då ha en state som säger om man är i create mode eller edit mode.
-// Jag tror också att man kan flytta fetch av contentsources och kanske egentligen fetch av hela scheduledcontent till content-scheduler. 
-// Då slipper man ha två olika fetchar och man kan ha allt i samma komponent!!!!
-
-
 export default function SchedulePage() {
   const [isScheduleOpen, setIsScheduleOpen] = useState(false);
   const [contentSources, setContentSources] = useState([]);
