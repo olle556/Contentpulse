@@ -13,6 +13,11 @@ export async function GET() {
     console.log('Cron job started at:', new Date().toISOString());
     console.log('Looking for schedules at time:', currentTime);
 
+    console.log('Query parameters:', {
+      date: today,
+      time: currentTime,
+    });
+
     // Find all schedules that should be processed now
     const schedulesToProcess = await prisma.contentSchedule.findMany({
       where: {
@@ -20,10 +25,10 @@ export async function GET() {
           // One-time schedules
           {
             isRecurring: false,
-           // date: now, //tetsar med bara dagen passar sitället för minuten. 
-           date: {
-            equals: new Date(today)
-          },
+            date: {
+              gte: new Date(today + ' 00:00:00'),
+              lt: new Date(today + ' 23:59:59'),
+            },
             time: currentTime,
           },
           // Recurring schedules
