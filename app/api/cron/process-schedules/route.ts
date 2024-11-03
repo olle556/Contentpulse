@@ -3,10 +3,16 @@ import { prisma } from '@/lib/prisma';
 import { format } from 'date-fns';
 
 export async function GET() {
+
+
   try {
     const now = new Date();
     const currentTime = format(now, 'HH:mm');
-    
+    const today = format(now, 'yyyy-MM-dd');
+
+    console.log('Cron job started at:', new Date().toISOString());
+    console.log('Looking for schedules at time:', currentTime);
+
     // Find all schedules that should be processed now
     const schedulesToProcess = await prisma.contentSchedule.findMany({
       where: {
@@ -14,7 +20,10 @@ export async function GET() {
           // One-time schedules
           {
             isRecurring: false,
-            date: now,
+           // date: now, //tetsar med bara dagen passar sitället för minuten. 
+           date: {
+            equals: new Date(today)
+          },
             time: currentTime,
           },
           // Recurring schedules
@@ -32,9 +41,12 @@ export async function GET() {
       },
     });
 
+    console.log(`Found ${schedulesToProcess.length} schedules to process`);
+    console.log('Current time:', currentTime);
+
     for (const schedule of schedulesToProcess) {
       // Generate post for each schedule
-      const response = await fetch(`${process.env.NEXT_PUBLIC_BASE_URL}/api/generate-post`, {
+      const response = await fetch(`https://aipostcrawler-qqxn.vercel.app/api/generate-post`, {
         method: 'POST',
         headers: {
           'Content-Type': 'application/json',
@@ -54,15 +66,15 @@ export async function GET() {
       }
     }
 
-    return NextResponse.json({ 
-      success: true, 
-      processed: schedulesToProcess.length 
+    return NextResponse.json({
+      success: true,
+      processed: schedulesToProcess.length
     });
   } catch (error) {
     console.error('Error processing schedules:', error);
-    return NextResponse.json({ 
-      success: false, 
-      error: 'Failed to process schedules' 
+    return NextResponse.json({
+      success: false,
+      error: 'Failed to process schedules'
     }, { status: 500 });
   }
 }
