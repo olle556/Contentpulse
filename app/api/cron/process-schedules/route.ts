@@ -1,6 +1,6 @@
 import { NextResponse } from 'next/server';
 import { prisma } from '@/lib/prisma';
-import { format } from 'date-fns';
+import { format, subMinutes } from 'date-fns';
 
 export async function GET() {
   try {
@@ -8,32 +8,40 @@ export async function GET() {
     await prisma.$connect();
     
     const now = new Date();
+    const fiveMinutesAgo = subMinutes(now, 5);
+    
     const currentTime = format(now, 'HH:mm');
     const today = format(now, 'yyyy-MM-dd');
 
-    console.log('Looking for schedules at time:', currentTime);
+    console.log('Looking for schedules between times:', format(fiveMinutesAgo, 'HH:mm'), 'and', currentTime);
 
     // Wrap database operations in a transaction
     const schedulesToProcess = await prisma.$transaction(async (tx) => {
       return tx.contentSchedule.findMany({
         where: {
           OR: [
-            // One-time schedules
+            // One-time schedules within last 5 minutes
             {
               isRecurring: false,
               date: {
                 gte: new Date(today + ' 00:00:00'),
                 lt: new Date(today + ' 23:59:59'),
               },
-              time: currentTime,
+              time: {
+                gte: format(fiveMinutesAgo, 'HH:mm'),
+                lte: currentTime,
+              },
             },
-            // Recurring schedules
+            // Recurring schedules within last 5 minutes
             {
               isRecurring: true,
               recurringDays: {
                 has: format(now, 'EEE').toLowerCase(), // e.g., 'mon', 'tue', etc.
               },
-              time: currentTime,
+              time: {
+                gte: format(fiveMinutesAgo, 'HH:mm'),
+                lte: currentTime,
+              },
             },
           ],
         },
