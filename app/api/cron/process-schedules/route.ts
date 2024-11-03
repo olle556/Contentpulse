@@ -2,9 +2,12 @@ import { NextResponse } from 'next/server';
 import { prisma } from '@/lib/prisma';
 import { format } from 'date-fns';
 
-// Add this at the top of the file, outside the GET function
+// Modify the getPrismaClient function
 async function getPrismaClient() {
   if (process.env.NODE_ENV === 'production') {
+    // Ensure any existing connections are closed first
+    await prisma.$disconnect();
+    // Create a fresh connection
     await prisma.$connect();
   }
   return prisma;
@@ -100,9 +103,9 @@ export async function GET() {
       error: 'Failed to process schedules'
     }, { status: 500 });
   } finally {
-    // Disconnect the client after we're done
-    if (client && process.env.NODE_ENV === 'production') {
-      await client.$disconnect();
+    // Always disconnect in production, regardless of success or failure
+    if (process.env.NODE_ENV === 'production') {
+      await prisma.$disconnect();
     }
   }
 }
