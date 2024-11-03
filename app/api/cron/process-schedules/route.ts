@@ -2,10 +2,18 @@ import { NextResponse } from 'next/server';
 import { prisma } from '@/lib/prisma';
 import { format } from 'date-fns';
 
+// Add this at the top of the file, outside the GET function
+async function getPrismaClient() {
+  if (process.env.NODE_ENV === 'production') {
+    await prisma.$connect();
+  }
+  return prisma;
+}
+
 export async function GET() {
-
-
+  let client;
   try {
+    client = await getPrismaClient();
     const now = new Date();
     const currentTime = format(now, 'HH:mm');
     const today = format(now, 'yyyy-MM-dd');
@@ -19,7 +27,7 @@ export async function GET() {
     });
 
     // Find all schedules that should be processed now
-    const schedulesToProcess = await prisma.contentSchedule.findMany({
+    const schedulesToProcess = await client.contentSchedule.findMany({
       where: {
         OR: [
           // One-time schedules
@@ -50,18 +58,28 @@ export async function GET() {
     console.log('Current time:', currentTime);
 
     for (const schedule of schedulesToProcess) {
+      // First get the source URL using the contentSourceId
+      const source = await client.contentSource.findUnique({
+        where: { id: schedule.contentSourceId }
+      });
+
+      if (!source) {
+        console.error(`Source not found for schedule ${schedule.id}`);
+        continue;
+      }
+
       // Generate post for each schedule
-      const response = await fetch(`https://aipostcrawler-qqxn.vercel.app/api/generate-post`, {
+      const response = await fetch('/api/generate-post', {
         method: 'POST',
         headers: {
           'Content-Type': 'application/json',
         },
         body: JSON.stringify({
-          sourceUrl: schedule.contentSourceId, // rätt????
-          platform: schedule.platforms[0], // CHANGE! tar bara första plattformen. You might want to generate for each platform
+          sourceUrl: source.url, // Use the source URL here
+          platform: schedule.platforms[0],
           tone: schedule.tonality,
           useEmojis: schedule.useEmojis,
-          aiInstructions: schedule.aiInstructions,
+          instructions: schedule.aiInstructions,
         }),
       });
 
@@ -81,5 +99,10 @@ export async function GET() {
       success: false,
       error: 'Failed to process schedules'
     }, { status: 500 });
+  } finally {
+    // Disconnect the client after we're done
+    if (client && process.env.NODE_ENV === 'production') {
+      await client.$disconnect();
+    }
   }
 }
