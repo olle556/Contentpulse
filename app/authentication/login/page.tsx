@@ -27,11 +27,11 @@ export default function Login() {
   return (
     <div className="min-h-screen flex items-center justify-center bg-gradient-to-b from-background to-muted p-4">
       <Card className="w-full max-w-md">
-        <CardHeader>
+        <CardHeader className="text-center">
           <CardTitle>Welcome Back</CardTitle>
           <CardDescription>Sign in to your account</CardDescription>
         </CardHeader>
-        <CardContent>
+        <CardContent className="flex justify-center">
           <Button 
             className="w-full" 
             onClick={handleGoogleSignIn}
