@@ -1,8 +1,7 @@
 import { AuthOptions } from "next-auth";
 import GoogleProvider from "next-auth/providers/google";
-import { PrismaAdapter } from "@next-auth/prisma-adapter";
-import { prisma } from "./prisma";
-import { Adapter, AdapterUser } from "next-auth/adapters";
+import { PrismaClient } from "@prisma/client";
+import { Adapter, AdapterUser, AdapterAccount, AdapterSession } from "next-auth/adapters";
 
 interface CreateUserData {
   email: string;
@@ -11,12 +10,17 @@ interface CreateUserData {
   image?: string | null;
 }
 
-// Create a custom adapter with connection handling
+interface CreateSessionData {
+  sessionToken: string;
+  userId: string;
+  expires: Date;
+}
+
 const customPrismaAdapter: Adapter = {
-  ...PrismaAdapter(prisma),
   async createUser(data: CreateUserData): Promise<AdapterUser> {
+    const prismaClient = new PrismaClient();
     try {
-      const user = await prisma.user.create({ 
+      const user = await prismaClient.user.create({ 
         data: {
           email: data.email,
           name: data.name,
@@ -24,7 +28,6 @@ const customPrismaAdapter: Adapter = {
           emailVerified: data.emailVerified,
         } 
       });
-      await prisma.$disconnect();
       return {
         id: user.id,
         email: user.email || "",
@@ -32,16 +35,14 @@ const customPrismaAdapter: Adapter = {
         name: user.name,
         image: user.image,
       };
-    } catch (error) {
-      console.error('Error creating user:', error);
-      await prisma.$disconnect();
-      throw error;
+    } finally {
+      await prismaClient.$disconnect();
     }
   },
   async getUser(id): Promise<AdapterUser | null> {
+    const prismaClient = new PrismaClient();
     try {
-      const user = await prisma.user.findUnique({ where: { id } });
-      await prisma.$disconnect();
+      const user = await prismaClient.user.findUnique({ where: { id } });
       if (!user) return null;
       return {
         id: user.id,
@@ -50,16 +51,14 @@ const customPrismaAdapter: Adapter = {
         name: user.name,
         image: user.image,
       };
-    } catch (error) {
-      console.error('Error getting user:', error);
-      await prisma.$disconnect();
-      throw error;
+    } finally {
+      await prismaClient.$disconnect();
     }
   },
   async getUserByEmail(email): Promise<AdapterUser | null> {
+    const prismaClient = new PrismaClient();
     try {
-      const user = await prisma.user.findUnique({ where: { email } });
-      await prisma.$disconnect();
+      const user = await prismaClient.user.findUnique({ where: { email } });
       if (!user) return null;
       return {
         id: user.id,
@@ -68,15 +67,14 @@ const customPrismaAdapter: Adapter = {
         name: user.name,
         image: user.image,
       };
-    } catch (error) {
-      console.error('Error getting user by email:', error);
-      await prisma.$disconnect();
-      throw error;
+    } finally {
+      await prismaClient.$disconnect();
     }
   },
   async getUserByAccount({ providerAccountId, provider }): Promise<AdapterUser | null> {
+    const prismaClient = new PrismaClient();
     try {
-      const account = await prisma.account.findUnique({
+      const account = await prismaClient.account.findUnique({
         where: {
           provider_providerAccountId: {
             providerAccountId,
@@ -85,7 +83,6 @@ const customPrismaAdapter: Adapter = {
         },
         include: { user: true },
       });
-      await prisma.$disconnect();
       if (!account?.user) return null;
       return {
         id: account.user.id,
@@ -94,10 +91,89 @@ const customPrismaAdapter: Adapter = {
         name: account.user.name,
         image: account.user.image,
       };
-    } catch (error) {
-      console.error('Error getting user by account:', error);
-      await prisma.$disconnect();
-      throw error;
+    } finally {
+      await prismaClient.$disconnect();
+    }
+  },
+  async updateUser(user) {
+    const prismaClient = new PrismaClient();
+    try {
+      const updated = await prismaClient.user.update({
+        where: { id: user.id },
+        data: {
+          name: user.name,
+          email: user.email,
+          image: user.image,
+          emailVerified: user.emailVerified,
+        },
+      });
+      return {
+        id: updated.id,
+        email: updated.email || "",
+        emailVerified: updated.emailVerified,
+        name: updated.name,
+        image: updated.image,
+      };
+    } finally {
+      await prismaClient.$disconnect();
+    }
+  },
+  async linkAccount(data: AdapterAccount) {
+    const prismaClient = new PrismaClient();
+    try {
+      await prismaClient.account.create({ data });
+    } finally {
+      await prismaClient.$disconnect();
+    }
+  },
+  async createSession(data: CreateSessionData): Promise<AdapterSession> {
+    const prismaClient = new PrismaClient();
+    try {
+      return await prismaClient.session.create({ data });
+    } finally {
+      await prismaClient.$disconnect();
+    }
+  },
+  async getSessionAndUser(sessionToken) {
+    const prismaClient = new PrismaClient();
+    try {
+      const userAndSession = await prismaClient.session.findUnique({
+        where: { sessionToken },
+        include: { user: true },
+      });
+      if (!userAndSession) return null;
+      const { user, ...session } = userAndSession;
+      return {
+        user: {
+          id: user.id,
+          email: user.email || "",
+          emailVerified: user.emailVerified,
+          name: user.name,
+          image: user.image,
+        },
+        session,
+      };
+    } finally {
+      await prismaClient.$disconnect();
+    }
+  },
+  async updateSession(data) {
+    const prismaClient = new PrismaClient();
+    try {
+      return await prismaClient.session.update({
+        where: { sessionToken: data.sessionToken },
+        data,
+      });
+    } finally {
+      await prismaClient.$disconnect();
+    }
+  },
+  async deleteSession(sessionToken) {
+    const prismaClient = new PrismaClient();
+    try {
+      await prismaClient.session.delete({ where: { sessionToken } });
+    } finally {
+      await prismaClient.$disconnect();
     }
   },
 };

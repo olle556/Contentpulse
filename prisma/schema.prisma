@@ -91,12 +91,13 @@ model GeneratedPost {
 }
 
 model ContentSource {
-  id        String   @id @default(cuid())
+  id        String            @id @default(cuid())
   url       String
-  createdAt DateTime @default(now())
-  updatedAt DateTime @updatedAt
+  createdAt DateTime          @default(now())
+  updatedAt DateTime          @updatedAt
   userId    String
-  user      User     @relation(fields: [userId], references: [id])
+  user      User              @relation(fields: [userId], references: [id])
+  schedules ContentSchedule[]
 
   @@index([userId])
 }
@@ -144,21 +145,22 @@ model Brand {
 }
 
 model ContentSchedule {
-  id              String    @id @default(cuid())
+  id              String        @id @default(cuid())
   userId          String
-  user            User      @relation(fields: [userId], references: [id])
+  user            User          @relation(fields: [userId], references: [id])
   contentSourceId String
+  contentSource   ContentSource @relation(fields: [contentSourceId], references: [id])
   tonality        String
   platforms       String[]
-  isRecurring     Boolean   @default(false)
+  isRecurring     Boolean       @default(false)
   recurringDays   String[]
   startDate       DateTime?
   date            DateTime?
   time            String
   aiInstructions  String?
-  createdAt       DateTime  @default(now())
-  updatedAt       DateTime  @updatedAt
-  useEmojis       Boolean   @default(false)
+  createdAt       DateTime      @default(now())
+  updatedAt       DateTime      @updatedAt
+  useEmojis       Boolean       @default(false)
 
   @@index([userId])
   @@index([contentSourceId])
