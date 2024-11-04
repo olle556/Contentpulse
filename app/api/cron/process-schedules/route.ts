@@ -85,13 +85,12 @@ export async function GET(req: NextRequest) {
         }
 
         // Generate post for each schedule
-        
+        try {
           const response = await fetch('https://aipostcrawler.vercel.app/api/generate-post', {
             method: 'POST',
             headers: {
               'Content-Type': 'application/json',
-              // Add authorization header if needed ???
-              //'Authorization': `Bearer ${process.env.API_SECRET_KEY}`,
+              'Authorization': `Bearer ${process.env.API_SECRET_KEY}`, // Add API key
             },
             body: JSON.stringify({
               sourceUrl: source.url,
@@ -101,12 +100,21 @@ export async function GET(req: NextRequest) {
               useEmojis: schedule.useEmojis || false,
             }),
           });
+
           if (!response.ok) {
-            console.error(`Failed to generate post for schedule ${schedule.id}`);
+            throw new Error(`Failed to generate post: ${await response.text()}`);
           }
+
+          const data = await response.json();
+          // Handle successful response if needed
+          
+        } catch (error) {
+          console.error(`Failed to generate post for schedule ${schedule.id}:`, error);
+          // Continue with next schedule instead of breaking the entire process
+          continue;
         }
-      });
-  
+      }
+    });
 
     return new Response(JSON.stringify({
       success: true,
