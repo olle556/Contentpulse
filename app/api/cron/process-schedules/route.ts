@@ -87,9 +87,16 @@ export async function GET(req: NextRequest) {
         // Generate post for each schedule
         try {
           const baseUrl = process.env.NEXTAUTH_URL || 'http://localhost:3000';
-          console.log('starting fetch for schedule', schedule.id);
+          console.log('[CRON] Generating post for schedule:', {
+            scheduleId: schedule.id,
+            sourceUrl: source.url,
+            tone: schedule.tonality.toLowerCase(),
+            instructions: schedule.aiInstructions || '',
+            useEmojis: schedule.useEmojis || false,
+            userId: schedule.userId, // Pass the userId from the schedule
+          });
 
-          const response = await fetch(`${baseUrl}/api/generate-post`, {
+          const response = await fetch(`${baseUrl}api/generate-post`, {
             method: 'POST',
             headers: {
               'Content-Type': 'application/json',

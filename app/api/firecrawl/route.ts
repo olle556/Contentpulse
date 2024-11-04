@@ -1,11 +1,19 @@
 import { NextResponse } from 'next/server';
 import FirecrawlApp from "@mendable/firecrawl-js";
 
-const app = new FirecrawlApp({ apiKey: process.env.NEXT_PUBLIC_FIRECRAWL_API_KEY || "" });
+const app = new FirecrawlApp({ apiKey: process.env.FIRECRAWL_API_KEY || "" });
 
 export async function POST(request: Request) {
 
   try {
+    if (!process.env.FIRECRAWL_API_KEY) {
+      console.error('Firecrawl API key not configured - Missing FIRECRWAL_API_KEY');
+      return NextResponse.json({
+        success: false,
+        error: "Service configuration error - Missing FIRECRWAL_API_KEY"
+      }, { status: 503 });
+    }
+
     const { url } = await request.json();
     console.log('Received URL in Firecrawl:', url);
 
