@@ -15,7 +15,7 @@ export async function GET(req: NextRequest) {
 
   try {
     console.log('[CRON] Starting schedule processing');
-    
+
     const now = new Date();
     const fiveMinutesAgo = subMinutes(now, 5);
 
@@ -86,7 +86,11 @@ export async function GET(req: NextRequest) {
 
         // Generate post for each schedule
         try {
-          const response = await fetch('https://aipostcrawler.vercel.app/api/generate-post', {
+          // Get base URL with fallback
+          const baseUrl = process.env.NEXT_PUBLIC_BASE_URL || 'http://localhost:3000';
+          console.log('starting fetch for schedule', schedule.id);
+
+          const response = await fetch(`${baseUrl}/api/generate-post`, {
             method: 'POST',
             headers: {
               'Content-Type': 'application/json',
@@ -107,7 +111,7 @@ export async function GET(req: NextRequest) {
 
           const data = await response.json();
           // Handle successful response if needed
-          
+
         } catch (error) {
           console.error(`Failed to generate post for schedule ${schedule.id}:`, error);
           // Continue with next schedule instead of breaking the entire process

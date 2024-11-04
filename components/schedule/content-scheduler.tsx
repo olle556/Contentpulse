@@ -114,8 +114,18 @@ export function ContentScheduler({ open, onOpenChange, contentSources, editSched
       const [hours, minutes] = values.time.split(':').map(Number);
       const dateToUse = values.isRecurring ? values.startDate : values.date;
       
-      // Just format the time as HH:mm
-      values.time = `${hours.toString().padStart(2, '0')}:${minutes.toString().padStart(2, '0')}`;
+      // Create a Date object with the user's local time
+      const localDate = new Date();
+      localDate.setHours(hours, minutes, 0, 0);
+      
+      // Convert to UTC time only for database storage
+      const dbTime = `${localDate.getUTCHours().toString().padStart(2, '0')}:${localDate.getUTCMinutes().toString().padStart(2, '0')}`;
+
+      // Send UTC time to database while keeping the display time unchanged
+      const dataToSend = {
+        ...values,
+        time: dbTime
+      };
 
       const url = editSchedule
         ? `/api/schedule/${editSchedule.id}`
@@ -128,7 +138,7 @@ export function ContentScheduler({ open, onOpenChange, contentSources, editSched
         headers: {
           'Content-Type': 'application/json',
         },
-        body: JSON.stringify(values),
+        body: JSON.stringify(dataToSend),
       });
 
       if (!response.ok) {
