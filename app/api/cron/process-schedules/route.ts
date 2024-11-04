@@ -74,7 +74,7 @@ export async function GET() {
         }
 
         // Generate post for each schedule
-        const response = await fetch('/api/generate-post', {
+        const response = await fetch('https://aipostcrawler.vercel.app/api/generate-post', {
           method: 'POST',
           headers: {
             'Content-Type': 'application/json',
