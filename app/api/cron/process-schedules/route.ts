@@ -4,6 +4,7 @@ import { format, subMinutes } from 'date-fns';
 
 export async function GET() {
   try {
+    console.log('Processing schedules');
     // Explicitly connect to the database
     await prisma.$connect();
 
