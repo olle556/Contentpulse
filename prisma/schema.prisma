@@ -4,6 +4,7 @@
 generator client {
   provider = "prisma-client-js"
   previewFeatures = ["postgresqlExtensions"]
+  
 }
 
 datasource db {
@@ -11,6 +12,7 @@ datasource db {
   url      = env("POSTGRES_PRISMA_URL")
   directUrl = env("POSTGRES_URL_NON_POOLING")
   extensions = [vector]
+  
 }
 
 model Account {
