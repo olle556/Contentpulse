@@ -1,4 +1,4 @@
-import { NextResponse } from 'next/server';
+import { NextRequest } from 'next/server';
 import { prisma } from '@/lib/prisma';
 import { format, subMinutes } from 'date-fns';
 
@@ -6,11 +6,11 @@ export const maxDuration = 300; // Set max duration to 5 minutes
 export const dynamic = 'force-dynamic';
 export const revalidate = 0;
 
-export async function GET(req: Request) {
+export async function GET(req: NextRequest) {
   // Verify the request is from Vercel Cron
   const authHeader = req.headers.get('authorization');
   if (authHeader !== `Bearer ${process.env.CRON_SECRET}`) {
-    return new NextResponse('Unauthorized', { status: 401 });
+    return new Response('Unauthorized', { status: 401 });
   }
 
   try {
@@ -70,10 +70,10 @@ export async function GET(req: Request) {
 
     if (schedulesToProcess.length === 0) {
       await prisma.$disconnect();
-      return NextResponse.json({
+      return new Response(JSON.stringify({
         success: true,
         processed: 0
-      });
+      }), { status: 200 });
     }
 
     // Process schedules within a transaction
@@ -113,18 +113,18 @@ export async function GET(req: Request) {
   
 
     await prisma.$disconnect();
-    return NextResponse.json({
+    return new Response(JSON.stringify({
       success: true,
       processed: schedulesToProcess.length
-    });
+    }), { status: 200 });
 
   } catch (error) {
     console.error('[CRON] Error:', error);
     await prisma.$disconnect();
-    return NextResponse.json({
+    return new Response(JSON.stringify({
       success: false,
       error: 'Failed to process schedules'
-    }, { status: 500 });
+    }), { status: 500 });
   } finally {
     // Ensure disconnect happens in finally block
     await prisma.$disconnect();
