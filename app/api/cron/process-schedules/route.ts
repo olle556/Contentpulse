@@ -6,10 +6,10 @@ export async function GET() {
   try {
     // Explicitly connect to the database
     await prisma.$connect();
-    
+
     const now = new Date();
     const fiveMinutesAgo = subMinutes(now, 5);
-    
+
     const currentTime = format(now, 'HH:mm');
     const today = format(now, 'yyyy-MM-dd');
 
@@ -67,14 +67,14 @@ export async function GET() {
         const source = await tx.contentSource.findUnique({
           where: { id: schedule.contentSourceId }
         });
-        
+
         if (!source) {
           console.error(`Source not found for schedule ${schedule.id}`);
           continue;
         }
 
         // Generate post for each schedule
-        try {
+        
           const response = await fetch('https://aipostcrawler.vercel.app/api/generate-post', {
             method: 'POST',
             headers: {
@@ -90,22 +90,12 @@ export async function GET() {
               useEmojis: schedule.useEmojis || false,
             }),
           });
-
           if (!response.ok) {
-            const errorData = await response.json();
-            console.error(`Failed to generate post for schedule ${schedule.id}. Status: ${response.status}. Error:`, errorData);
-            throw new Error(`Failed to generate post: ${errorData.error || response.statusText}`);
+            console.error(`Failed to generate post for schedule ${schedule.id}`);
           }
-
-          const data = await response.json();
-          console.log(`Successfully generated post for schedule ${schedule.id}`);
-
-        } catch (error) {
-          console.error(`Error processing schedule ${schedule.id}:`, error);
-          continue; // Continue with next schedule even if this one fails
         }
-      }
-    });
+      });
+  
 
     await prisma.$disconnect();
     return NextResponse.json({
