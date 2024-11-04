@@ -14,13 +14,15 @@ export async function GET() {
       }, { status: 401 });
     }
 
-    const sources = await prisma.contentSource.findMany({
-      where: {
-        userId: session.user.id
-      },
-      orderBy: {
-        createdAt: 'desc',
-      },
+    const sources = await prisma.$transaction(async (tx) => {
+      return tx.contentSource.findMany({
+        where: {
+          userId: session.user.id
+        },
+        orderBy: {
+          createdAt: 'desc',
+        },
+      });
     });
 
     return NextResponse.json({ success: true, sources });
@@ -30,6 +32,8 @@ export async function GET() {
       success: false, 
       error: 'Failed to fetch sources' 
     }, { status: 500 });
+  } finally {
+    await prisma.$disconnect();
   }
 }
 
@@ -37,41 +41,33 @@ export async function POST(req: Request) {
   try {
     const session = await getServerSession(authOptions);
     
-    // Add debug logs
-    console.log("API Route - Session:", session);
-    console.log("API Route - User:", session?.user);
-
     if (!session?.user) {
-      return new Response(JSON.stringify({ error: "Not authenticated" }), {
-        status: 401,
-        headers: {
-          "Content-Type": "application/json",
-        },
-      });
+      return NextResponse.json({ 
+        error: "Not authenticated" 
+      }, { status: 401 });
     }
 
     const { url } = await req.json();
 
-    const contentSource = await prisma.contentSource.create({
-      data: {
-        url,
-        userId: session.user.id,
-      },
+    const contentSource = await prisma.$transaction(async (tx) => {
+      return tx.contentSource.create({
+        data: {
+          url,
+          userId: session.user.id,
+        },
+      });
     });
 
-    return new Response(JSON.stringify({ success: true, data: contentSource }), {
-      status: 200,
-      headers: {
-        "Content-Type": "application/json",
-      },
+    return NextResponse.json({ 
+      success: true, 
+      data: contentSource 
     });
   } catch (error) {
     console.error("Error in POST /api/sources:", error);
-    return new Response(JSON.stringify({ error: "Internal Server Error" }), {
-      status: 500,
-      headers: {
-        "Content-Type": "application/json",
-      },
-    });
+    return NextResponse.json({ 
+      error: "Internal Server Error" 
+    }, { status: 500 });
+  } finally {
+    await prisma.$disconnect();
   }
 }

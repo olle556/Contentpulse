@@ -2,17 +2,16 @@
 // learn more about it in the docs: https://pris.ly/d/prisma-schema
 
 generator client {
-  provider = "prisma-client-js"
+  provider        = "prisma-client-js"
   previewFeatures = ["postgresqlExtensions"]
-  
 }
 
 datasource db {
-  provider = "postgresql"
-  url      = env("POSTGRES_PRISMA_URL")
+  provider  = "postgresql"
+  url       = env("POSTGRES_PRISMA_URL")
   directUrl = env("POSTGRES_URL_NON_POOLING")
   extensions = [vector]
-  
+  relationMode = "prisma"
 }
 
 model Account {
@@ -32,6 +31,7 @@ model Account {
   user User @relation(fields: [userId], references: [id], onDelete: Cascade)
 
   @@unique([provider, providerAccountId])
+  @@index([userId])
 }
 
 model Session {
@@ -40,12 +40,14 @@ model Session {
   userId       String
   expires      DateTime
   user         User     @relation(fields: [userId], references: [id], onDelete: Cascade)
+
+  @@index([userId])
 }
 
 model User {
   id            String           @id @default(cuid())
   name          String?
-  email         String          @unique
+  email         String?         @unique
   emailVerified DateTime?
   image         String?
   username      String?         @unique
@@ -60,6 +62,8 @@ model User {
   sessions      Session[]
   brands        Brand[]
   contentSchedules ContentSchedule[]
+
+  @@index([email])
 }
 
 model VerificationToken {
@@ -82,6 +86,8 @@ model GeneratedPost {
   updatedAt       DateTime  @updatedAt
   userId          String
   user            User      @relation(fields: [userId], references: [id])
+
+  @@index([userId])
 }
 
 model ContentSource {
@@ -91,6 +97,8 @@ model ContentSource {
   updatedAt      DateTime         @updatedAt
   userId         String
   user           User             @relation(fields: [userId], references: [id])
+
+  @@index([userId])
 }
 
 model ScrapedContent {
@@ -151,4 +159,7 @@ model ContentSchedule {
   createdAt       DateTime  @default(now())
   updatedAt       DateTime  @updatedAt
   useEmojis    Boolean   @default(false)
+
+  @@index([userId])
+  @@index([contentSourceId])
 }
