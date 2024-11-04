@@ -7,10 +7,10 @@ generator client {
 }
 
 datasource db {
-  provider     = "postgresql"
-  url          = env("POSTGRES_PRISMA_URL")
-  directUrl    = env("POSTGRES_URL_NON_POOLING")
-  extensions   = [vector]
+  provider  = "postgresql"
+  url       = env("POSTGRES_PRISMA_URL")
+  directUrl = env("POSTGRES_URL_NON_POOLING")
+  extensions = [vector]
   relationMode = "prisma"
 }
 
@@ -44,9 +44,9 @@ model Session {
 }
 
 model User {
-  id            String            @id @default(cuid())
+  id            String           @id @default(cuid())
   name          String?
-  email         String?           @unique
+  email         String?          @unique
   emailVerified DateTime?
   image         String?
   accounts      Account[]
@@ -94,41 +94,42 @@ model ContentSource {
 }
 
 model ScrapedContent {
-  id        String                      @id @default(cuid())
-  content   String                      @db.Text
-  embedding Unsupported("vector(1536)") // Changed from Float[] to Unsupported
-  metadata  Json?
-  createdAt DateTime                    @default(now())
-  sourceId  String
+  id          String        @id @default(cuid())
+  content     String        @db.Text
+  embedding   Unsupported("vector(1536)")  // Changed from Float[] to Unsupported
+  metadata    Json?
+  createdAt   DateTime      @default(now())
+  sourceId    String
 
   @@index([embedding(type: Vector)])
 }
 
 model Brand {
-  id                String                     @id @default(cuid())
-  brandName         String
-  brandType         String
-  industry          String
-  language          String?
-  website           String?
-  brandVoice        String
-  usp               String?
-  missionStatement  String?
-  slogans           String?
-  demographics      String?
-  psychographics    String?
-  contentThemes     String?
+  id              String    @id @default(cuid())
+  brandName       String
+  brandType       String
+  industry        String
+  language        String?
+  website         String?
+  brandVoice      String
+  usp             String?
+  missionStatement String?
+  slogans         String?
+  demographics    String?
+  psychographics  String?
+  contentThemes   String?
   primaryObjectives String?
-  brandStory        String?
-  embedding_1       Unsupported("vector(384)")
-  embedding_2       Unsupported("vector(384)")
-  embedding_3       Unsupported("vector(384)")
-  embedding_4       Unsupported("vector(384)")
-  userId            String
-  user              User                       @relation(fields: [userId], references: [id])
-  createdAt         DateTime                   @default(now())
-  updatedAt         DateTime                   @updatedAt
+  brandStory      String?
+  embedding_1     Unsupported("vector(384)")
+  embedding_2     Unsupported("vector(384)")
+  embedding_3     Unsupported("vector(384)")
+  embedding_4     Unsupported("vector(384)")
+  userId          String
+  user            User     @relation(fields: [userId], references: [id])
+  createdAt       DateTime @default(now())
+  updatedAt       DateTime @updatedAt
 
+  @@index([userId])
   @@index([embedding_1(type: Vector)])
   @@index([embedding_2(type: Vector)])
   @@index([embedding_3(type: Vector)])
@@ -145,8 +146,15 @@ model ContentSchedule {
   contentSource   ContentSource @relation(fields: [contentSourceId], references: [id])
   frequency       String        @default("daily")
   time            String
+  date            DateTime?
   lastRun         DateTime?
   active          Boolean       @default(true)
+  platforms      String[]  @default([])
+  tonality       String    @default("neutral")
+  aiInstructions String    @default("")
+  useEmojis      Boolean   @default(false)
+  recurringDays   String[]  @default([])
+
 
   @@index([userId])
   @@index([contentSourceId])
