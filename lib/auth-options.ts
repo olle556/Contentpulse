@@ -13,8 +13,13 @@ export const authOptions: AuthOptions = {
   ],
   callbacks: {
     async signIn({ user, account, profile }) {
-      if (account?.provider === "google" && user.email) {
-        try {
+      try {
+        console.log("Sign in attempt:", { 
+          email: user.email, 
+          provider: account?.provider 
+        });
+
+        if (account?.provider === "google" && user.email) {
           const existingUser = await prisma.user.upsert({
             where: { email: user.email },
             update: {
@@ -27,32 +32,44 @@ export const authOptions: AuthOptions = {
               image: user.image,
             },
           });
+          
+          console.log("User upserted successfully:", existingUser.id);
           user.id = existingUser.id;
           return true;
-        } catch (error) {
-          console.error("Error during sign in:", error);
-          return false;
         }
+        return true;
+      } catch (error) {
+        console.error("Detailed sign in error:", error);
+        // Return false to show there was an error
+        return false;
       }
-      return true;
     },
-    session: async ({ session, token }) => {
-      if (session?.user) {
-        session.user.id = token.sub!;
+    async session({ session, token }) {
+      try {
+        if (session?.user) {
+          session.user.id = token.sub!;
+        }
+        return session;
+      } catch (error) {
+        console.error("Session callback error:", error);
+        return session;
       }
-      return session;
     },
-    jwt: async ({ token, user }) => {
-      if (user) {
-        token.sub = user.id;
+    async jwt({ token, user }) {
+      try {
+        if (user) {
+          token.sub = user.id;
+        }
+        return token;
+      } catch (error) {
+        console.error("JWT callback error:", error);
+        return token;
       }
-      return token;
     },
   },
   pages: {
     signIn: "/authentication/login",
+    error: "/authentication/error",
   },
-  session: {
-    strategy: "jwt",
-  },
+  debug: true,
 };
