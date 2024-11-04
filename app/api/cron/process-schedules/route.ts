@@ -74,22 +74,35 @@ export async function GET() {
         }
 
         // Generate post for each schedule
-        const response = await fetch('https://aipostcrawler.vercel.app/api/generate-post', {
-          method: 'POST',
-          headers: {
-            'Content-Type': 'application/json',
-          },
-          body: JSON.stringify({
-            sourceUrl: source.url,
-            platform: schedule.platforms[0],
-            tone: schedule.tonality,
-            useEmojis: schedule.useEmojis,
-            instructions: schedule.aiInstructions,
-          }),
-        });
+        try {
+          const response = await fetch('https://aipostcrawler.vercel.app/api/generate-post', {
+            method: 'POST',
+            headers: {
+              'Content-Type': 'application/json',
+              // Add authorization header if needed ???
+              //'Authorization': `Bearer ${process.env.API_SECRET_KEY}`,
+            },
+            body: JSON.stringify({
+              sourceUrl: source.url,
+              platform: schedule.platforms[0].toLowerCase(), // Ensure platform is lowercase
+              tone: schedule.tonality.toLowerCase(), // Ensure tone is lowercase
+              instructions: schedule.aiInstructions || '',
+              useEmojis: schedule.useEmojis || false,
+            }),
+          });
 
-        if (!response.ok) {
-          console.error(`Failed to generate post for schedule ${schedule.id}`);
+          if (!response.ok) {
+            const errorData = await response.json();
+            console.error(`Failed to generate post for schedule ${schedule.id}. Status: ${response.status}. Error:`, errorData);
+            throw new Error(`Failed to generate post: ${errorData.error || response.statusText}`);
+          }
+
+          const data = await response.json();
+          console.log(`Successfully generated post for schedule ${schedule.id}`);
+
+        } catch (error) {
+          console.error(`Error processing schedule ${schedule.id}:`, error);
+          continue; // Continue with next schedule even if this one fails
         }
       }
     });
