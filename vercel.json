@@ -2,5 +2,8 @@
     "crons": [{
       "path": "/api/cron/process-schedules",
       "schedule": "*/5 * * * *"
-    }]
+    }],
+    "env": {
+      "CRON_SECRET": "@cron_secret"
+    }
   }
