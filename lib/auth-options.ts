@@ -2,44 +2,79 @@ import { AuthOptions } from "next-auth";
 import GoogleProvider from "next-auth/providers/google";
 import { PrismaAdapter } from "@next-auth/prisma-adapter";
 import { prisma } from "./prisma";
+import { Adapter, AdapterUser } from "next-auth/adapters";
+
+interface CreateUserData {
+  email: string;
+  emailVerified?: Date | null;
+  name?: string | null;
+  image?: string | null;
+}
 
 // Create a custom adapter with connection handling
-const customPrismaAdapter = {
+const customPrismaAdapter: Adapter = {
   ...PrismaAdapter(prisma),
-  async createUser(data: any) {
+  async createUser(data: CreateUserData): Promise<AdapterUser> {
     try {
-      const user = await prisma.user.create({ data });
+      const user = await prisma.user.create({ 
+        data: {
+          email: data.email,
+          name: data.name,
+          image: data.image,
+          emailVerified: data.emailVerified,
+        } 
+      });
       await prisma.$disconnect();
-      return user;
+      return {
+        id: user.id,
+        email: user.email || "",
+        emailVerified: user.emailVerified,
+        name: user.name,
+        image: user.image,
+      };
     } catch (error) {
       console.error('Error creating user:', error);
       await prisma.$disconnect();
       throw error;
     }
   },
-  async getUser(id: string) {
+  async getUser(id): Promise<AdapterUser | null> {
     try {
       const user = await prisma.user.findUnique({ where: { id } });
       await prisma.$disconnect();
-      return user;
+      if (!user) return null;
+      return {
+        id: user.id,
+        email: user.email || "",
+        emailVerified: user.emailVerified,
+        name: user.name,
+        image: user.image,
+      };
     } catch (error) {
       console.error('Error getting user:', error);
       await prisma.$disconnect();
       throw error;
     }
   },
-  async getUserByEmail(email: string) {
+  async getUserByEmail(email): Promise<AdapterUser | null> {
     try {
       const user = await prisma.user.findUnique({ where: { email } });
       await prisma.$disconnect();
-      return user;
+      if (!user) return null;
+      return {
+        id: user.id,
+        email: user.email || "",
+        emailVerified: user.emailVerified,
+        name: user.name,
+        image: user.image,
+      };
     } catch (error) {
       console.error('Error getting user by email:', error);
       await prisma.$disconnect();
       throw error;
     }
   },
-  async getUserByAccount({ providerAccountId, provider }: { providerAccountId: string, provider: string }) {
+  async getUserByAccount({ providerAccountId, provider }): Promise<AdapterUser | null> {
     try {
       const account = await prisma.account.findUnique({
         where: {
@@ -51,7 +86,14 @@ const customPrismaAdapter = {
         include: { user: true },
       });
       await prisma.$disconnect();
-      return account?.user ?? null;
+      if (!account?.user) return null;
+      return {
+        id: account.user.id,
+        email: account.user.email || "",
+        emailVerified: account.user.emailVerified,
+        name: account.user.name,
+        image: account.user.image,
+      };
     } catch (error) {
       console.error('Error getting user by account:', error);
       await prisma.$disconnect();
