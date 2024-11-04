@@ -77,6 +77,8 @@ model GeneratedPost {
   title      String?
   published  Boolean  @default(false)
   embeddings Json?
+  platform   String   @default("twitter")
+  status     String   @default("draft")
 
   @@index([userId])
 }
@@ -149,12 +151,12 @@ model ContentSchedule {
   date            DateTime?
   lastRun         DateTime?
   active          Boolean       @default(true)
-  platforms      String[]  @default([])
-  tonality       String    @default("neutral")
-  aiInstructions String    @default("")
-  useEmojis      Boolean   @default(false)
-  recurringDays   String[]  @default([])
-
+  platform        String        @default("twitter")
+  platforms       String[]      @default([])
+  tonality        String        @default("neutral")
+  aiInstructions  String        @default("")
+  useEmojis       Boolean       @default(false)
+  recurringDays   String[]      @default([])
 
   @@index([userId])
   @@index([contentSourceId])
