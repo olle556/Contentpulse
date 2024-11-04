@@ -37,32 +37,28 @@ export async function GET(req: NextRequest) {
           OR: [
             // One-time schedules within last 5 minutes
             {
-              frequency: 'once',
-              AND: [
-                {
-                  time: {
-                    gte: format(fiveMinutesAgo, 'HH:mm'),
-                    lte: currentTime,
-                  }
-                },
-                {
-                  createdAt: {
-                    gte: new Date(today + ' 00:00:00'),
-                    lt: new Date(today + ' 23:59:59'),
-                  }
-                }
-              ]
-            },
-            // Recurring schedules within last 5 minutes
-            {
-              frequency: 'recurring',
+              isRecurring: false,
+              date: {
+                gte: new Date(today + ' 00:00:00'),
+                lt: new Date(today + ' 23:59:59'),
+              },
               time: {
                 gte: format(fiveMinutesAgo, 'HH:mm'),
                 lte: currentTime,
-              }
-            }
+              },
+            },
+            // Recurring schedules within last 5 minutes
+            {
+              isRecurring: true,
+              recurringDays: {
+                has: format(now, 'EEE').toLowerCase(), // e.g., 'mon', 'tue', etc.
+              },
+              time: {
+                gte: format(fiveMinutesAgo, 'HH:mm'),
+                lte: currentTime,
+              },
+            },
           ],
-          active: true,
         },
         include: {
           user: true,

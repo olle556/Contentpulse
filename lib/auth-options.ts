@@ -10,39 +10,23 @@ interface CreateUserData {
   image?: string | null;
 }
 
-// Create a function to get a new PrismaClient instance
-const getPrismaClient = () => {
-  return new PrismaClient({
-    log: ['error'],
-    datasources: {
-      db: {
-        url: process.env.POSTGRES_PRISMA_URL,
-      },
-    },
-  });
-};
-
-// Create a wrapper for Prisma operations
-const prismaOperation = async <T>(operation: (prisma: PrismaClient) => Promise<T>): Promise<T> => {
-  const prisma = getPrismaClient();
-  try {
-    const result = await operation(prisma);
-    return result;
-  } finally {
-    await prisma.$disconnect();
-  }
-};
+interface CreateSessionData {
+  sessionToken: string;
+  userId: string;
+  expires: Date;
+}
 
 const customPrismaAdapter: Adapter = {
   async createUser(data: CreateUserData): Promise<AdapterUser> {
-    return prismaOperation(async (prisma) => {
-      const user = await prisma.user.create({
+    const prismaClient = new PrismaClient();
+    try {
+      const user = await prismaClient.user.create({ 
         data: {
           email: data.email,
           name: data.name,
           image: data.image,
           emailVerified: data.emailVerified,
-        },
+        } 
       });
       return {
         id: user.id,
@@ -51,12 +35,14 @@ const customPrismaAdapter: Adapter = {
         name: user.name,
         image: user.image,
       };
-    });
+    } finally {
+      await prismaClient.$disconnect();
+    }
   },
-
-  async getUser(id: string): Promise<AdapterUser | null> {
-    return prismaOperation(async (prisma) => {
-      const user = await prisma.user.findUnique({ where: { id } });
+  async getUser(id): Promise<AdapterUser | null> {
+    const prismaClient = new PrismaClient();
+    try {
+      const user = await prismaClient.user.findUnique({ where: { id } });
       if (!user) return null;
       return {
         id: user.id,
@@ -65,12 +51,14 @@ const customPrismaAdapter: Adapter = {
         name: user.name,
         image: user.image,
       };
-    });
+    } finally {
+      await prismaClient.$disconnect();
+    }
   },
-
-  async getUserByEmail(email: string): Promise<AdapterUser | null> {
-    return prismaOperation(async (prisma) => {
-      const user = await prisma.user.findUnique({ where: { email } });
+  async getUserByEmail(email): Promise<AdapterUser | null> {
+    const prismaClient = new PrismaClient();
+    try {
+      const user = await prismaClient.user.findUnique({ where: { email } });
       if (!user) return null;
       return {
         id: user.id,
@@ -79,16 +67,18 @@ const customPrismaAdapter: Adapter = {
         name: user.name,
         image: user.image,
       };
-    });
+    } finally {
+      await prismaClient.$disconnect();
+    }
   },
-
-  async getUserByAccount({ providerAccountId, provider }: { providerAccountId: string, provider: string }): Promise<AdapterUser | null> {
-    return prismaOperation(async (prisma) => {
-      const account = await prisma.account.findUnique({
+  async getUserByAccount({ providerAccountId, provider }): Promise<AdapterUser | null> {
+    const prismaClient = new PrismaClient();
+    try {
+      const account = await prismaClient.account.findUnique({
         where: {
           provider_providerAccountId: {
-            providerAccountId: providerAccountId,
-            provider: provider,
+            providerAccountId,
+            provider,
           },
         },
         include: { user: true },
@@ -101,23 +91,22 @@ const customPrismaAdapter: Adapter = {
         name: account.user.name,
         image: account.user.image,
       };
-    });
+    } finally {
+      await prismaClient.$disconnect();
+    }
   },
-
-  async updateUser(user: Partial<AdapterUser> & Pick<AdapterUser, "id">): Promise<AdapterUser> {
-    return prismaOperation(async (prisma) => {
-      const data: Record<string, any> = {};
-      
-      if (user.name !== undefined) data.name = user.name;
-      if (user.email !== undefined) data.email = user.email;
-      if (user.image !== undefined) data.image = user.image;
-      if (user.emailVerified !== undefined) data.emailVerified = user.emailVerified;
-
-      const updated = await prisma.user.update({
+  async updateUser(user) {
+    const prismaClient = new PrismaClient();
+    try {
+      const updated = await prismaClient.user.update({
         where: { id: user.id },
-        data
+        data: {
+          name: user.name,
+          email: user.email,
+          image: user.image,
+          emailVerified: user.emailVerified,
+        },
       });
-
       return {
         id: updated.id,
         email: updated.email || "",
@@ -125,24 +114,30 @@ const customPrismaAdapter: Adapter = {
         name: updated.name,
         image: updated.image,
       };
-    });
+    } finally {
+      await prismaClient.$disconnect();
+    }
   },
-
-  async linkAccount(data: AdapterAccount): Promise<void> {
-    return prismaOperation(async (prisma) => {
-      await prisma.account.create({ data });
-    });
+  async linkAccount(data: AdapterAccount) {
+    const prismaClient = new PrismaClient();
+    try {
+      await prismaClient.account.create({ data });
+    } finally {
+      await prismaClient.$disconnect();
+    }
   },
-
-  async createSession(data: AdapterSession): Promise<AdapterSession> {
-    return prismaOperation(async (prisma) => {
-      return prisma.session.create({ data });
-    });
+  async createSession(data: CreateSessionData): Promise<AdapterSession> {
+    const prismaClient = new PrismaClient();
+    try {
+      return await prismaClient.session.create({ data });
+    } finally {
+      await prismaClient.$disconnect();
+    }
   },
-
-  async getSessionAndUser(sessionToken: string): Promise<{ user: AdapterUser, session: AdapterSession } | null> {
-    return prismaOperation(async (prisma) => {
-      const userAndSession = await prisma.session.findUnique({
+  async getSessionAndUser(sessionToken) {
+    const prismaClient = new PrismaClient();
+    try {
+      const userAndSession = await prismaClient.session.findUnique({
         where: { sessionToken },
         include: { user: true },
       });
@@ -158,31 +153,28 @@ const customPrismaAdapter: Adapter = {
         },
         session,
       };
-    });
+    } finally {
+      await prismaClient.$disconnect();
+    }
   },
-
-  async updateSession(
-    session: Partial<AdapterSession> & Pick<AdapterSession, "sessionToken">
-  ): Promise<AdapterSession | null> {
-    return prismaOperation(async (prisma) => {
-      const data: Record<string, any> = {};
-      
-      if (session.expires !== undefined) data.expires = session.expires;
-      if (session.userId !== undefined) data.userId = session.userId;
-
-      const updated = await prisma.session.update({
-        where: { sessionToken: session.sessionToken },
-        data
+  async updateSession(data) {
+    const prismaClient = new PrismaClient();
+    try {
+      return await prismaClient.session.update({
+        where: { sessionToken: data.sessionToken },
+        data,
       });
-
-      return updated;
-    });
+    } finally {
+      await prismaClient.$disconnect();
+    }
   },
-
-  async deleteSession(sessionToken: string): Promise<void> {
-    return prismaOperation(async (prisma) => {
-      await prisma.session.delete({ where: { sessionToken } });
-    });
+  async deleteSession(sessionToken) {
+    const prismaClient = new PrismaClient();
+    try {
+      await prismaClient.session.delete({ where: { sessionToken } });
+    } finally {
+      await prismaClient.$disconnect();
+    }
   },
 };
 
@@ -204,7 +196,7 @@ export const authOptions: AuthOptions = {
       }
       return session;
     },
-    async jwt({ token, user }) {
+    async jwt({ token, user, account }) {
       if (user) {
         token.sub = user.id;
       }
