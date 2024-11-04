@@ -12,17 +12,37 @@ const anthropic = new Anthropic({
 
 export async function POST(request: Request) {
   try {
-    // Get the authenticated user's session
-    const session = await getServerSession(authOptions);
+    // Check if request is from cron job
+    const authHeader = request.headers.get('authorization');
+    const isCronRequest = authHeader === `Bearer ${process.env.CRON_SECRET}`;
     
-    if (!session?.user?.id) {
-      return NextResponse.json({
-        success: false,
-        error: 'Authentication required'
-      }, { status: 401 });
+    let userId: string;
+
+    if (isCronRequest) {
+      // For cron requests, get userId from request body
+      const { userId: cronUserId } = await request.json();
+      if (!cronUserId) {
+        return NextResponse.json({
+          success: false,
+          error: 'UserId required for cron requests'
+        }, { status: 400 });
+      }
+      userId = cronUserId;
+    } else {
+      // For regular requests, get userId from session
+      const session = await getServerSession(authOptions);
+      if (!session?.user?.id) {
+        return NextResponse.json({
+          success: false,
+          error: 'Authentication required'
+        }, { status: 401 });
+      }
+      userId = session.user.id;
     }
 
-    const { sourceUrl, platform, tone, useEmojis } = await request.json();
+    // Clone the request to read the body again
+    const clonedRequest = request.clone();
+    const { sourceUrl, platform, tone, useEmojis } = await clonedRequest.json();
 
     if (!sourceUrl || !platform || !tone) {
       return NextResponse.json({
@@ -65,7 +85,7 @@ export async function POST(request: Request) {
     }
 
     // Get brand context for the authenticated user
-    const brandContext = await getRelevantBrandContext(session.user.id);
+    const brandContext = await getRelevantBrandContext(userId);
     
     if (!brandContext) {
       return NextResponse.json({
@@ -135,7 +155,7 @@ Please generate the post now:`;
         content: generatedContent,
         platform,
         status: 'draft',
-        userId: session.user.id, // Use the authenticated user's ID
+        userId: userId,
       },
     });
 

@@ -86,7 +86,6 @@ export async function GET(req: NextRequest) {
 
         // Generate post for each schedule
         try {
-          // Get base URL with fallback
           const baseUrl = process.env.NEXTAUTH_URL || 'http://localhost:3000';
           console.log('starting fetch for schedule', schedule.id);
 
@@ -94,14 +93,15 @@ export async function GET(req: NextRequest) {
             method: 'POST',
             headers: {
               'Content-Type': 'application/json',
-              'Authorization': `Bearer ${process.env.API_SECRET_KEY}`, // Add API key
+              'Authorization': `Bearer ${process.env.CRON_SECRET}`, // Use CRON_SECRET for authentication
             },
             body: JSON.stringify({
               sourceUrl: source.url,
-              platform: schedule.platforms[0].toLowerCase(), // Ensure platform is lowercase
-              tone: schedule.tonality.toLowerCase(), // Ensure tone is lowercase
+              platform: schedule.platforms[0].toLowerCase(),
+              tone: schedule.tonality.toLowerCase(),
               instructions: schedule.aiInstructions || '',
               useEmojis: schedule.useEmojis || false,
+              userId: schedule.userId, // Pass the userId from the schedule
             }),
           });
 
