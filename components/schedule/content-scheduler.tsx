@@ -111,6 +111,23 @@ export function ContentScheduler({ open, onOpenChange, contentSources, editSched
 
   const onSubmit = async (values: z.infer<typeof formSchema>) => {
     try {
+      // Convert local time to UTC // TETSAR HÄR 
+      const [hours, minutes] = values.time.split(':').map(Number);
+      const dateToUse = values.isRecurring ? values.startDate : values.date;
+      
+      if (dateToUse) {
+        // Create a new date object with the selected date and time in local timezone
+        const localDate = new Date(dateToUse);
+        localDate.setHours(hours, minutes);
+
+        // Get UTC time components
+        const utcHours = localDate.getUTCHours();
+        const utcMinutes = localDate.getUTCMinutes();
+
+        // Format UTC time as HH:mm
+        values.time = `${utcHours.toString().padStart(2, '0')}:${utcMinutes.toString().padStart(2, '0')}`;
+      }
+
       const url = editSchedule
         ? `/api/schedule/${editSchedule.id}`
         : '/api/schedule';

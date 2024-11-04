@@ -2,7 +2,7 @@ import { NextRequest } from 'next/server';
 import { prisma } from '@/lib/prisma';
 import { format, subMinutes } from 'date-fns';
 
-export const maxDuration = 300; // Set max duration to 5 minutes
+export const maxDuration = 290; // Set max duration to 5 minutes
 export const dynamic = 'force-dynamic';
 export const revalidate = 0;
 
@@ -16,9 +16,6 @@ export async function GET(req: NextRequest) {
   try {
     console.log('[CRON] Starting schedule processing');
     
-    // Explicitly connect to the database
-    await prisma.$connect();
-
     const now = new Date();
     const fiveMinutesAgo = subMinutes(now, 5);
 
@@ -69,7 +66,6 @@ export async function GET(req: NextRequest) {
     console.log(`Found ${schedulesToProcess.length} schedules to process`);
 
     if (schedulesToProcess.length === 0) {
-      await prisma.$disconnect();
       return new Response(JSON.stringify({
         success: true,
         processed: 0
@@ -112,7 +108,6 @@ export async function GET(req: NextRequest) {
       });
   
 
-    await prisma.$disconnect();
     return new Response(JSON.stringify({
       success: true,
       processed: schedulesToProcess.length
@@ -120,13 +115,12 @@ export async function GET(req: NextRequest) {
 
   } catch (error) {
     console.error('[CRON] Error:', error);
-    await prisma.$disconnect();
     return new Response(JSON.stringify({
       success: false,
       error: 'Failed to process schedules'
     }), { status: 500 });
   } finally {
-    // Ensure disconnect happens in finally block
+    // Single disconnect in finally block
     await prisma.$disconnect();
   }
 }
