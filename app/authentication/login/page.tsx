@@ -1,21 +1,21 @@
 "use client";
 
 import { signIn } from "next-auth/react";
-import { useRouter, useSearchParams } from "next/navigation";
+import { useSearchParams } from "next/navigation";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
 import { useState } from "react";
 
 export default function Login() {
-  const router = useRouter();
   const searchParams = useSearchParams();
   const [loading, setLoading] = useState(false);
+  const callbackUrl = searchParams?.get("callbackUrl") || "/dashboard";
 
   const handleGoogleSignIn = async () => {
-    setLoading(true);
     try {
+      setLoading(true);
       await signIn("google", {
-        callbackUrl: searchParams?.get("callbackUrl") || "/dashboard",
+        callbackUrl,
       });
     } catch (error) {
       console.error("Sign in error:", error);
@@ -25,17 +25,15 @@ export default function Login() {
   };
 
   return (
-    <div className="flex min-h-screen items-center justify-center">
-      <Card className="w-[400px]">
-        <CardHeader className="text-center">
-          <CardTitle>Welcome to Content Pulse</CardTitle>
-          <CardDescription>
-            Sign in to your account to continue
-          </CardDescription>
+    <div className="min-h-screen flex items-center justify-center bg-gradient-to-b from-background to-muted p-4">
+      <Card className="w-full max-w-md">
+        <CardHeader>
+          <CardTitle>Welcome Back</CardTitle>
+          <CardDescription>Sign in to your account</CardDescription>
         </CardHeader>
         <CardContent>
           <Button 
-            className="w-full"
+            className="w-full" 
             onClick={handleGoogleSignIn}
             disabled={loading}
           >
