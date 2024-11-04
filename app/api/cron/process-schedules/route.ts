@@ -87,7 +87,7 @@ export async function GET(req: NextRequest) {
         // Generate post for each schedule
         try {
           // Get base URL with fallback
-          const baseUrl = process.env.NEXT_PUBLIC_BASE_URL || 'http://localhost:3000';
+          const baseUrl = process.env.NEXTAUTH_URL || 'http://localhost:3000';
           console.log('starting fetch for schedule', schedule.id);
 
           const response = await fetch(`${baseUrl}/api/generate-post`, {
