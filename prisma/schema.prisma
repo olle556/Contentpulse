@@ -27,8 +27,7 @@ model Account {
   scope             String?
   id_token          String? @db.Text
   session_state     String?
-
-  user User @relation(fields: [userId], references: [id], onDelete: Cascade)
+  user              User    @relation(fields: [userId], references: [id], onDelete: Cascade)
 
   @@unique([provider, providerAccountId])
   @@index([userId])
@@ -45,23 +44,17 @@ model Session {
 }
 
 model User {
-  id               String            @id @default(cuid())
-  name             String?
-  email            String?           @unique
-  emailVerified    DateTime?
-  image            String?
-  username         String?           @unique
-  bio              String?
-  accountType      String            @default("individual")
-  createdAt        DateTime          @default(now())
-  updatedAt        DateTime          @updatedAt
-  posts            GeneratedPost[]
-  sources          ContentSource[]
-  preferences      Json?
-  accounts         Account[]
-  sessions         Session[]
-  brands           Brand[]
-  contentSchedules ContentSchedule[]
+  id            String            @id @default(cuid())
+  name          String?
+  email         String?           @unique
+  emailVerified DateTime?
+  image         String?
+  accounts      Account[]
+  sessions      Session[]
+  sources       ContentSource[]
+  schedules     ContentSchedule[]
+  posts         GeneratedPost[]
+  brands        Brand[]
 
   @@index([email])
 }
@@ -75,26 +68,24 @@ model VerificationToken {
 }
 
 model GeneratedPost {
-  id               String    @id @default(cuid())
-  content          String
-  platform         String
-  status           String    @default("pending")
-  scheduledTime    DateTime?
-  feedbackRating   Int?
-  feedbackComments String?
-  createdAt        DateTime  @default(now())
-  updatedAt        DateTime  @updatedAt
-  userId           String
-  user             User      @relation(fields: [userId], references: [id])
+  id         String   @id @default(cuid())
+  createdAt  DateTime @default(now())
+  updatedAt  DateTime @updatedAt
+  userId     String
+  user       User     @relation(fields: [userId], references: [id])
+  content    String   @db.Text
+  title      String?
+  published  Boolean  @default(false)
+  embeddings Json?
 
   @@index([userId])
 }
 
 model ContentSource {
   id        String            @id @default(cuid())
-  url       String
   createdAt DateTime          @default(now())
   updatedAt DateTime          @updatedAt
+  url       String
   userId    String
   user      User              @relation(fields: [userId], references: [id])
   schedules ContentSchedule[]
@@ -146,21 +137,16 @@ model Brand {
 
 model ContentSchedule {
   id              String        @id @default(cuid())
+  createdAt       DateTime      @default(now())
+  updatedAt       DateTime      @updatedAt
   userId          String
   user            User          @relation(fields: [userId], references: [id])
   contentSourceId String
   contentSource   ContentSource @relation(fields: [contentSourceId], references: [id])
-  tonality        String
-  platforms       String[]
-  isRecurring     Boolean       @default(false)
-  recurringDays   String[]
-  startDate       DateTime?
-  date            DateTime?
+  frequency       String        @default("daily")
   time            String
-  aiInstructions  String?
-  createdAt       DateTime      @default(now())
-  updatedAt       DateTime      @updatedAt
-  useEmojis       Boolean       @default(false)
+  lastRun         DateTime?
+  active          Boolean       @default(true)
 
   @@index([userId])
   @@index([contentSourceId])
