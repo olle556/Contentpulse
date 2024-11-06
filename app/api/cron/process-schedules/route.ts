@@ -90,10 +90,12 @@ export async function GET(req: NextRequest) {
           console.log('[CRON] Generating post for schedule:', {
             scheduleId: schedule.id,
             sourceUrl: source.url,
+            platform: schedule.platforms[0].toLowerCase(),
             tone: schedule.tonality.toLowerCase(),
             instructions: schedule.aiInstructions || '',
             useEmojis: schedule.useEmojis || false,
             userId: schedule.userId, // Pass the userId from the schedule
+            baseUrl: baseUrl,
           });
 
           const response = await fetch(`${baseUrl}api/generate-post`, {
