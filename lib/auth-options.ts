@@ -207,5 +207,5 @@ export const authOptions: AuthOptions = {
     signIn: "/authentication/login",
     error: "/authentication/error",
   },
-  debug: true,
+  debug: false,
 };

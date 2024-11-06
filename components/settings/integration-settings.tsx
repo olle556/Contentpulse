@@ -44,7 +44,7 @@ export function IntegrationSettings() {
 
   const initiateThreadsAuth = useCallback(() => {
     const FACEBOOK_APP_ID = "3745203395697482";
-    const APP_URL = "http://localhost:3000";
+    const APP_URL = "https://localhost:3000";
     const REDIRECT_URI = `${APP_URL}/api/auth/threads/callback`;
 
     console.log('InitiateThreadsAuth called with ID:', FACEBOOK_APP_ID);
