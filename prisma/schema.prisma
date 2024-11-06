@@ -10,7 +10,6 @@ datasource db {
   provider     = "postgresql"
   url          = env("DATABASE_URL")
   directUrl    = env("DIRECT_URL")
-  extensions   = [vector]
   relationMode = "prisma"
 }
 
@@ -106,14 +105,13 @@ model ContentSource {
 model ScrapedContent {
   id        String                      @id @default(cuid())
   content   String                      @db.Text
-  embedding Unsupported("vector(1536)")
   metadata  Json?
   createdAt DateTime                    @default(now())
   sourceId  String
   source    ContentSource               @relation(fields: [sourceId], references: [id])
 
   @@index([sourceId])
-  @@index([embedding(type: Vector)])
+
 }
 
 model Brand {
@@ -124,7 +122,7 @@ model Brand {
   language          String?
   website           String?
   brandVoice        String
-  usp               String?
+  description       String?
   missionStatement  String?
   slogans           String?
   demographics      String?
@@ -132,21 +130,12 @@ model Brand {
   contentThemes     String?
   primaryObjectives String?
   brandStory        String?
-  embedding_1       Unsupported("vector(384)")
-  embedding_2       Unsupported("vector(384)")
-  embedding_3       Unsupported("vector(384)")
-  embedding_4       Unsupported("vector(384)")
-  
   userId            String
   user              User                       @relation(fields: [userId], references: [id])
   createdAt         DateTime                   @default(now())
   updatedAt         DateTime                   @updatedAt
 
   @@index([userId])
-  @@index([embedding_1(type: Vector)])
-  @@index([embedding_2(type: Vector)])
-  @@index([embedding_3(type: Vector)])
-  @@index([embedding_4(type: Vector)])
 }
 
 model ContentSchedule {

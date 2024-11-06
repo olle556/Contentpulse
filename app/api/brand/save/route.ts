@@ -1,66 +1,19 @@
-import { OpenAI } from 'openai'
 import { getServerSession } from 'next-auth/next';
 import { NextResponse } from 'next/server';
 import { authOptions } from '@/lib/auth-options';
 import { prisma } from '@/lib/prisma';
-
-const openai = new OpenAI({
-  apiKey: process.env.OPENAI_API_KEY
-})
-
-async function generateEmbedding(brandData: any) {
-  try {
-    const brandText = `
-      Brand: ${brandData.brandName}
-      Type: ${brandData.brandType}
-      Industry: ${brandData.industry}
-      Voice: ${brandData.brandVoice}
-      Language: ${brandData.language}
-      Website: ${brandData.website}
-      Description: ${brandData.description}
-      Mission: ${brandData.missionStatement}
-      Slogans: ${brandData.slogans}
-      Demographics: ${brandData.demographics}
-      Psychographics: ${brandData.psychographics}
-      Content Themes: ${brandData.contentThemes}
-      Primary Objectives: ${brandData.primaryObjectives}
-      Call to Actions: ${brandData.callToActions}
-      Upcoming Events: ${brandData.upcomingEvents}
-      Testimonials: ${brandData.testimonials}
-      Brand Story: ${brandData.brandStory}
-      Hashtag Preferences: ${brandData.hashtagPreferences}
-      Successful Posts: ${brandData.successfulPosts}
-      Competitor Content: ${brandData.competitorContent}
-      Current Promotions: ${brandData.currentPromotions}
-    `.trim()
-
-    console.log('Generated brand text:', brandText);
-    console.log('Calling OpenAI API...');
-    
-    const embedding = await openai.embeddings.create({
-      model: "text-embedding-ada-002",
-      input: brandText,
-    })
-
-    console.log('OpenAI API response received');
-    console.log('Embedding length:', embedding.data[0].embedding.length);
-    console.log('First few values:', embedding.data[0].embedding.slice(0, 5));
-
-    return embedding.data[0].embedding
-  } catch (error) {
-    console.error('Error in generateEmbedding:', error);
-    throw error;
-  }
-}
+import { Prisma } from '@prisma/client';
 
 export async function POST(req: Request) {
   try {
     const session = await getServerSession(authOptions)
     if (!session?.user?.id) {
+      console.log('No session found')
       return NextResponse.json({ error: 'Unauthorized' }, { status: 401 })
     }
 
     const { values, brandId } = await req.json()
+    console.log('Processing request:', { brandId, userId: session.user.id })
     
     if (!values.brandName || !values.brandType || !values.industry || !values.brandVoice) {
       return NextResponse.json(
@@ -69,123 +22,55 @@ export async function POST(req: Request) {
       )
     }
 
+    const data = {
+      brandName: values.brandName,
+      brandType: values.brandType,
+      industry: values.industry,
+      language: values.language || null,
+      website: values.website || null,
+      brandVoice: values.brandVoice,
+      description: values.description || null,
+      missionStatement: values.missionStatement || null,
+      slogans: values.slogans || null,
+      demographics: values.demographics || null,
+      psychographics: values.psychographics || null,
+      contentThemes: values.contentThemes || null,
+      primaryObjectives: values.primaryObjectives || null,
+      brandStory: values.brandStory || null,
+    }
+
     try {
-      console.log('Starting embedding generation...');
-      console.log('OpenAI API Key exists:', !!process.env.OPENAI_API_KEY);
+      const result = await prisma.brand.upsert({
+        where: {
+          id: brandId ? parseInt(brandId) : -1,
+        },
+        update: {
+          ...data,
+          updatedAt: new Date(),
+        },
+        create: {
+          ...data,
+          userId: session.user.id,
+        },
+      })
       
-      const embedding = await generateEmbedding(values);
-      
-      console.log('Embedding generated successfully');
-      console.log('Splitting embeddings into chunks...');
-      
-      const embedding_1 = embedding.slice(0, 384);
-      const embedding_2 = embedding.slice(384, 768);
-      const embedding_3 = embedding.slice(768, 1152);
-      const embedding_4 = embedding.slice(1152, 1536);
+      console.log('Upserted brand:', result)
+      return NextResponse.json({ 
+        id: result.id,
+        success: true 
+      })
 
-      console.log('Chunks created. Lengths:', {
-        chunk1: embedding_1.length,
-        chunk2: embedding_2.length,
-        chunk3: embedding_3.length,
-        chunk4: embedding_4.length
-      });
-
-      if (brandId) {
-        await prisma.$executeRaw`
-          UPDATE "Brand"
-          SET 
-            "brandName" = ${values.brandName},
-            "brandType" = ${values.brandType},
-            "industry" = ${values.industry},
-            "brandVoice" = ${values.brandVoice},
-            "language" = ${values.language || null},
-            "website" = ${values.website || null},
-            "usp" = ${values.usp || null},
-            "missionStatement" = ${values.missionStatement || null},
-            "slogans" = ${values.slogans || null},
-            "demographics" = ${values.demographics || null},
-            "psychographics" = ${values.psychographics || null},
-            "contentThemes" = ${values.contentThemes || null},
-            "primaryObjectives" = ${values.primaryObjectives || null},
-            "brandStory" = ${values.brandStory || null},
-            "embedding_1" = ('[' || ${embedding_1.join(',')} || ']')::vector(384),
-            "embedding_2" = ('[' || ${embedding_2.join(',')} || ']')::vector(384),
-            "embedding_3" = ('[' || ${embedding_3.join(',')} || ']')::vector(384),
-            "embedding_4" = ('[' || ${embedding_4.join(',')} || ']')::vector(384),
-            "updatedAt" = NOW()
-          WHERE id = ${Number(brandId)}
-        `;
-        
-        return NextResponse.json({ success: true });
-      } else {
-        console.log('Creating new brand with embeddings...');
-        
-        await prisma.$executeRaw`
-          INSERT INTO "Brand" (
-            "brandName",
-            "brandType",
-            "industry",
-            "brandVoice",
-            "language",
-            "website",
-            "usp",
-            "missionStatement",
-            "slogans",
-            "demographics",
-            "psychographics",
-            "contentThemes",
-            "primaryObjectives",
-            "brandStory",
-            "userId",
-            "embedding_1",
-            "embedding_2",
-            "embedding_3",
-            "embedding_4"
-          ) VALUES (
-            ${values.brandName},
-            ${values.brandType},
-            ${values.industry},
-            ${values.brandVoice},
-            ${values.language || null},
-            ${values.website || null},
-            ${values.usp || null},
-            ${values.missionStatement || null},
-            ${values.slogans || null},
-            ${values.demographics || null},
-            ${values.psychographics || null},
-            ${values.contentThemes || null},
-            ${values.primaryObjectives || null},
-            ${values.brandStory || null},
-            ${session.user.id},
-            ('[' || ${embedding_1.join(',')} || ']')::vector(384),
-            ('[' || ${embedding_2.join(',')} || ']')::vector(384),
-            ('[' || ${embedding_3.join(',')} || ']')::vector(384),
-            ('[' || ${embedding_4.join(',')} || ']')::vector(384)
-          ) RETURNING id
-        `;
-
-        // Get the last inserted ID
-        const result = await prisma.$queryRaw<[{ id: number }]>`
-          SELECT id FROM "Brand" 
-          WHERE "userId" = ${session.user.id} 
-          ORDER BY "createdAt" DESC 
-          LIMIT 1
-        `;
-
-        return NextResponse.json({ id: result[0].id });
-      }
     } catch (error) {
-      console.error('Database operation failed:', error)
-      console.error('Full error:', JSON.stringify(error, null, 2))
+      console.error('Operation failed:', error)
       return NextResponse.json(
-        { error: 'Database operation failed', details: error }, 
+        { error: 'Database operation failed' }, 
         { status: 500 }
       )
     }
   } catch (error) {
-    console.error('Failed to save brand:', error)
+    console.error('Request failed:', error)
     return NextResponse.json(
-      { error: 'Failed to save brand', details: error }, 
+      { error: 'Failed to process request' }, 
       { status: 500 }
     )
   }

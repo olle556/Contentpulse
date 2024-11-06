@@ -29,6 +29,7 @@ import { Brand, Prisma } from '@prisma/client'
 import { generateBrandEmbedding } from '@/utils/embeddings'
 import debounce from 'lodash/debounce'
 import { useRouter } from 'next/navigation'
+import AutosaveToast from '@/components/autosave-toast'
 
 // Define custom interfaces for your brand data
 interface BrandInput {
@@ -134,31 +135,20 @@ const advancedSteps = [
 ]
 
 const formSchema = z.object({
-  brandName: z.string(),
-  brandType: z.string(),
-  industry: z.string(),
-  language: z.string(),
-  website: z.string(),
-  missionStatement: z.string(),
-  brandVoice: z.string(),
-  slogans: z.string(),
-  // Target Audience
-  demographics: z.string(),
-  psychographics: z.string(),
-  description: z.string(),
-  currentPromotions: z.string(),
-  // Content Preferences
-  contentThemes: z.string(),
-  successfulPosts: z.string(),
-  competitorContent: z.string(),
-  // Marketing Goals
-  primaryObjectives: z.string(),
-  callToActions: z.string(),
-  // Additional Context
-  upcomingEvents: z.string(),
-  testimonials: z.string(),
-  brandStory: z.string(),
-  hashtagPreferences: z.string(),
+  brandName: z.string().min(1, "Brand name is required"),
+  brandType: z.string().min(1, "Brand type is required"),
+  industry: z.string().min(1, "Industry is required"),
+  language: z.string().optional().nullable(),
+  website: z.string().optional().nullable(),
+  brandVoice: z.string().min(1, "Brand voice is required"),
+  usp: z.string().optional().nullable(),
+  missionStatement: z.string().optional().nullable(),
+  slogans: z.string().optional().nullable(),
+  demographics: z.string().optional().nullable(),
+  psychographics: z.string().optional().nullable(),
+  contentThemes: z.string().optional().nullable(),
+  primaryObjectives: z.string().optional().nullable(),
+  brandStory: z.string().optional().nullable(),
 })
 
 export default function BrandInformationPage() {
@@ -174,26 +164,15 @@ export default function BrandInformationPage() {
       industry: '',
       language: '',
       website: '',
-      missionStatement: '',
       brandVoice: '',
+      usp: '',
+      missionStatement: '',
       slogans: '',
-      // Target Audience
       demographics: '',
       psychographics: '',
-      description: '',
-      currentPromotions: '',
-      // Content Preferences
       contentThemes: '',
-      successfulPosts: '',
-      competitorContent: '',
-      // Marketing Goals
       primaryObjectives: '',
-      callToActions: '',
-      // Additional Context
-      upcomingEvents: '',
-      testimonials: '',
-      brandStory: '',     
-      hashtagPreferences: '',
+      brandStory: '',
     },
   })
 
@@ -206,56 +185,83 @@ export default function BrandInformationPage() {
     }
   }, [])
 
-  // Add a save status indicator
-  const [saveStatus, setSaveStatus] = useState<'saved' | 'saving' | 'error'>('saved')
+  // Replace the [saveStatus, setSaveStatus] with [showSaveToast, setShowSaveToast]
+  const [showSaveToast, setShowSaveToast] = useState(false)
+
+  
 
   // Auto-save to localStorage
   const autoSaveToStorage = debounce((values: z.infer<typeof formSchema>) => {
-    localStorage.setItem('brandFormData', JSON.stringify(values))
-  }, 1000) // Save after 1 second of inactivity
+    try {
+      localStorage.setItem('brandFormData', JSON.stringify(values))
+      console.log('Saved to localStorage:', values) // Debug log
+    } catch (error) {
+      console.error('Failed to save to localStorage:', error)
+    }
+  }, 1000)
 
   // Auto-save to DB
   const autoSaveToDb = debounce(async (values: z.infer<typeof formSchema>) => {
     try {
-      setSaveStatus('saving')
       if (!session?.user?.id) return
 
+      setShowSaveToast(true)
       const brandId = localStorage.getItem('brandId')
+      
+      console.log('Saving brand:', { values, brandId }) // Debug log
       
       const response = await fetch('/api/brand/save', {
         method: 'POST',
         headers: {
           'Content-Type': 'application/json',
         },
-        body: JSON.stringify({ values, brandId }),
+        body: JSON.stringify({ 
+          values, 
+          brandId: brandId ? parseInt(brandId) : null 
+        }),
       })
-
-      if (!response.ok) {
-        throw new Error('Failed to save')
-      }
 
       const data = await response.json()
       
-      if (data.id) {
-        localStorage.setItem('brandId', data.id)
+      if (!response.ok) {
+        console.error('Save failed:', data)
+        throw new Error(data.error || 'Failed to save')
       }
-      
-      setSaveStatus('saved')
-    } catch (error) {
-      setSaveStatus('error')
-      console.error('Failed to auto-save:', error)
-    }
-  }, 2000) // Save to DB after 2 seconds of inactivity
 
-  // Watch form changes
+      if (data.id) {
+        localStorage.setItem('brandId', data.id.toString())
+      }
+
+      setTimeout(() => {
+        setShowSaveToast(false)
+      }, 2000)
+      
+    } catch (error) {
+      console.error('Failed to auto-save:', error)
+      setShowSaveToast(false)
+    }
+  }, 2000)
+
+  // Watch form changes and trigger both saves
   useEffect(() => {
-    const subscription = form.watch((values) => {
-      autoSaveToStorage(values as z.infer<typeof formSchema>)
-      autoSaveToDb(values as z.infer<typeof formSchema>)
+    const subscription = form.watch((value, { name, type }) => {
+      console.log('Form changed:', name, value) // Debug log
+      
+      const formValues = form.getValues()
+      
+      // Only save if we have the minimum required fields
+      if (formValues.brandName && formValues.brandType && formValues.industry && formValues.brandVoice) {
+        autoSaveToStorage(formValues)
+        autoSaveToDb(formValues)
+      }
     })
     
-    return () => subscription.unsubscribe()
-  }, [form.watch])
+    return () => {
+      subscription.unsubscribe()
+      autoSaveToStorage.cancel()
+      autoSaveToDb.cancel()
+    }
+  }, [form, session?.user?.id])
 
   // Final submit handler
   const onSubmit = async (values: z.infer<typeof formSchema>) => {
@@ -416,11 +422,8 @@ export default function BrandInformationPage() {
           )}
         </CardContent>
       </Card>
-      <div className="text-sm text-gray-500">
-        {saveStatus === 'saving' && 'Saving...'}
-        {saveStatus === 'saved' && 'All changes saved'}
-        {saveStatus === 'error' && 'Error saving changes'}
-      </div>
+      <AutosaveToast show={showSaveToast} />
+
     </div>
   )
 }
