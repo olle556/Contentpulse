@@ -106,7 +106,8 @@ export function ScheduledPostList() {
   // Find the corresponding content source URL
   const getContentSourceUrl = (sourceId: string) => {
     const source = contentSources.find(source => source.id === sourceId);
-    return source?.url || 'Unknown Source';
+    const url = source?.url || 'Unknown Source';
+    return url.replace(/^https?:\/\//, '');
   };
 
   if (schedules.length === 0) {
@@ -147,21 +148,21 @@ export function ScheduledPostList() {
               {schedules.map((schedule) => (
                 <TableRow key={schedule.id}>
                   <TableCell>{getContentSourceUrl(schedule.contentSourceId)}</TableCell>
-                  <TableCell>{schedule.platforms.join(", ")}</TableCell>
-                  <TableCell>{schedule.tonality || "Default"}</TableCell>
-                  <TableCell>
+                  <TableCell className="text-center">{schedule.platforms.join(", ")}</TableCell>
+                  <TableCell className="text-center">{schedule.tonality || "Default"}</TableCell>
+                  <TableCell className="text-center">
                     {schedule.date ? format(new Date(schedule.date), "MMM dd") : "N/A"}
                   </TableCell>
-                  <TableCell>
+                  <TableCell className="text-center">
                     {schedule.time ? convertUTCToLocalTime(schedule.time) : "N/A"}
                   </TableCell>
-                  <TableCell>
+                  <TableCell className="text-center">
                     {schedule.isRecurring 
                       ? schedule.recurringDays.join(", ")
                       : "No"}
                   </TableCell>
-                  <TableCell>{schedule.aiInstructions ? "Yes" : "No"}</TableCell>
-                  <TableCell>{schedule.useEmojis ? "Yes" : "No"}</TableCell>
+                  <TableCell className="text-center">{schedule.aiInstructions ? "Yes" : "No"}</TableCell>
+                  <TableCell className="text-center">{schedule.useEmojis ? "Yes" : "No"}</TableCell>
                   <TableCell>
                     <div className="flex space-x-2">
                       <Button

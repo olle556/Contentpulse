@@ -5,7 +5,7 @@ import { zodResolver } from "@hookform/resolvers/zod"
 import { useForm } from "react-hook-form"
 import * as z from "zod"
 import { format } from "date-fns"
-import { Calendar as CalendarIcon, Clock } from "lucide-react"
+import { Calendar as CalendarIcon } from "lucide-react"
 import { Button } from "@/components/ui/button"
 import { Calendar } from "@/components/ui/calendar"
 import { Checkbox } from "@/components/ui/checkbox"
@@ -118,13 +118,23 @@ export function ContentScheduler({ open, onOpenChange, contentSources, editSched
       const localDate = new Date();
       localDate.setHours(hours, minutes, 0, 0);
 
-      // Convert to UTC time only for database storage
+      // Convert to UTC time only for the time field
       const dbTime = `${localDate.getUTCHours().toString().padStart(2, '0')}:${localDate.getUTCMinutes().toString().padStart(2, '0')}`;
 
-      // Send UTC time to database while keeping the display time unchanged
+      // For the date field, ensure we're using the local date without time component
+      const selectedDate = dateToUse ? new Date(dateToUse) : null;
+      if (selectedDate) {
+        // Set the time to noon (12:00) to avoid timezone issues
+        selectedDate.setHours(12, 0, 0, 0);
+      }
+
+      // Send data to database
       const dataToSend = {
         ...values,
-        time: dbTime
+        time: dbTime,
+        date: selectedDate,
+        startDate: selectedDate, // if it's recurring
+        useEmojis: values.useEmojis // Explicitly include useEmojis field
       };
 
       const url = editSchedule
@@ -393,7 +403,6 @@ export function ContentScheduler({ open, onOpenChange, contentSources, editSched
                         {...field}
                         className="w-[240px]"
                       />
-                      <Clock className="ml-2 h-4 w-4 opacity-50" />
                     </div>
                   </FormControl>
                 </FormItem>
