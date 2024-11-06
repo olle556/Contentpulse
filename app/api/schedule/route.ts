@@ -33,6 +33,7 @@ export async function POST(req: Request) {
         date: data.date,
         time: data.time,
         aiInstructions: data.aiInstructions,
+        useEmojis: data.useEmojis,
       },
     })
 

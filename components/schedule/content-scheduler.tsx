@@ -113,11 +113,11 @@ export function ContentScheduler({ open, onOpenChange, contentSources, editSched
     try {
       const [hours, minutes] = values.time.split(':').map(Number);
       const dateToUse = values.isRecurring ? values.startDate : values.date;
-      
+
       // Create a Date object with the user's local time
       const localDate = new Date();
       localDate.setHours(hours, minutes, 0, 0);
-      
+
       // Convert to UTC time only for database storage
       const dbTime = `${localDate.getUTCHours().toString().padStart(2, '0')}:${localDate.getUTCMinutes().toString().padStart(2, '0')}`;
 
@@ -365,9 +365,13 @@ export function ContentScheduler({ open, onOpenChange, contentSources, editSched
                         mode="single"
                         selected={field.value}
                         onSelect={field.onChange}
-                        disabled={(date) =>
-                          date < new Date() || date < new Date("1900-01-01")
-                        }
+                        disabled={(date) => {
+                          const today = new Date();
+                          today.setHours(0, 0, 0, 0);
+                          const compareDate = new Date(date);
+                          compareDate.setHours(0, 0, 0, 0);
+                          return compareDate < today || date < new Date("1900-01-01");
+                        }}
                         initialFocus
                       />
                     </PopoverContent>
