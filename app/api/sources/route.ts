@@ -14,15 +14,13 @@ export async function GET() {
       }, { status: 401 });
     }
 
-    const sources = await prisma.$transaction(async (tx) => {
-      return tx.contentSource.findMany({
-        where: {
-          userId: session.user.id
-        },
-        orderBy: {
-          createdAt: 'desc',
-        },
-      });
+    const sources = await prisma.contentSource.findMany({
+      where: {
+        userId: session.user.id
+      },
+      orderBy: {
+        createdAt: 'desc',
+      },
     });
 
     return NextResponse.json({ success: true, sources });
@@ -49,13 +47,11 @@ export async function POST(req: Request) {
 
     const { url } = await req.json();
 
-    const contentSource = await prisma.$transaction(async (tx) => {
-      return tx.contentSource.create({
-        data: {
-          url,
-          userId: session.user.id,
-        },
-      });
+    const contentSource = await prisma.contentSource.create({
+      data: {
+        url,
+        userId: session.user.id,
+      },
     });
 
     return NextResponse.json({ 
