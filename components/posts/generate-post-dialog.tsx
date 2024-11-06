@@ -216,29 +216,36 @@ export function GeneratePostDialog({ open, onOpenChange, onSuccess }: GeneratePo
         throw new Error("Selected source not found");
       }
 
-      console.log('Selected source URL:', selectedSource.url); // Debug log
+      console.log('Sending request with:', { 
+        sourceUrl: selectedSource.url,
+        platform: selectedPlatform,
+        tone: selectedTone,
+        useEmojis,
+      });
 
       const response = await fetch('/api/generate-post', {
         method: 'POST',
-        headers: { 'Content-Type': 'application/json' },
+        headers: { 
+          'Content-Type': 'application/json',
+        },
         body: JSON.stringify({ 
           sourceUrl: selectedSource.url,
           platform: selectedPlatform,
           tone: selectedTone,
-          instructions: aiInstructions,
           useEmojis,
+          // Remove instructions if not used in the API
+          // instructions: aiInstructions,
         }),
       });
 
+      console.log('Response status:', response.status);
       const data = await response.json();
-      
-      if (response.status === 402) {
-        toast.error("Service is temporarily unavailable. Please try again later.");
-        return;
+      console.log('Response data:', data);
+
+      if (!response.ok) {
+        throw new Error(data.error || `HTTP error! status: ${response.status}`);
       }
       
-      if (!response.ok) throw new Error(data.error || 'Failed to generate post');
-
       setGeneratedContent(data.content);
       setSavedPostId(data.post.id);
       if (editor) {

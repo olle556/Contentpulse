@@ -5,12 +5,16 @@ import { getServerSession } from "next-auth/next";
 import { authOptions } from "@/lib/auth-options";
 import { getRelevantBrandContext } from '@/utils/getBrandContext';
 
+export async function GET() {
+  return NextResponse.json({ status: 'Route is working' });
+}
 const prisma = new PrismaClient();
 const anthropic = new Anthropic({
   apiKey: process.env.ANTHROPIC_API_KEY,
 });
 
 export async function POST(request: Request) {
+  console.log('API route hit: /api/generate-post');
   try {
     // Check if request is from cron job
     const authHeader = request.headers.get('authorization');
@@ -92,13 +96,7 @@ export async function POST(request: Request) {
 
     // Get brand context for the authenticated user
     const brandContext = await getRelevantBrandContext(userId);
-    
-    if (!brandContext) {
-      return NextResponse.json({
-        success: false,
-        error: 'No brand found for user'
-      }, { status: 404 });
-    }
+    const brandInfo = brandContext || "";
 
     // 2. Create a platform-specific prompt
     const platformLimits = {
@@ -111,7 +109,7 @@ export async function POST(request: Request) {
     const prompt = `You are a social media content creator. Your task is to create an engaging ${platform} post using a ${tone} tone based on the following brand context and source material.
 
 Brand Context:
-${brandContext}
+${brandInfo}
 
 Source URL: ${sourceUrl}
 Scraped Content:
