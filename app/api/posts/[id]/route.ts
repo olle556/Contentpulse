@@ -1,7 +1,7 @@
 import { NextResponse } from 'next/server';
-import { PrismaClient } from '@prisma/client';
-
-const prisma = new PrismaClient();
+import { prisma } from '@/lib/prisma';
+import { getServerSession } from "next-auth/next";
+import { authOptions } from "@/lib/auth-options";
 
 export async function GET() {
   try {
@@ -24,8 +24,6 @@ export async function GET() {
       success: false, 
       error: error instanceof Error ? error.message : 'Failed to fetch posts' 
     }, { status: 500 });
-  } finally {
-    await prisma.$disconnect();
   }
 }
 
@@ -34,6 +32,15 @@ export async function PATCH(
   { params }: { params: { id: string } }
 ) {
   try {
+    const session = await getServerSession(authOptions);
+    
+    if (!session?.user?.email) {
+      return NextResponse.json({ 
+        success: false, 
+        error: 'Unauthorized' 
+      }, { status: 401 });
+    }
+
     const { content } = await request.json();
     
     if (!content) {
@@ -41,6 +48,19 @@ export async function PATCH(
         success: false, 
         error: 'Content is required' 
       }, { status: 400 });
+    }
+
+    // Verify the post belongs to the user
+    const existingPost = await prisma.generatedPost.findUnique({
+      where: { id: params.id },
+      include: { user: true },
+    });
+
+    if (!existingPost || existingPost.user.email !== session.user.email) {
+      return NextResponse.json({ 
+        success: false, 
+        error: 'Post not found or unauthorized' 
+      }, { status: 404 });
     }
 
     const post = await prisma.generatedPost.update({
@@ -59,8 +79,6 @@ export async function PATCH(
       success: false, 
       error: error instanceof Error ? error.message : 'Failed to update post' 
     }, { status: 500 });
-  } finally {
-    await prisma.$disconnect();
   }
 }
 
@@ -83,7 +101,5 @@ export async function DELETE(
       success: false, 
       error: error instanceof Error ? error.message : 'Failed to delete post' 
     }, { status: 500 });
-  } finally {
-    await prisma.$disconnect();
   }
 }
