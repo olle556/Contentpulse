@@ -389,12 +389,6 @@ export function GeneratePostDialog({ open, onOpenChange, onSuccess }: GeneratePo
                 <EditorContent editor={editor} />
               </div>
               <div className="flex justify-end space-x-2">
-                {isSaving && (
-                  <span className="text-sm text-muted-foreground">
-                    <Loader2 className="w-4 h-4 animate-spin inline mr-2" />
-                    Saving...
-                  </span>
-                )}
                 <Button 
                   variant="outline" 
                   onClick={handleDoneEditing}
