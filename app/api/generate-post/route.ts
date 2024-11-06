@@ -16,6 +16,10 @@ const anthropic = new Anthropic({
 export async function POST(request: Request) {
   console.log('API route hit: /api/generate-post');
   try {
+    // Read request body once at the beginning
+    const requestData = await request.json();
+    const { sourceUrl, platform, tone, useEmojis, userId: cronUserId } = requestData;
+
     // Check if request is from cron job
     const authHeader = request.headers.get('authorization');
     const isCronRequest = authHeader === `Bearer ${process.env.CRON_SECRET}`;
@@ -23,8 +27,6 @@ export async function POST(request: Request) {
     let userId: string;
 
     if (isCronRequest) {
-      // For cron requests, get userId from request body
-      const { userId: cronUserId } = await request.json();
       if (!cronUserId) {
         return NextResponse.json({
           success: false,
@@ -33,7 +35,6 @@ export async function POST(request: Request) {
       }
       userId = cronUserId;
     } else {
-      // For regular requests, get userId from session
       const session = await getServerSession(authOptions);
       if (!session?.user?.id) {
         return NextResponse.json({
@@ -43,10 +44,6 @@ export async function POST(request: Request) {
       }
       userId = session.user.id;
     }
-
-    // Clone the request to read the body again
-    const clonedRequest = request.clone();
-    const { sourceUrl, platform, tone, useEmojis } = await clonedRequest.json();
 
     if (!sourceUrl || !platform || !tone) {
       return NextResponse.json({
