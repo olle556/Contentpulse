@@ -16,6 +16,7 @@ import { EditPostDialog } from "./edit-post-dialog";
 import { GeneratePostDialog } from "./generate-post-dialog";
 import { toast } from "react-toastify";
 
+
 export function PostList() {
   const [posts, setPosts] = useState<GeneratedPost[]>([]);
   const [loading, setLoading] = useState(true);
@@ -23,6 +24,7 @@ export function PostList() {
   const [isDeleteOpen, setIsDeleteOpen] = useState(false);
   const [isEditOpen, setIsEditOpen] = useState(false);
   const [isGenerateOpen, setIsGenerateOpen] = useState(false);
+  const [copyingStates, setCopyingStates] = useState<{ [key: string]: boolean }>({});
 
   useEffect(() => {
     fetchPosts();
@@ -60,6 +62,18 @@ export function PostList() {
     setSelectedPost(post);
     setIsDeleteOpen(true);
   }
+
+  const copyToClipboard = async (text: string, postId: string) => {
+    try {
+      await navigator.clipboard.writeText(text);
+      setCopyingStates(prev => ({ ...prev, [postId]: true }));
+      setTimeout(() => {
+        setCopyingStates(prev => ({ ...prev, [postId]: false }));
+      }, 2000); // Reset after 2 seconds
+    } catch (err) {
+      console.error('Failed to copy:', err);
+    }
+  };
 
   if (loading) {
     return <div>Loading posts...</div>;
@@ -114,8 +128,23 @@ export function PostList() {
               <div className="flex gap-2">
                 <Badge variant="outline">{post.platform}</Badge>
               </div>
-              <Button size="sm" variant="default">
-                Post
+              <Button 
+                size="sm" 
+                variant="default" 
+                onClick={() => copyToClipboard(post.content, post.id)}
+                className="relative min-w-[70px] transition-all duration-200"
+                disabled={copyingStates[post.id]}
+              >
+                <span className={`${copyingStates[post.id] ? 'opacity-0' : 'opacity-100'} transition-opacity duration-200`}>
+                  Copy
+                </span>
+                <span 
+                  className={`absolute left-1/2 -translate-x-1/2 
+                    ${copyingStates[post.id] ? 'opacity-100' : 'opacity-0'} 
+                    transition-opacity duration-200`}
+                >
+                  Copied!
+                </span>
               </Button>
             </div>
           </Card>
@@ -146,6 +175,8 @@ export function PostList() {
           fetchPosts();
         }}
       />
+      
+
     </>
   );
 }

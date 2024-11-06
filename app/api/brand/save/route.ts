@@ -91,7 +91,6 @@ export async function POST(req: Request) {
       });
 
       if (brandId) {
-        // Update existing brand with new embeddings
         await prisma.$executeRaw`
           UPDATE "Brand"
           SET 
@@ -114,17 +113,15 @@ export async function POST(req: Request) {
             "embedding_3" = ('[' || ${embedding_3.join(',')} || ']')::vector(384),
             "embedding_4" = ('[' || ${embedding_4.join(',')} || ']')::vector(384),
             "updatedAt" = NOW()
-          WHERE id = ${brandId}
+          WHERE id = ${Number(brandId)}
         `;
         
         return NextResponse.json({ success: true });
       } else {
         console.log('Creating new brand with embeddings...');
-        const newId = crypto.randomUUID();
         
         await prisma.$executeRaw`
           INSERT INTO "Brand" (
-            "id",
             "brandName",
             "brandType",
             "industry",
@@ -143,11 +140,8 @@ export async function POST(req: Request) {
             "embedding_1",
             "embedding_2",
             "embedding_3",
-            "embedding_4",
-            "createdAt",
-            "updatedAt"
+            "embedding_4"
           ) VALUES (
-            ${newId},
             ${values.brandName},
             ${values.brandType},
             ${values.industry},
@@ -166,21 +160,19 @@ export async function POST(req: Request) {
             ('[' || ${embedding_1.join(',')} || ']')::vector(384),
             ('[' || ${embedding_2.join(',')} || ']')::vector(384),
             ('[' || ${embedding_3.join(',')} || ']')::vector(384),
-            ('[' || ${embedding_4.join(',')} || ']')::vector(384),
-            NOW(),
-            NOW()
-          )
+            ('[' || ${embedding_4.join(',')} || ']')::vector(384)
+          ) RETURNING id
         `;
 
-        const verifyResult = await prisma.$queryRaw<{ id: string }[]>`
-          SELECT id FROM "Brand" WHERE id = ${newId}
+        // Get the last inserted ID
+        const result = await prisma.$queryRaw<[{ id: number }]>`
+          SELECT id FROM "Brand" 
+          WHERE "userId" = ${session.user.id} 
+          ORDER BY "createdAt" DESC 
+          LIMIT 1
         `;
 
-        if (!verifyResult?.[0]?.id) {
-          throw new Error('Failed to create brand');
-        }
-
-        return NextResponse.json({ id: verifyResult[0].id });
+        return NextResponse.json({ id: result[0].id });
       }
     } catch (error) {
       console.error('Database operation failed:', error)
