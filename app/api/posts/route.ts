@@ -38,8 +38,6 @@ export async function GET() {
       success: false, 
       error: error instanceof Error ? error.message : 'Failed to fetch posts' 
     }, { status: 500 });
-  } finally {
-    await prisma.$disconnect();
   }
 }
 
@@ -90,7 +88,5 @@ export async function POST(request: Request) {
       success: false, 
       error: error instanceof Error ? error.message : 'Failed to save post' 
     }, { status: 500 });
-  } finally {
-    await prisma.$disconnect();
   }
 }

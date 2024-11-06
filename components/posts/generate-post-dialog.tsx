@@ -24,6 +24,7 @@ import {
   SelectTrigger,
   SelectValue,
 } from "@/components/ui/select";
+import { fetchWithRetry } from "@/utils/fetch-with-retry";
 
 interface GeneratePostDialogProps {
   open: boolean;
@@ -180,12 +181,17 @@ export function GeneratePostDialog({ open, onOpenChange, onSuccess }: GeneratePo
   }, []);
 
   async function fetchSources() {
-    try { //API/sources
-      const response = await fetch('/api/sources');
+    try {
+      const response = await fetchWithRetry('/api/sources');
       const data = await response.json();
+      
+      if (!response.ok) {
+        throw new Error(data.error || 'Failed to fetch sources');
+      }
+      
       if (data.success) {
         setSources(data.sources);
-      } 
+      }
     } catch (error) {
       console.error('Error fetching sources:', error);
       toast.error('Failed to fetch sources');

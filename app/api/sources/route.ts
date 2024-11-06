@@ -29,8 +29,6 @@ export async function GET() {
       }, { status: 404 });
     }
 
-    console.log('Fetching sources for user ID:', user.id);
-
     const sources = await prisma.contentSource.findMany({
       where: {
         userId: user.id
@@ -40,8 +38,6 @@ export async function GET() {
       },
     });
 
-    console.log('Found sources:', sources.length);
-
     return NextResponse.json({ success: true, sources });
   } catch (error) {
     console.error('Detailed error fetching sources:', error);
@@ -49,8 +45,6 @@ export async function GET() {
       success: false, 
       error: error instanceof Error ? error.message : 'Failed to fetch sources' 
     }, { status: 500 });
-  } finally {
-    await prisma.$disconnect();
   }
 }
 
@@ -95,7 +89,5 @@ export async function POST(req: Request) {
     return NextResponse.json({ 
       error: error instanceof Error ? error.message : "Internal Server Error" 
     }, { status: 500 });
-  } finally {
-    await prisma.$disconnect();
   }
 }
