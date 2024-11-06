@@ -32,7 +32,7 @@ export async function GET(req: NextRequest) {
       end: format(now, 'HH:mm')
     });
 
-    // Wrap database operations in a transaction
+    // First transaction to get schedules
     const schedulesToProcess = await prisma.$transaction(async (tx) => {
       return tx.contentSchedule.findMany({
         where: {
@@ -66,6 +66,8 @@ export async function GET(req: NextRequest) {
           user: true,
         },
       });
+    }, {
+      timeout: 30000 // Increase timeout to 30 seconds n
     });
 
     console.log(`Found ${schedulesToProcess.length} schedules to process`);
@@ -77,10 +79,10 @@ export async function GET(req: NextRequest) {
       }), { status: 200 });
     }
 
-    // Process schedules within a transaction
-    await prisma.$transaction(async (tx) => {
-      for (const schedule of schedulesToProcess) {
-        const source = await tx.contentSource.findUnique({
+    // Process schedules outside of transaction
+    for (const schedule of schedulesToProcess) {
+      try {
+        const source = await prisma.contentSource.findUnique({
           where: { id: schedule.contentSourceId }
         });
 
@@ -89,50 +91,33 @@ export async function GET(req: NextRequest) {
           continue;
         }
 
-        // Generate post for each schedule
-        try {
-          const baseUrl = process.env.NEXTAUTH_URL || 'http://localhost:3000';
-          console.log('[CRON] Generating post for schedule:', {
-            scheduleId: schedule.id,
+        // Generate post
+        const baseUrl = process.env.NEXTAUTH_URL || 'http://localhost:3000';
+        const response = await fetch(`${baseUrl}/api/generate-post`, {
+          method: 'POST',
+          headers: {
+            'Content-Type': 'application/json',
+            'Authorization': `Bearer ${process.env.CRON_SECRET}`, // Use CRON_SECRET for authentication
+          },
+          body: JSON.stringify({
             sourceUrl: source.url,
             platform: schedule.platforms[0].toLowerCase(),
             tone: schedule.tonality.toLowerCase(),
             instructions: schedule.aiInstructions || '',
             useEmojis: schedule.useEmojis || false,
             userId: schedule.userId, // Pass the userId from the schedule
-            baseUrl: baseUrl,
-          });
+          }),
+        });
 
-          const response = await fetch(`${baseUrl}api/generate-post`, {
-            method: 'POST',
-            headers: {
-              'Content-Type': 'application/json',
-              'Authorization': `Bearer ${process.env.CRON_SECRET}`, // Use CRON_SECRET for authentication
-            },
-            body: JSON.stringify({
-              sourceUrl: source.url,
-              platform: schedule.platforms[0].toLowerCase(),
-              tone: schedule.tonality.toLowerCase(),
-              instructions: schedule.aiInstructions || '',
-              useEmojis: schedule.useEmojis || false,
-              userId: schedule.userId, // Pass the userId from the schedule
-            }),
-          });
-
-          if (!response.ok) {
-            throw new Error(`Failed to generate post: ${await response.text()}`);
-          }
-
-          const data = await response.json();
-          // Handle successful response if needed
-
-        } catch (error) {
-          console.error(`Failed to generate post for schedule ${schedule.id}:`, error);
-          // Continue with next schedule instead of breaking the entire process
-          continue;
+        if (!response.ok) {
+          throw new Error(`Failed to generate post: ${await response.text()}`);
         }
+
+        await response.json();
+      } catch (error) {
+        console.error(`Failed to generate post for schedule ${schedule.id}:`, error);
       }
-    });
+    }
 
     return new Response(JSON.stringify({
       success: true,
