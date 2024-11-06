@@ -39,6 +39,13 @@ type ContentSource = {
   category: string
 }
 
+function convertUTCToLocalTime(utcTime: string) {
+  const [hours, minutes] = utcTime.split(':').map(Number);
+  const date = new Date();
+  date.setUTCHours(hours, minutes, 0, 0);
+  return date.toLocaleTimeString([], { hour: '2-digit', minute: '2-digit', hour12: false });
+}
+
 export function ScheduledPostList() {
   const [schedules, setSchedules] = useState<ContentSchedule[]>([]);
   const [contentSources, setContentSources] = useState<ContentSource[]>([]);
@@ -145,7 +152,9 @@ export function ScheduledPostList() {
                   <TableCell>
                     {schedule.date ? format(new Date(schedule.date), "MMM dd") : "N/A"}
                   </TableCell>
-                  <TableCell>{schedule.time || "N/A"}</TableCell>
+                  <TableCell>
+                    {schedule.time ? convertUTCToLocalTime(schedule.time) : "N/A"}
+                  </TableCell>
                   <TableCell>
                     {schedule.isRecurring 
                       ? schedule.recurringDays.join(", ")
