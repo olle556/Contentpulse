@@ -98,6 +98,7 @@ model ContentSource {
   userId    String
   user      User              @relation(fields: [userId], references: [id])
   schedules ContentSchedule[]
+  scrapedContent ScrapedContent[]
 
   @@index([userId])
 }
@@ -105,16 +106,18 @@ model ContentSource {
 model ScrapedContent {
   id        String                      @id @default(cuid())
   content   String                      @db.Text
-  embedding Unsupported("vector(1536)") // Changed from Float[] to Unsupported
+  embedding Unsupported("vector(1536)")
   metadata  Json?
   createdAt DateTime                    @default(now())
   sourceId  String
+  source    ContentSource               @relation(fields: [sourceId], references: [id])
 
+  @@index([sourceId])
   @@index([embedding(type: Vector)])
 }
 
 model Brand {
-  id                String                     @id @default(cuid())
+  id                Int                        @id @default(autoincrement())
   brandName         String
   brandType         String
   industry          String
@@ -133,11 +136,13 @@ model Brand {
   embedding_2       Unsupported("vector(384)")
   embedding_3       Unsupported("vector(384)")
   embedding_4       Unsupported("vector(384)")
+  
   userId            String
   user              User                       @relation(fields: [userId], references: [id])
   createdAt         DateTime                   @default(now())
   updatedAt         DateTime                   @updatedAt
-
+  
+  @@index([userId])
   @@index([embedding_1(type: Vector)])
   @@index([embedding_2(type: Vector)])
   @@index([embedding_3(type: Vector)])
