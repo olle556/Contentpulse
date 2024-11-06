@@ -97,7 +97,7 @@ export async function GET(req: NextRequest) {
           method: 'POST',
           headers: {
             'Content-Type': 'application/json',
-            'Authorization': `Bearer ${process.env.CRON_SECRET}`, // Use CRON_SECRET for authentication
+            'Authorization': `Bearer ${process.env.CRON_SECRET}`, // Use CRON_SECRET for identifying schedules compared to only generate
           },
           body: JSON.stringify({
             sourceUrl: source.url,
@@ -114,6 +114,14 @@ export async function GET(req: NextRequest) {
         }
 
         await response.json();
+
+        // Delete one-time schedules after successful processing
+        if (!schedule.isRecurring) {
+          await prisma.contentSchedule.delete({
+            where: { id: schedule.id }
+          });
+          console.log(`Deleted one-time schedule ${schedule.id}`);
+        }
       } catch (error) {
         console.error(`Failed to generate post for schedule ${schedule.id}:`, error);
       }

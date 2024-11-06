@@ -134,14 +134,14 @@ export function ScheduledPostList() {
             <TableHeader>
               <TableRow>
                 <TableHead>Content Source</TableHead>
-                <TableHead>Platforms</TableHead>
-                <TableHead>Tonality</TableHead>
-                <TableHead>Start Date</TableHead>
-                <TableHead>Time</TableHead>
-                <TableHead>Recurring</TableHead>
-                <TableHead>AI Instructions</TableHead>
-                <TableHead>Emojis</TableHead>
-                <TableHead className="w-[100px]">Actions</TableHead>
+                <TableHead className="text-center">Platforms</TableHead>
+                <TableHead className="text-center">Tonality</TableHead>
+                <TableHead className="text-center">Start Date</TableHead>
+                <TableHead className="text-center">Time</TableHead>
+                <TableHead className="text-center">Recurring</TableHead>
+                <TableHead className="text-center">AI Instructions</TableHead>
+                <TableHead className="text-center">Emojis</TableHead>
+                <TableHead className="w-[100px] text-center">Actions</TableHead>
               </TableRow>
             </TableHeader>
             <TableBody>
