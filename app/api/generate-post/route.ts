@@ -67,14 +67,16 @@ export async function POST(request: Request) {
     });
 
     if (!scrapeResponse.ok) {
+      console.error(`Scrape failed with status ${scrapeResponse.status}:`, await scrapeResponse.text());
       throw new Error(`Failed to scrape URL: ${scrapeResponse.statusText}`);
     }
 
     // Parse the JSON response instead of getting text
     const scrapedData = await scrapeResponse.json();
 
-    if (!scrapedData.success) {
-      throw new Error(scrapedData.error || 'Failed to scrape content');
+    if (!scrapedData.success || !scrapedData.content) {
+      console.error('Scrape failed:', scrapedData);
+      throw new Error(scrapedData.error || 'No content could be scraped from URL');
     }
 
     // Use the content from the JSON response
@@ -82,6 +84,10 @@ export async function POST(request: Request) {
 
     if (!scrapedContent) {
       throw new Error('No content scraped from URL');
+    }
+
+    if (!scrapedContent || scrapedContent.trim().length < 50) {  // Minimum content length
+      throw new Error('Insufficient content scraped from URL');
     }
 
     // Get brand context for the authenticated user
