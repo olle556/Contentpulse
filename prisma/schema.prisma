@@ -8,8 +8,8 @@ generator client {
 
 datasource db {
   provider     = "postgresql"
-  url          = env("POSTGRES_PRISMA_URL")
-  directUrl    = env("POSTGRES_URL_NON_POOLING")
+  url          = env("DATABASE_URL")
+  directUrl    = env("DIRECT_URL")
   extensions   = [vector]
   relationMode = "prisma"
 }
@@ -141,7 +141,7 @@ model Brand {
   user              User                       @relation(fields: [userId], references: [id])
   createdAt         DateTime                   @default(now())
   updatedAt         DateTime                   @updatedAt
-  
+
   @@index([userId])
   @@index([embedding_1(type: Vector)])
   @@index([embedding_2(type: Vector)])
