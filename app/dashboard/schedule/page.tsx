@@ -3,7 +3,6 @@
 import { useState, useEffect } from "react";
 import { Button } from "@/components/ui/button";
 import { Calendar } from "lucide-react";
-import { SchedulePostDialog } from "@/components/schedule/schedule-post-dialog";
 import { ScheduledPostList } from "@/components/schedule/scheduled-post-list";
 import { ContentScheduler } from "@/components/schedule/content-scheduler";
 
