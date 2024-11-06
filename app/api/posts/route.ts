@@ -1,13 +1,10 @@
 import { NextResponse } from 'next/server';
-import { PrismaClient } from '@prisma/client';
+import { prisma } from '@/lib/prisma';
 import { getServerSession } from "next-auth/next";
 import { authOptions } from "@/lib/auth-options";
 
-const prisma = new PrismaClient();
-
 export async function GET() {
   try {
-    // Get the authenticated user's session
     const session = await getServerSession(authOptions);
     
     if (!session?.user?.email) {
@@ -17,24 +14,11 @@ export async function GET() {
       }, { status: 401 });
     }
 
-    // Find the user in the database
-    const user = await prisma.user.findUnique({
-      where: {
-        email: session.user.email
-      }
-    });
-
-    if (!user) {
-      return NextResponse.json({ 
-        success: false, 
-        error: 'User not found' 
-      }, { status: 404 });
-    }
-
-    // Get posts for this specific user
     const posts = await prisma.generatedPost.findMany({
       where: {
-        userId: user.id
+        user: {
+          email: session.user.email
+        }
       },
       orderBy: {
         createdAt: 'desc'
@@ -43,8 +27,6 @@ export async function GET() {
         user: true
       }
     });
-
-    console.log('Found posts for user:', posts); // Debug log
 
     return NextResponse.json({ 
       success: true, 
@@ -72,19 +54,6 @@ export async function POST(request: Request) {
       }, { status: 401 });
     }
 
-    const user = await prisma.user.findUnique({
-      where: {
-        email: session.user.email
-      }
-    });
-
-    if (!user) {
-      return NextResponse.json({ 
-        success: false, 
-        error: 'User not found' 
-      }, { status: 404 });
-    }
-
     const { content, platform, status } = await request.json();
     
     if (!content) {
@@ -99,8 +68,15 @@ export async function POST(request: Request) {
         content,
         platform: platform || 'twitter',
         status: status || 'draft',
-        userId: user.id, // Use the authenticated user's ID
+        user: {
+          connect: {
+            email: session.user.email
+          }
+        }
       },
+      include: {
+        user: true
+      }
     });
 
     return NextResponse.json({ 
