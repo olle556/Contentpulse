@@ -6,6 +6,11 @@ export const maxDuration = 290; // Set max duration to 5 minutes
 export const dynamic = 'force-dynamic';
 export const revalidate = 0;
 
+// Update the prisma client initialization to ensure DATABASE_URL is available
+if (!process.env.DATABASE_URL) {
+  throw new Error('DATABASE_URL environment variable is not set');
+}
+
 export async function GET(req: NextRequest) {
   // Verify the request is from Vercel Cron
   const authHeader = req.headers.get('authorization');
