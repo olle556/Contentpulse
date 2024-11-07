@@ -45,7 +45,7 @@ export async function GET(req: NextRequest) {
                 lt: new Date(today + ' 23:59:59'),
               },
               time: {
-                gte: format(fiveMinutesAgo, 'HH:mm'),
+                gt: format(fiveMinutesAgo, 'HH:mm'),
                 lte: currentTime,
               },
             },
@@ -59,7 +59,7 @@ export async function GET(req: NextRequest) {
                 has: format(now, 'EEE'),
               },
               time: {
-                gte: format(fiveMinutesAgo, 'HH:mm'),
+                gt: format(fiveMinutesAgo, 'HH:mm'),
                 lte: currentTime,
               },
             },
