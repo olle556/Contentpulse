@@ -23,23 +23,27 @@ const navigation = [
   { name: "Settings", href: "/dashboard/settings", icon: Settings },
 ];
 
-export function Sidebar() {
+export function Sidebar({ mobile, onNavigate }: { mobile?: boolean, onNavigate?: () => void }) {
   const pathname = usePathname();
 
   return (
     <div className="flex h-full w-64 flex-col bg-card">
-      <div className="flex h-16 items-center px-6">
-        <Link href="/dashboard" className="text-xl font-bold">
-          Content Pulse
-        </Link>
-      </div>
-      <nav className="flex-1 space-y-1 px-3 py-4">
+      {!mobile && (
+        <div className="flex h-14 md:h-16 items-center px-4 md:px-6">
+          <Link href="/dashboard" className="text-lg md:text-xl font-bold">
+            Content Pulse
+          </Link>
+        </div>
+      )}
+      <nav className="flex-1 space-y-1 p-2 md:px-3 md:py-4">
+        <div className="h-10" />
         {navigation.map((item) => {
           const isActive = pathname === item.href;
           return (
             <Link
               key={item.name}
               href={item.href}
+              onClick={onNavigate}
               className={cn(
                 "group flex items-center rounded-md px-3 py-2 text-sm font-medium",
                 isActive
