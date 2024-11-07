@@ -56,7 +56,7 @@ export default function SchedulePage() {
       <ScheduledPostList key={refreshTrigger} />
       {!loading && (
         <ContentScheduler 
-          open={isGenerateOpen} 
+          open={isScheduleOpen} 
           onOpenChange={setIsScheduleOpen}
           contentSources={contentSources}
           onScheduleUpdate={handleScheduleUpdate}
