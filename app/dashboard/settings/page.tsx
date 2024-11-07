@@ -11,13 +11,9 @@ export default function SettingsPage() {
     <div className="space-y-6">
       <h1 className="text-3xl font-bold">Settings</h1>
 
-      <Tabs defaultValue="notifications" className="space-y-6">
-        <TabsList className="w-full justify-start">
-          <TabsTrigger value="notifications" className="w-auto">Notifications</TabsTrigger>
-        </TabsList>
-
-        
-        <TabsContent value="notifications" className="space-y-6">
+   
+          <Tabs defaultValue="notifications" className="space-y-6">
+            <TabsContent value="notifications" className="space-y-6">
           <Card>
             <CardHeader>
               <CardTitle>Notification Preferences</CardTitle>
