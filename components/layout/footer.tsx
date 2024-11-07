@@ -1,7 +1,15 @@
 import Link from "next/link";
 import React from "react";
+import { usePathname } from "next/navigation";
 
 export function Footer() {
+  const pathname = usePathname();
+  
+  // Hide footer if pathname starts with /dashboard
+  if (pathname.startsWith('/dashboard')) {
+    return null;
+  }
+
   return (
     <footer className="border-t">
       <div className="container mx-auto px-4 py-6">
