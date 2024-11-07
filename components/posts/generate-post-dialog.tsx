@@ -239,8 +239,7 @@ export function GeneratePostDialog({ open, onOpenChange, onSuccess }: GeneratePo
           platform: selectedPlatform,
           tone: selectedTone,
           useEmojis,
-          // Remove instructions if not used in the API
-          // instructions: aiInstructions,
+          aiInstructions,
         }),
       });
 

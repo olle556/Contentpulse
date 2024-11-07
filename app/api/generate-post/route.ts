@@ -18,7 +18,7 @@ export async function POST(request: Request) {
   try {
     // Read request body once at the beginning
     const requestData = await request.json();
-    const { sourceUrl, platform, tone, useEmojis, userId: cronUserId } = requestData;
+    const { sourceUrl, platform, tone, useEmojis, userId: cronUserId , aiInstructions} = requestData;
 
     // Check if request is from cron job
     const authHeader = request.headers.get('authorization');
@@ -112,6 +112,10 @@ Source URL: ${sourceUrl}
 Scraped Content:
 ${scrapedContent}
 
+${aiInstructions ? `Special Instructions:
+${aiInstructions}
+` : ''}
+
 Instructions:
 1. Create a single, engaging post for ${platform} (limit: ${platformLimits[platform as keyof typeof platformLimits]})
 2. Maintain the brand voice and ${tone} tone throughout
@@ -133,6 +137,10 @@ ${useEmojis ? '\nEmoji usage:\n- Use emojis naturally and strategically\n- Don\'
 
 In your answer, exclude the following:
 Any explanation of the content, just the post.
+Any answer that is not the post.
+Any reference to the source URL.
+Any reference to the brand context.
+JUST THE POST.
 
 Please generate the post now:`;
 
