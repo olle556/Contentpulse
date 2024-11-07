@@ -52,8 +52,11 @@ export async function GET(req: NextRequest) {
             // Recurring schedules within last 5 minutes
             {
               isRecurring: true,
+              startDate: {
+                lte: new Date(today + ' 23:59:59'), // Only include schedules where startDate is today or earlier
+              },
               recurringDays: {
-                has: format(now, 'EEE').toLowerCase(), // e.g., 'mon', 'tue', etc.
+                has: format(now, 'EEE'),
               },
               time: {
                 gte: format(fiveMinutesAgo, 'HH:mm'),
