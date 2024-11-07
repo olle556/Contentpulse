@@ -8,7 +8,7 @@ interface BrandQueryResult {
   language: string | null
   website: string | null
   brandVoice: string
-  usp: string | null
+  description: string | null
   missionStatement: string | null
   slogans: string | null
   demographics: string | null
@@ -29,7 +29,7 @@ export async function getRelevantBrandContext(userId: string) {
         language,
         website,
         "brandVoice",
-        usp,
+        description,
         "missionStatement",
         slogans,
         demographics,
@@ -54,7 +54,7 @@ export async function getRelevantBrandContext(userId: string) {
       Language: ${brand.language ?? 'N/A'}
       Website: ${brand.website ?? 'N/A'}
       Voice: ${brand.brandVoice}
-      USP: ${brand.usp ?? 'N/A'}
+      Description: ${brand.description ?? 'N/A'}
       Mission: ${brand.missionStatement ?? 'N/A'}
       Slogans: ${brand.slogans ?? 'N/A'}
       Demographics: ${brand.demographics ?? 'N/A'}
