@@ -57,14 +57,17 @@ export function ContentSourceList({ sources: initialSources, onSourceDeleted }: 
 
   return (
     <>
-      <div className="grid gap-4">
+      <div className="grid gap-4 sm:grid-cols-2 lg:grid-cols-3">
         {sources.map((source) => (
-          <div key={source.id} className="p-4 border rounded-lg">
-            <div className="flex items-center justify-between">
-              <div className="font-medium">{source.url}</div>
+          <div key={source.id} className="p-4 border rounded-lg overflow-hidden">
+            <div className="flex items-center justify-between space-x-2">
+              <div className="font-medium break-words overflow-hidden text-ellipsis flex-1 min-w-0">
+                {source.url}
+              </div>
               <Button 
                 variant="outline" 
                 onClick={() => setSourceToDelete(source)}
+                className="flex-shrink-0"
               >
                 <Trash2Icon className="w-4 h-4" />
               </Button>
