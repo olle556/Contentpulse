@@ -5,6 +5,7 @@ import { useSearchParams } from "next/navigation";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
 import { useState } from "react";
+import { Icons } from "lucide-react";
 
 export default function Login() {
   const searchParams = useSearchParams();
@@ -33,11 +34,19 @@ export default function Login() {
         </CardHeader>
         <CardContent className="flex justify-center">
           <Button 
-            className="w-full" 
+            className="w-full flex items-center justify-center gap-2" 
             onClick={handleGoogleSignIn}
             disabled={loading}
+            variant="outline"
           >
-            {loading ? "Signing in..." : "Continue with Google"}
+            {loading ? (
+              "Signing in..."
+            ) : (
+              <>
+                <Icons.Google className="h-5 w-5" />
+                Continue with Google
+              </>
+            )}
           </Button>
         </CardContent>
       </Card>
