@@ -5,7 +5,7 @@ import { useSearchParams } from "next/navigation";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
 import { useState } from "react";
-import { Icons } from "lucide-react";
+import * as icons from "heroicons-react";
 
 export default function Login() {
   const searchParams = useSearchParams();
@@ -43,7 +43,7 @@ export default function Login() {
               "Signing in..."
             ) : (
               <>
-                <Icons.Google className="h-5 w-5" />
+
                 Continue with Google
               </>
             )}
