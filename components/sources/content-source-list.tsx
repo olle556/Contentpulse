@@ -61,11 +61,11 @@ export function ContentSourceList({ sources: initialSources, onSourceDeleted }: 
         {sources.map((source) => (
           <div 
             key={source.id} 
-            className="p-4 border rounded-lg overflow-hidden flex flex-col justify-between space-y-2 hover:shadow-sm transition-shadow duration-200"
+            className="p-4 border rounded-lg overflow-hidden flex flex-col justify-between space-y-2 hover:shadow-sm transition-shadow duration-200 w-fit"
           >
             <div className="flex items-center justify-between space-x-2">
               <div 
-                className="font-medium break-words overflow-hidden text-ellipsis flex-1 min-w-0 text-sm sm:text-base"
+                className="font-medium break-words overflow-hidden text-ellipsis text-sm sm:text-base max-w-full"
                 title={source.url}
               >
                 {source.url}
@@ -74,7 +74,7 @@ export function ContentSourceList({ sources: initialSources, onSourceDeleted }: 
                 variant="outline" 
                 size="sm"
                 onClick={() => setSourceToDelete(source)}
-                className="flex-shrink-0"
+                className="flex-shrink-0 ml-2"
               >
                 <Trash2Icon className="w-3 h-3 sm:w-4 sm:h-4" />
               </Button>
