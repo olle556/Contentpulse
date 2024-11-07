@@ -38,12 +38,15 @@ export default function SchedulePage() {
   };
 
   return (
-    <div className="space-y-6">
-      <div className="flex justify-between items-center">
-        <h1 className="text-3xl font-bold">Scheduled Post Generations</h1>
+    <div className="space-y-6 p-4 sm:p-6">
+      <div className="flex flex-col sm:flex-row justify-between items-center gap-4">
+        <h1 className="text-2xl sm:text-3xl font-bold text-center sm:text-left w-full">
+          Scheduled Post Generations
+        </h1>
         <Button 
           onClick={() => setIsScheduleOpen(true)}
           disabled={contentSources.length === 0}
+          className="w-full sm:w-auto"
         >
           <Calendar className="h-4 w-4 mr-2" />
           Schedule Generation
@@ -53,7 +56,7 @@ export default function SchedulePage() {
       <ScheduledPostList key={refreshTrigger} />
       {!loading && (
         <ContentScheduler 
-          open={isScheduleOpen} 
+          open={isGenerateOpen} 
           onOpenChange={setIsScheduleOpen}
           contentSources={contentSources}
           onScheduleUpdate={handleScheduleUpdate}
