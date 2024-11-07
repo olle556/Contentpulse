@@ -57,28 +57,26 @@ export function ContentSourceList({ sources: initialSources, onSourceDeleted }: 
 
   return (
     <>
-      <div className="grid gap-4 grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4">
+      <div className="space-y-4 w-full">
         {sources.map((source) => (
           <div 
             key={source.id} 
-            className="p-4 border rounded-lg overflow-hidden flex flex-col justify-between space-y-2 hover:shadow-sm transition-shadow duration-200 w-fit"
+            className="p-4 border rounded-lg overflow-hidden flex items-center justify-between space-x-4 w-full hover:shadow-sm transition-shadow duration-200"
           >
-            <div className="flex items-center justify-between space-x-2">
-              <div 
-                className="font-medium break-words overflow-hidden text-ellipsis text-sm sm:text-base max-w-full"
-                title={source.url}
-              >
-                {source.url}
-              </div>
-              <Button 
-                variant="outline" 
-                size="sm"
-                onClick={() => setSourceToDelete(source)}
-                className="flex-shrink-0 ml-2"
-              >
-                <Trash2Icon className="w-3 h-3 sm:w-4 sm:h-4" />
-              </Button>
+            <div 
+              className="font-medium break-words overflow-hidden text-ellipsis text-sm sm:text-base flex-grow"
+              title={source.url}
+            >
+              {source.url}
             </div>
+            <Button 
+              variant="outline" 
+              size="sm"
+              onClick={() => setSourceToDelete(source)}
+              className="flex-shrink-0"
+            >
+              <Trash2Icon className="w-3 h-3 sm:w-4 sm:h-4" />
+            </Button>
           </div>
         ))}
       </div>
