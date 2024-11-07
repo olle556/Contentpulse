@@ -5,7 +5,6 @@ import { Plus } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { ContentSourceList } from "@/components/sources/content-source-list";
 import { AddSourceDialog } from "@/components/sources/add-source-dialog";
-import { Input } from "@/components/ui/input";
 import { ContentSource } from "@/types";
 
 export default function SourcesPage() {
@@ -30,7 +29,6 @@ export default function SourcesPage() {
       console.log('Scraped content:', data.content);
       setAnalysis(data.analysis);
       
-      // Refresh the sources list
       if (data.source) {
         setSources(prevSources => [...prevSources, data.source]);
       }
@@ -53,22 +51,20 @@ export default function SourcesPage() {
     }
   };
 
-  // Add useEffect to load sources initially
   useEffect(() => {
     refreshSources();
   }, []);
 
   return (
-    <div className="space-y-6">
-      <div className="flex justify-between items-center">
-        <h1 className="text-3xl font-bold">Content Sources</h1>
-        <Button onClick={() => setIsAddSourceOpen(true)}>
+    <div className="space-y-6 p-4 sm:p-6">
+      <div className="flex flex-col sm:flex-row justify-between items-start sm:items-center space-y-4 sm:space-y-0">
+        <h1 className="text-2xl sm:text-3xl font-bold">Content Sources</h1>
+        <Button onClick={() => setIsAddSourceOpen(true)} className="flex items-center">
           <Plus className="h-4 w-4 mr-2" />
           Add Source
         </Button>
       </div>
 
-  
       <ContentSourceList sources={sources} />
       <AddSourceDialog 
         open={isAddSourceOpen} 
