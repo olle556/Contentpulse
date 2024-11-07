@@ -94,31 +94,40 @@ export async function GET(req: NextRequest) {
           continue;
         }
 
-        // Generate post
-        const baseUrl = process.env.NEXTAUTH_URL || 'http://localhost:3000';
-        const response = await fetch(`${baseUrl}/api/generate-post`, {
-          method: 'POST',
-          headers: {
-            'Content-Type': 'application/json',
-            'Authorization': `Bearer ${process.env.CRON_SECRET}`, // Use CRON_SECRET for identifying schedules compared to only generate
-          },
-          body: JSON.stringify({
-            sourceUrl: source.url,
-            platform: schedule.platforms[0].toLowerCase(),
-            tone: schedule.tonality.toLowerCase(),
-            instructions: schedule.aiInstructions || '',
-            useEmojis: schedule.useEmojis || false,
-            userId: schedule.userId, // Pass the userId from the schedule
-          }),
-        });
+        // Generate a post for each platform
+        for (const platform of schedule.platforms) {
+          try {
+            const baseUrl = process.env.NEXTAUTH_URL || 'http://localhost:3000';
+            const response = await fetch(`${baseUrl}/api/generate-post`, {
+              method: 'POST',
+              headers: {
+                'Content-Type': 'application/json',
+                'Authorization': `Bearer ${process.env.CRON_SECRET}`, //identify the cron job
+              },
+              body: JSON.stringify({
+                sourceUrl: source.url,
+                platform: platform.toLowerCase(), 
+                tone: schedule.tonality.toLowerCase(),
+                instructions: schedule.aiInstructions || '',
+                useEmojis: schedule.useEmojis || false,
+                userId: schedule.userId,
+              }),
+            });
 
-        if (!response.ok) {
-          throw new Error(`Failed to generate post: ${await response.text()}`);
+            if (!response.ok) {
+              throw new Error(`Failed to generate post for platform ${platform}: ${await response.text()}`);
+            }
+
+            await response.json();
+            console.log(`Successfully generated post for platform ${platform} from schedule ${schedule.id}`);
+          } catch (error) {
+            console.error(`Failed to generate post for platform ${platform} from schedule ${schedule.id}:`, error);
+            // Continue with other platforms even if one fails
+            continue;
+          }
         }
 
-        await response.json();
-
-        // Delete one-time schedules after successful processing
+        // Delete one-time schedules after successful processing of all platforms
         if (!schedule.isRecurring) {
           await prisma.contentSchedule.delete({
             where: { id: schedule.id }
