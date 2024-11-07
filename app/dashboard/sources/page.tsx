@@ -56,16 +56,26 @@ export default function SourcesPage() {
   }, []);
 
   return (
-    <div className="space-y-6 p-4 sm:p-6">
+    <div className="space-y-6 p-4 sm:p-6 max-w-7xl mx-auto">
       <div className="flex flex-col sm:flex-row justify-between items-start sm:items-center space-y-4 sm:space-y-0">
-        <h1 className="text-2xl sm:text-3xl font-bold">Content Sources</h1>
-        <Button onClick={() => setIsAddSourceOpen(true)} className="flex items-center">
+        <h1 className="text-xl sm:text-2xl lg:text-3xl font-bold text-gray-800">Content Sources</h1>
+        <Button 
+          onClick={() => setIsAddSourceOpen(true)} 
+          className="flex items-center w-full sm:w-auto"
+          size="sm"
+        >
           <Plus className="h-4 w-4 mr-2" />
           Add Source
         </Button>
       </div>
 
-      <ContentSourceList sources={sources} />
+      <div className="mt-6">
+        <ContentSourceList 
+          sources={sources} 
+          onSourceDeleted={refreshSources}
+        />
+      </div>
+      
       <AddSourceDialog 
         open={isAddSourceOpen} 
         onOpenChange={setIsAddSourceOpen}
