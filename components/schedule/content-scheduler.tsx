@@ -447,7 +447,10 @@ export function ContentScheduler({ open, onOpenChange, contentSources, editSched
               )}
             />
 
-            <Button type="submit" className="w-full">
+            <Button 
+              type="submit" 
+              className="w-full sticky bottom-0 bg-white dark:bg-black z-10"
+            >
               {editSchedule ? "Submit Changes" : "Schedule Content Generation"}
             </Button>
           </form>
