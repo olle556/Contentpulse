@@ -37,7 +37,7 @@ const generatePostWithTimeout = async (params: {
   baseUrl: string
 }) => {
   const controller = new AbortController();
-  const timeoutId = setTimeout(() => controller.abort(), 25000); // 25 second timeout
+  const timeoutId = setTimeout(() => controller.abort(), 55000); // Increased to 45 seconds
 
   try {
     const response = await fetch(`${params.baseUrl}/api/generate-post`, {
@@ -132,7 +132,7 @@ export async function GET(req: NextRequest) {
       }), { status: 200 });
     }
 
-    // Process schedules outside of transaction with rate limiting
+    // Process schedules outside of transaction with simple rate limiting
     for (const schedule of schedulesToProcess) {
       try {
         const source = await prisma.contentSource.findUnique({
@@ -144,56 +144,31 @@ export async function GET(req: NextRequest) {
           continue;
         }
 
-        // Process platforms sequentially with improved retry logic
+        // Process platforms sequentially with basic error handling
         for (const platform of schedule.platforms) {
-          let retries = 3;
-          let delayTime = 2000; // Start with 2 second delay
-          let success = false;
-          
-          while (retries > 0 && !success) {
-            try {
-              const baseUrl = process.env.NEXTAUTH_URL || 'http://localhost:3000';
-              const result = await generatePostWithTimeout({
-                sourceUrl: source.url,
-                platform: platform.toLowerCase(),
-                tone: schedule.tonality.toLowerCase(),
-                instructions: schedule.aiInstructions || '',
-                useEmojis: schedule.useEmojis || false,
-                userId: schedule.userId,
-                baseUrl
-              });
+          try {
+            const baseUrl = process.env.NEXTAUTH_URL || 'http://localhost:3000';
+            const result = await generatePostWithTimeout({
+              sourceUrl: source.url,
+              platform: platform.toLowerCase(),
+              tone: schedule.tonality.toLowerCase(),
+              instructions: schedule.aiInstructions || '',
+              useEmojis: schedule.useEmojis || false,
+              userId: schedule.userId,
+              baseUrl
+            });
 
-              console.log(`Successfully generated post for platform ${platform} from schedule ${schedule.id}`);
-              success = true;
-              
-              // Add delay between successful platform processing
-              await delay(5000);
+            console.log(`Successfully generated post for platform ${platform} from schedule ${schedule.id}`);
+            
+            // Add fixed delay between platform processing
+            await delay(5000); // 5 second delay between platforms
 
-            } catch (error) {
-              console.error(`Attempt ${4 - retries} failed for platform ${platform}:`, error);
-              
-              if (isTimeoutError(error)) {
-                delayTime = Math.min(delayTime * 2, 15000);
-              } else if (isRateLimitError(error)) {
-                delayTime = 20000; // Longer delay for rate limits
-              } else {
-                delayTime = 5000;
-              }
-
-              retries--;
-              
-              if (retries > 0) {
-                console.log(`Waiting ${delayTime}ms before retry...`);
-                await delay(delayTime);
-              }
-            }
+          } catch (error) {
+            console.error(`Failed to generate post for platform ${platform}:`, error);
           }
-
-          // Add delay between platforms regardless of outcome
-          await delay(8000);
         }
 
-        // Delete one-time schedule only if at least one platform succeeded
+        // Delete one-time schedule after processing
         if (!schedule.isRecurring) {
           await prisma.contentSchedule.delete({
             where: { id: schedule.id }
@@ -206,7 +181,7 @@ export async function GET(req: NextRequest) {
       }
       
       // Add delay between schedules
-      await delay(1000); // 1 second delay between schedules
+      await delay(3000); // 3 second delay between schedules
     }
 
     return new Response(JSON.stringify({
