@@ -11,6 +11,9 @@ if (!process.env.DATABASE_URL) {
   throw new Error('DATABASE_URL environment variable is not set');
 }
 
+// Add delay utility function
+const delay = (ms: number) => new Promise(resolve => setTimeout(resolve, ms));
+
 export async function GET(req: NextRequest) {
   // Verify the request is from Vercel Cron
   const authHeader = req.headers.get('authorization');
@@ -82,7 +85,7 @@ export async function GET(req: NextRequest) {
       }), { status: 200 });
     }
 
-    // Process schedules outside of transaction
+    // Process schedules outside of transaction with rate limiting
     for (const schedule of schedulesToProcess) {
       try {
         const source = await prisma.contentSource.findUnique({
@@ -94,49 +97,72 @@ export async function GET(req: NextRequest) {
           continue;
         }
 
-        // Generate a post for each platform
+        // Process platforms sequentially with delays
         for (const platform of schedule.platforms) {
-          try {
-            const baseUrl = process.env.NEXTAUTH_URL || 'http://localhost:3000';
-            const response = await fetch(`${baseUrl}/api/generate-post`, {
-              method: 'POST',
-              headers: {
-                'Content-Type': 'application/json',
-                'Authorization': `Bearer ${process.env.CRON_SECRET}`, //identify the cron job
-              },
-              body: JSON.stringify({
-                sourceUrl: source.url,
-                platform: platform.toLowerCase(), 
-                tone: schedule.tonality.toLowerCase(),
-                instructions: schedule.aiInstructions || '',
-                useEmojis: schedule.useEmojis || false,
-                userId: schedule.userId,
-              }),
-            });
+          let retries = 2; //ändra till 3 kanske
+          while (retries > 0) {
+            try {
+              const baseUrl = process.env.NEXTAUTH_URL || 'http://localhost:3000';
+              const response = await fetch(`${baseUrl}/api/generate-post`, {
+                method: 'POST',
+                headers: {
+                  'Content-Type': 'application/json',
+                  'Authorization': `Bearer ${process.env.CRON_SECRET}`,
+                },
+                body: JSON.stringify({
+                  sourceUrl: source.url,
+                  platform: platform.toLowerCase(),
+                  tone: schedule.tonality.toLowerCase(),
+                  instructions: schedule.aiInstructions || '',
+                  useEmojis: schedule.useEmojis || false,
+                  userId: schedule.userId,
+                }),
+              });
 
-            if (!response.ok) {
-              throw new Error(`Failed to generate post for platform ${platform}: ${await response.text()}`);
+              if (response.status === 429 || response.status === 529) {
+                // Rate limit or overload - wait longer
+                await delay(5000); // 5 second delay
+                retries--;
+                continue;
+              }
+
+              if (!response.ok) {
+                throw new Error(`Failed to generate post: ${await response.text()}`);
+              }
+
+              await response.json();
+              console.log(`Successfully generated post for platform ${platform} from schedule ${schedule.id}`);
+              
+              // Add delay between platform processing
+              await delay(2000); // 2 second delay between platforms
+              break; // Success - exit retry loop
+
+            } catch (error) {
+              console.error(`Attempt ${4 - retries} failed for platform ${platform}:`, error);
+              if (retries <= 1) {
+                console.error(`All retries failed for platform ${platform} from schedule ${schedule.id}`);
+                break;
+              }
+              retries--;
+              await delay(3000); // 3 second delay between retries
             }
-
-            await response.json();
-            console.log(`Successfully generated post for platform ${platform} from schedule ${schedule.id}`);
-          } catch (error) {
-            console.error(`Failed to generate post for platform ${platform} from schedule ${schedule.id}:`, error);
-            // Continue with other platforms even if one fails
-            continue;
           }
         }
 
-        // Delete one-time schedules after successful processing of all platforms
+        // Delete one-time schedule only if at least one platform succeeded
         if (!schedule.isRecurring) {
           await prisma.contentSchedule.delete({
             where: { id: schedule.id }
           });
           console.log(`Deleted one-time schedule ${schedule.id}`);
         }
+
       } catch (error) {
-        console.error(`Failed to generate post for schedule ${schedule.id}:`, error);
+        console.error(`Failed to process schedule ${schedule.id}:`, error);
       }
+      
+      // Add delay between schedules
+      await delay(1000); // 1 second delay between schedules
     }
 
     return new Response(JSON.stringify({
