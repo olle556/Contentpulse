@@ -26,6 +26,41 @@ const isRateLimitError = (error: any) => {
          error.message?.includes('rate limit');
 };
 
+// Update the generate post function to handle timeouts better
+const generatePostWithTimeout = async (params: {
+  sourceUrl: string,
+  platform: string,
+  tone: string,
+  useEmojis: boolean,
+  userId: string,
+  instructions: string,
+  baseUrl: string
+}) => {
+  const controller = new AbortController();
+  const timeoutId = setTimeout(() => controller.abort(), 25000); // 25 second timeout
+
+  try {
+    const response = await fetch(`${params.baseUrl}/api/generate-post`, {
+      method: 'POST',
+      headers: {
+        'Content-Type': 'application/json',
+        'Authorization': `Bearer ${process.env.CRON_SECRET}`,
+      },
+      body: JSON.stringify(params),
+      signal: controller.signal,
+    });
+
+    if (!response.ok) {
+      const errorText = await response.text();
+      throw new Error(`Failed to generate post: ${errorText}`);
+    }
+
+    return await response.json();
+  } finally {
+    clearTimeout(timeoutId);
+  }
+};
+
 export async function GET(req: NextRequest) {
   // Verify the request is from Vercel Cron
   const authHeader = req.headers.get('authorization');
@@ -109,68 +144,53 @@ export async function GET(req: NextRequest) {
           continue;
         }
 
-        // Process platforms sequentially with delays
+        // Process platforms sequentially with improved retry logic
         for (const platform of schedule.platforms) {
           let retries = 3;
           let delayTime = 2000; // Start with 2 second delay
+          let success = false;
           
-          while (retries > 0) {
+          while (retries > 0 && !success) {
             try {
               const baseUrl = process.env.NEXTAUTH_URL || 'http://localhost:3000';
-              const response = await fetch(`${baseUrl}/api/generate-post`, {
-                method: 'POST',
-                headers: {
-                  'Content-Type': 'application/json',
-                  'Authorization': `Bearer ${process.env.CRON_SECRET}`,
-                },
-                body: JSON.stringify({
-                  sourceUrl: source.url,
-                  platform: platform.toLowerCase(),
-                  tone: schedule.tonality.toLowerCase(),
-                  instructions: schedule.aiInstructions || '',
-                  useEmojis: schedule.useEmojis || false,
-                  userId: schedule.userId,
-                }),
+              const result = await generatePostWithTimeout({
+                sourceUrl: source.url,
+                platform: platform.toLowerCase(),
+                tone: schedule.tonality.toLowerCase(),
+                instructions: schedule.aiInstructions || '',
+                useEmojis: schedule.useEmojis || false,
+                userId: schedule.userId,
+                baseUrl
               });
 
-              if (!response.ok) {
-                const errorText = await response.text();
-                throw new Error(`Failed to generate post: ${errorText}`);
-              }
-
-              await response.json();
               console.log(`Successfully generated post for platform ${platform} from schedule ${schedule.id}`);
+              success = true;
               
-              // Add longer delay between successful platform processing
-              await delay(5000); // 5 second delay between platforms
-              break; // Success - exit retry loop
+              // Add delay between successful platform processing
+              await delay(5000);
 
             } catch (error) {
               console.error(`Attempt ${4 - retries} failed for platform ${platform}:`, error);
               
               if (isTimeoutError(error)) {
-                // For timeouts, use longer delays
-                delayTime = Math.min(delayTime * 2, 15000); // Exponential backoff up to 15 seconds
-                await delay(delayTime);
+                delayTime = Math.min(delayTime * 2, 15000);
               } else if (isRateLimitError(error)) {
-                // For rate limits, wait even longer
-                await delay(10000); // 10 second delay for rate limits
+                delayTime = 20000; // Longer delay for rate limits
               } else {
-                // For other errors, use standard delay
-                await delay(3000);
+                delayTime = 5000;
               }
 
               retries--;
               
-              if (retries === 0) {
-                console.error(`All retries failed for platform ${platform} from schedule ${schedule.id}`);
-                break;
+              if (retries > 0) {
+                console.log(`Waiting ${delayTime}ms before retry...`);
+                await delay(delayTime);
               }
             }
           }
-          
-          // Add longer delay between platforms regardless of success/failure
-          await delay(8000); // 8 second delay between platforms
+
+          // Add delay between platforms regardless of outcome
+          await delay(8000);
         }
 
         // Delete one-time schedule only if at least one platform succeeded
