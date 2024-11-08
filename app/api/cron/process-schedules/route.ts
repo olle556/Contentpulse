@@ -11,8 +11,20 @@ if (!process.env.DATABASE_URL) {
   throw new Error('DATABASE_URL environment variable is not set');
 }
 
-// Add delay utility function
+// Update the delay utility function to return a Promise
 const delay = (ms: number) => new Promise(resolve => setTimeout(resolve, ms));
+
+// Add more specific error handling
+const isTimeoutError = (error: any) => {
+  return error.message?.includes('FUNCTION_INVOCATION_TIMEOUT') ||
+         error.message?.includes('Task timed out');
+};
+
+const isRateLimitError = (error: any) => {
+  return error.status === 429 || 
+         error.status === 529 || 
+         error.message?.includes('rate limit');
+};
 
 export async function GET(req: NextRequest) {
   // Verify the request is from Vercel Cron
@@ -99,7 +111,9 @@ export async function GET(req: NextRequest) {
 
         // Process platforms sequentially with delays
         for (const platform of schedule.platforms) {
-          let retries = 2; //ändra till 3 kanske
+          let retries = 3;
+          let delayTime = 2000; // Start with 2 second delay
+          
           while (retries > 0) {
             try {
               const baseUrl = process.env.NEXTAUTH_URL || 'http://localhost:3000';
@@ -119,34 +133,44 @@ export async function GET(req: NextRequest) {
                 }),
               });
 
-              if (response.status === 429 || response.status === 529) {
-                // Rate limit or overload - wait longer
-                await delay(5000); // 5 second delay
-                retries--;
-                continue;
-              }
-
               if (!response.ok) {
-                throw new Error(`Failed to generate post: ${await response.text()}`);
+                const errorText = await response.text();
+                throw new Error(`Failed to generate post: ${errorText}`);
               }
 
               await response.json();
               console.log(`Successfully generated post for platform ${platform} from schedule ${schedule.id}`);
               
-              // Add delay between platform processing
-              await delay(2000); // 2 second delay between platforms
+              // Add longer delay between successful platform processing
+              await delay(5000); // 5 second delay between platforms
               break; // Success - exit retry loop
 
             } catch (error) {
               console.error(`Attempt ${4 - retries} failed for platform ${platform}:`, error);
-              if (retries <= 1) {
+              
+              if (isTimeoutError(error)) {
+                // For timeouts, use longer delays
+                delayTime = Math.min(delayTime * 2, 15000); // Exponential backoff up to 15 seconds
+                await delay(delayTime);
+              } else if (isRateLimitError(error)) {
+                // For rate limits, wait even longer
+                await delay(10000); // 10 second delay for rate limits
+              } else {
+                // For other errors, use standard delay
+                await delay(3000);
+              }
+
+              retries--;
+              
+              if (retries === 0) {
                 console.error(`All retries failed for platform ${platform} from schedule ${schedule.id}`);
                 break;
               }
-              retries--;
-              await delay(3000); // 3 second delay between retries
             }
           }
+          
+          // Add longer delay between platforms regardless of success/failure
+          await delay(8000); // 8 second delay between platforms
         }
 
         // Delete one-time schedule only if at least one platform succeeded
