@@ -38,7 +38,7 @@ const generatePostWithTimeout = async (params: {
   scrapedContent?: string
 }) => {
   const controller = new AbortController();
-  const timeoutId = setTimeout(() => controller.abort(), 120000); // Increase to 120 seconds
+  const timeoutId = setTimeout(() => controller.abort(), 240000); // Increase to 240 seconds (4 minutes)
 
   try {
     const response = await fetch(`${params.baseUrl}/api/generate-post`, {
@@ -121,7 +121,7 @@ export async function GET(req: NextRequest) {
         },
       });
     }, {
-      timeout: 30000 // Increase timeout to 30 seconds n
+      timeout: 60000 // Increase timeout to 60 seconds
     });
 
     console.log(`Found ${schedulesToProcess.length} schedules to process`);
