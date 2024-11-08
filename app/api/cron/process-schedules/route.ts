@@ -34,7 +34,8 @@ const generatePostWithTimeout = async (params: {
   useEmojis: boolean,
   userId: string,
   instructions: string,
-  baseUrl: string
+  baseUrl: string,
+  scrapedContent?: string
 }) => {
   const controller = new AbortController();
   const timeoutId = setTimeout(() => controller.abort(), 55000); // Increased to 45 seconds
@@ -144,10 +145,25 @@ export async function GET(req: NextRequest) {
           continue;
         }
 
-        // Process platforms sequentially with basic error handling
+        // Scrape content once
+        const baseUrl = process.env.NEXTAUTH_URL || 'http://localhost:3000';
+        const scrapeResponse = await fetch(`${baseUrl}/api/firecrawl`, {
+          method: 'POST',
+          headers: {
+            'Content-Type': 'application/json',
+          },
+          body: JSON.stringify({ url: source.url }),
+        });
+
+        if (!scrapeResponse.ok) {
+          throw new Error(`Failed to scrape content: ${await scrapeResponse.text()}`);
+        }
+
+        const scrapedData = await scrapeResponse.json();
+
+        // Process each platform with the same scraped content
         for (const platform of schedule.platforms) {
           try {
-            const baseUrl = process.env.NEXTAUTH_URL || 'http://localhost:3000';
             const result = await generatePostWithTimeout({
               sourceUrl: source.url,
               platform: platform.toLowerCase(),
@@ -155,7 +171,8 @@ export async function GET(req: NextRequest) {
               instructions: schedule.aiInstructions || '',
               useEmojis: schedule.useEmojis || false,
               userId: schedule.userId,
-              baseUrl
+              baseUrl,
+              scrapedContent: scrapedData.content
             });
 
             console.log(`Successfully generated post for platform ${platform} from schedule ${schedule.id}`);

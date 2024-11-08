@@ -59,29 +59,23 @@ export async function POST(request: Request) {
     const scrapeUrl = `${baseUrl}/api/firecrawl`;
     console.log('Attempting to scrape from:', scrapeUrl); // Debug log
 
-    const scrapeResponse = await fetch(scrapeUrl, {
-      method: 'POST',
-      headers: {
-        'Content-Type': 'application/json',
-      },
-      body: JSON.stringify({ url: sourceUrl }),
-    });
+    // If scrapedContent is provided, use it directly
+    const scrapedContent = requestData.scrapedContent || await (async () => {
+      const scrapeResponse = await fetch(scrapeUrl, {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json',
+        },
+        body: JSON.stringify({ url: sourceUrl }),
+      });
 
-    if (!scrapeResponse.ok) {
-      console.error(`Scrape failed with status ${scrapeResponse.status}:`, await scrapeResponse.text());
-      throw new Error(`Failed to scrape URL: ${scrapeResponse.statusText}`);
-    }
+      if (!scrapeResponse.ok) {
+        throw new Error(`Failed to scrape URL: ${scrapeResponse.statusText}`);
+      }
 
-    // Parse the JSON response instead of getting text
-    const scrapedData = await scrapeResponse.json();
-
-    if (!scrapedData.success || !scrapedData.content) {
-      console.error('Scrape failed:', scrapedData);
-      throw new Error(scrapedData.error || 'No content could be scraped from URL');
-    }
-
-    // Use the content from the JSON response
-    const scrapedContent = scrapedData.content;
+      const scrapedData = await scrapeResponse.json();
+      return scrapedData.content;
+    })();
 
     if (!scrapedContent) {
       throw new Error('No content scraped from URL');
