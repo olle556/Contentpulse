@@ -2,7 +2,7 @@ import { NextRequest } from 'next/server';
 import { prisma } from '@/lib/prisma';
 import { format, subMinutes } from 'date-fns';
 
-export const maxDuration = 290; // Set max duration to 5 minutes
+export const maxDuration = 300; // Set to 5 minutes (300 seconds) for Pro plan?
 export const dynamic = 'force-dynamic';
 export const revalidate = 0;
 
@@ -38,7 +38,7 @@ const generatePostWithTimeout = async (params: {
   scrapedContent?: string
 }) => {
   const controller = new AbortController();
-  const timeoutId = setTimeout(() => controller.abort(), 55000); // Increased to 45 seconds
+  const timeoutId = setTimeout(() => controller.abort(), 120000); // Increase to 120 seconds
 
   try {
     const response = await fetch(`${params.baseUrl}/api/generate-post`, {
@@ -133,7 +133,7 @@ export async function GET(req: NextRequest) {
       }), { status: 200 });
     }
 
-    // Process schedules outside of transaction with simple rate limiting
+    // Process schedules sequentially with proper delays
     for (const schedule of schedulesToProcess) {
       try {
         const source = await prisma.contentSource.findUnique({
@@ -147,58 +147,69 @@ export async function GET(req: NextRequest) {
 
         // Scrape content once
         const baseUrl = process.env.NEXTAUTH_URL || 'http://localhost:3000';
-        const scrapeResponse = await fetch(`${baseUrl}/api/firecrawl`, {
-          method: 'POST',
-          headers: {
-            'Content-Type': 'application/json',
-          },
-          body: JSON.stringify({ url: source.url }),
-        });
+        const controller = new AbortController();
+        const timeoutId = setTimeout(() => controller.abort(), 60000); // 60 second timeout for scraping
 
-        if (!scrapeResponse.ok) {
-          throw new Error(`Failed to scrape content: ${await scrapeResponse.text()}`);
-        }
-
-        const scrapedData = await scrapeResponse.json();
-
-        // Process each platform with the same scraped content
-        for (const platform of schedule.platforms) {
-          try {
-            const result = await generatePostWithTimeout({
-              sourceUrl: source.url,
-              platform: platform.toLowerCase(),
-              tone: schedule.tonality.toLowerCase(),
-              instructions: schedule.aiInstructions || '',
-              useEmojis: schedule.useEmojis || false,
-              userId: schedule.userId,
-              baseUrl,
-              scrapedContent: scrapedData.content
-            });
-
-            console.log(`Successfully generated post for platform ${platform} from schedule ${schedule.id}`);
-            
-            // Add fixed delay between platform processing
-            await delay(5000); // 5 second delay between platforms
-
-          } catch (error) {
-            console.error(`Failed to generate post for platform ${platform}:`, error);
-          }
-        }
-
-        // Delete one-time schedule after processing
-        if (!schedule.isRecurring) {
-          await prisma.contentSchedule.delete({
-            where: { id: schedule.id }
+        try {
+          const scrapeResponse = await fetch(`${baseUrl}/api/firecrawl`, {
+            method: 'POST',
+            headers: {
+              'Content-Type': 'application/json',
+            },
+            body: JSON.stringify({ url: source.url }),
+            signal: controller.signal,
           });
-          console.log(`Deleted one-time schedule ${schedule.id}`);
+
+          if (!scrapeResponse.ok) {
+            throw new Error(`Failed to scrape content: ${await scrapeResponse.text()}`);
+          }
+
+          const scrapedData = await scrapeResponse.json();
+
+          // Process each platform
+          for (const platform of schedule.platforms) {
+            try {
+              await generatePostWithTimeout({
+                sourceUrl: source.url,
+                platform: platform.toLowerCase(),
+                tone: schedule.tonality.toLowerCase(),
+                instructions: schedule.aiInstructions || '',
+                useEmojis: schedule.useEmojis || false,
+                userId: schedule.userId,
+                baseUrl,
+                scrapedContent: scrapedData.content
+              });
+
+              console.log(`Successfully generated post for platform ${platform} from schedule ${schedule.id}`);
+              
+              // Add delay between platform processing
+              await delay(5000); // 5 second delay between platforms
+
+            } catch (error) {
+              console.error(`Failed to generate post for platform ${platform}:`, error);
+            }
+          }
+
+          // Delete one-time schedule if needed
+          if (!schedule.isRecurring) {
+            await prisma.contentSchedule.delete({
+              where: { id: schedule.id }
+            });
+            console.log(`Deleted one-time schedule ${schedule.id}`);
+          }
+
+        } catch (error) {
+          console.error(`Failed to process schedule ${schedule.id}:`, error);
+        } finally {
+          clearTimeout(timeoutId);
         }
+
+        // Add delay between schedules
+        await delay(10000); // Increased to 10 second delay between schedules
 
       } catch (error) {
         console.error(`Failed to process schedule ${schedule.id}:`, error);
       }
-      
-      // Add delay between schedules
-      await delay(3000); // 3 second delay between schedules
     }
 
     return new Response(JSON.stringify({
