@@ -56,7 +56,7 @@ export default function SourcesPage() {
   }, []);
 
   return (
-    <div className="space-y-6">
+    <div className="space-y-6 sm:p-6">
       <div className="flex justify-between items-center">
         <h1 className="text-3xl font-bold">Content Sources</h1>
         <Button onClick={() => setIsAddSourceOpen(true)}>

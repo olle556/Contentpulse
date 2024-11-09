@@ -16,7 +16,7 @@ export default function PostsPage() {
   }, []);
 
   return (
-    <div className="space-y-6 p-4 sm:p-6">
+    <div className="space-y-6 sm:p-6">
       <div className="flex flex-col sm:flex-row justify-between items-center gap-4">
         <h1 className="text-2xl sm:text-3xl font-bold text-center sm:text-left w-full">Generated Posts</h1>
         <Button 
