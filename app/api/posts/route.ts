@@ -54,30 +54,19 @@ export async function POST(request: Request) {
 
     const { content, platform, status, isRegeneration } = await request.json();
     
+    if (!content) {
+      return NextResponse.json({ 
+        success: false, 
+        error: 'Content is required' 
+      }, { status: 400 });
+    }
+
     // Only save if this is not a regeneration
     if (isRegeneration) {
       return NextResponse.json({ 
         success: true, 
         post: { content, platform, status }
       });
-    }
-  try {
-    const session = await getServerSession(authOptions);
-    
-    if (!session?.user?.email) {
-      return NextResponse.json({ 
-        success: false, 
-        error: 'Unauthorized' 
-      }, { status: 401 });
-    }
-
-    const { content, platform, status } = await request.json();
-    
-    if (!content) {
-      return NextResponse.json({ 
-        success: false, 
-        error: 'Content is required' 
-      }, { status: 400 });
     }
 
     const post = await prisma.generatedPost.create({
