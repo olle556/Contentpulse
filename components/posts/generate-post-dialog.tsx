@@ -229,29 +229,30 @@ export function GeneratePostDialog({ open, onOpenChange, onSuccess }: GeneratePo
         throw new Error("Selected source not found");
       }
 
-      // Only scrape if we don't have content or this is the first generation
-      const endpoint = scrapedContent ? '/api/generate-post/regenerate' : '/api/generate-post';
+      const endpoint = isRegeneration ? '/api/generate-post/regenerate' : '/api/generate-post';
       
-      console.log('Sending request to:', endpoint, { 
-        ...(scrapedContent ? {} : { sourceUrl: selectedSource.url }),
+      const requestBody = isRegeneration ? {
+        scrapedContent,
         platform: selectedPlatform,
         tone: selectedTone,
         useEmojis,
-        scrapedContent,
-      });
+        aiInstructions,
+      } : {
+        sourceUrl: selectedSource.url,
+        platform: selectedPlatform,
+        tone: selectedTone,
+        useEmojis,
+        aiInstructions,
+      };
+
+      console.log('Sending request to:', endpoint, requestBody);
 
       const response = await fetch(endpoint, {
         method: 'POST',
         headers: { 
           'Content-Type': 'application/json',
         },
-        body: JSON.stringify({ 
-          sourceUrl: selectedSource.url,
-          platform: selectedPlatform,
-          tone: selectedTone,
-          useEmojis,
-          aiInstructions,
-        }),
+        body: JSON.stringify(requestBody),
       });
 
       console.log('Response status:', response.status);
