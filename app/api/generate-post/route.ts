@@ -57,10 +57,10 @@ export async function POST(request: Request) {
     
     // 1. First, scrape the content using Firecrawl
     const scrapeUrl = `${baseUrl}/api/firecrawl`;
-    console.log('Attempting to scrape from:', scrapeUrl); // Debug log
 
     // If scrapedContent is provided, use it directly
     const scrapedContent = requestData.scrapedContent || await (async () => {
+      console.log('Attempting to scrape from:', scrapeUrl); // Debug log
       const scrapeResponse = await fetch(scrapeUrl, {
         method: 'POST',
         headers: {

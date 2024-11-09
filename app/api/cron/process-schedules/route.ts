@@ -38,7 +38,7 @@ const generatePostWithTimeout = async (params: {
   scrapedContent?: string
 }) => {
   const controller = new AbortController();
-  const timeoutId = setTimeout(() => controller.abort(), 240000); // Increase to 240 seconds (4 minutes)
+  const timeoutId = setTimeout(() => controller.abort(), 120000); // Reduced to 120 seconds (2 minutes)
 
   try {
     const response = await fetch(`${params.baseUrl}/api/generate-post`, {
@@ -140,15 +140,15 @@ export async function GET(req: NextRequest) {
           where: { id: schedule.contentSourceId }
         });
 
-        if (!source) {
-          console.error(`Source not found for schedule ${schedule.id}`);
-          continue;
-        }
+          if (!source) {
+            console.error(`Source not found for schedule ${schedule.id}`);
+            continue;
+          }
 
         // Scrape content once
         const baseUrl = process.env.NEXTAUTH_URL || 'http://localhost:3000';
         const controller = new AbortController();
-        const timeoutId = setTimeout(() => controller.abort(), 60000); // 60 second timeout for scraping
+        const timeoutId = setTimeout(() => controller.abort(), 30000); // 30 second timeout for scraping
 
         try {
           const scrapeResponse = await fetch(`${baseUrl}/api/firecrawl`, {
@@ -183,7 +183,7 @@ export async function GET(req: NextRequest) {
               console.log(`Successfully generated post for platform ${platform} from schedule ${schedule.id}`);
               
               // Add delay between platform processing
-              await delay(5000); // 5 second delay between platforms
+              //await delay(5000); // 5 second delay between platforms
 
             } catch (error) {
               console.error(`Failed to generate post for platform ${platform}:`, error);
@@ -205,7 +205,7 @@ export async function GET(req: NextRequest) {
         }
 
         // Add delay between schedules
-        await delay(10000); // Increased to 10 second delay between schedules
+        await delay(2000); // 2 second delay between schedules
 
       } catch (error) {
         console.error(`Failed to process schedule ${schedule.id}:`, error);
