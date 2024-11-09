@@ -52,6 +52,25 @@ export async function POST(request: Request) {
       }, { status: 401 });
     }
 
+    const { content, platform, status, isRegeneration } = await request.json();
+    
+    // Only save if this is not a regeneration
+    if (isRegeneration) {
+      return NextResponse.json({ 
+        success: true, 
+        post: { content, platform, status }
+      });
+    }
+  try {
+    const session = await getServerSession(authOptions);
+    
+    if (!session?.user?.email) {
+      return NextResponse.json({ 
+        success: false, 
+        error: 'Unauthorized' 
+      }, { status: 401 });
+    }
+
     const { content, platform, status } = await request.json();
     
     if (!content) {

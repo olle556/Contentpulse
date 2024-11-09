@@ -46,6 +46,7 @@ export function GeneratePostDialog({ open, onOpenChange, onSuccess }: GeneratePo
   const [aiInstructions, setAiInstructions] = useState("");
   const [savedPostId, setSavedPostId] = useState<string | null>(null);
   const [useEmojis, setUseEmojis] = useState(false);
+  const [scrapedContent, setScrapedContent] = useState<string | null>(null);
 
   const TONES = [
     { value: "professional", label: "Professional" },
@@ -207,7 +208,13 @@ export function GeneratePostDialog({ open, onOpenChange, onSuccess }: GeneratePo
     }
   }
 
-  async function handleGenerate() {
+  async function handleGenerate(isRegeneration: boolean = false) {
+    if (!isRegeneration) {
+      // Clear previous state when generating fresh
+      setScrapedContent(null);
+      setSavedPostId(null);
+      setGeneratedContent("");
+    }
     if (selectedSources.length === 0) {
       toast.error("Please select a source");
       return;
@@ -222,14 +229,18 @@ export function GeneratePostDialog({ open, onOpenChange, onSuccess }: GeneratePo
         throw new Error("Selected source not found");
       }
 
-      console.log('Sending request with:', { 
-        sourceUrl: selectedSource.url,
+      // Only scrape if we don't have content or this is the first generation
+      const endpoint = scrapedContent ? '/api/generate-post/regenerate' : '/api/generate-post';
+      
+      console.log('Sending request to:', endpoint, { 
+        ...(scrapedContent ? {} : { sourceUrl: selectedSource.url }),
         platform: selectedPlatform,
         tone: selectedTone,
         useEmojis,
+        scrapedContent,
       });
 
-      const response = await fetch('/api/generate-post', {
+      const response = await fetch(endpoint, {
         method: 'POST',
         headers: { 
           'Content-Type': 'application/json',
@@ -253,6 +264,9 @@ export function GeneratePostDialog({ open, onOpenChange, onSuccess }: GeneratePo
       
       setGeneratedContent(data.content);
       setSavedPostId(data.post.id);
+      if (!scrapedContent) {
+        setScrapedContent(data.scrapedContent);
+      }
       if (editor) {
         editor.commands.setContent(data.content);
       }
@@ -377,7 +391,7 @@ export function GeneratePostDialog({ open, onOpenChange, onSuccess }: GeneratePo
               <div className="flex justify-end space-x-2">
                 <Button
                   variant="outline"
-                  onClick={() => handleGenerate()}
+                  onClick={() => handleGenerate(true)}
                 >
                   <RefreshCw className="w-4 h-4 mr-2" />
                   Regenerate
