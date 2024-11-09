@@ -176,14 +176,40 @@ export default function BrandInformationPage() {
     },
   })
 
-  // Initialize form with saved data if it exists
+  // Fetch and initialize form with saved data
   useEffect(() => {
-    const savedData = localStorage.getItem('brandFormData')
-    if (savedData) {
-      const parsedData = JSON.parse(savedData)
-      form.reset(parsedData)
+    const fetchBrand = async () => {
+      try {
+        const response = await fetch('/api/brand')
+        if (!response.ok) throw new Error('Failed to fetch brand')
+        
+        const brand = await response.json()
+        if (brand?.id) {
+          localStorage.setItem('brandId', brand.id.toString())
+          form.reset(brand)
+        } else {
+          // Fallback to localStorage if no brand in DB
+          const savedData = localStorage.getItem('brandFormData')
+          if (savedData) {
+            const parsedData = JSON.parse(savedData)
+            form.reset(parsedData)
+          }
+        }
+      } catch (error) {
+        console.error('Error fetching brand:', error)
+        // Fallback to localStorage on error
+        const savedData = localStorage.getItem('brandFormData')
+        if (savedData) {
+          const parsedData = JSON.parse(savedData)
+          form.reset(parsedData)
+        }
+      }
     }
-  }, [])
+
+    if (session?.user?.id) {
+      fetchBrand()
+    }
+  }, [session?.user?.id])
 
   // Replace the [saveStatus, setSaveStatus] with [showSaveToast, setShowSaveToast]
   const [showSaveToast, setShowSaveToast] = useState(false)
