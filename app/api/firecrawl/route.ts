@@ -3,7 +3,11 @@ import FirecrawlApp from "@mendable/firecrawl-js";
 
 const app = new FirecrawlApp({ apiKey: process.env.FIRECRAWL_API_KEY || "" });
 
+export const maxDuration = 60; // Set to 1 minute instead of 2
+
 export async function POST(request: Request) {
+  const controller = new AbortController();
+  const timeoutId = setTimeout(() => controller.abort(), 50000); // Set to 50 seconds
 
   try {
     if (!process.env.FIRECRAWL_API_KEY) {
@@ -33,7 +37,7 @@ export async function POST(request: Request) {
       scrapeOptions: {
         formats: ["markdown"],
         onlyMainContent: true,
-      },
+      }
     });
 
     console.log('Crawl response:', crawlResponse);
@@ -69,7 +73,13 @@ export async function POST(request: Request) {
   } catch (error: any) {
     console.error('Error processing URL:', error);
     
-    // Handle credit limit error specifically
+    if (error.name === 'AbortError') {
+      return NextResponse.json({
+        success: false,
+        error: "Request timed out"
+      }, { status: 408 });
+    }
+    
     if (error.statusCode === 402) {
       return NextResponse.json({
         success: false,
@@ -81,5 +91,7 @@ export async function POST(request: Request) {
       success: false,
       error: error instanceof Error ? error.message : 'Failed to process URL'
     }, { status: 500 });
+  } finally {
+    clearTimeout(timeoutId);
   }
 }
