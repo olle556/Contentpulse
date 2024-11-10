@@ -74,6 +74,7 @@
     "input-otp": "^1.2.4",
     "langchain": "^0.3.5",
     "lucide-react": "^0.446.0",
+    "mailgun.js": "^10.2.3",
     "next": "13.5.1",
     "next-auth": "^4.24.10",
     "next-themes": "^0.3.0",

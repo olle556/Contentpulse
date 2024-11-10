@@ -26,7 +26,13 @@ const isRateLimitError = (error: any) => {
          error.message?.includes('rate limit');
 };
 
-// Update the generate post function to handle timeouts better
+// Add this interface near the top of the file
+interface GeneratedPost {
+  platform: string;
+  content: string;
+}
+
+// Update the generate post function to return the generated content
 const generatePostWithTimeout = async (params: {
   sourceUrl: string,
   platform: string,
@@ -56,7 +62,8 @@ const generatePostWithTimeout = async (params: {
       throw new Error(`Failed to generate post: ${errorText}`);
     }
 
-    return await response.json();
+    const result = await response.json();
+    return result; // This now includes the generated content
   } finally {
     clearTimeout(timeoutId);
   }
@@ -140,10 +147,13 @@ export async function GET(req: NextRequest) {
           where: { id: schedule.contentSourceId }
         });
 
-          if (!source) {
-            console.error(`Source not found for schedule ${schedule.id}`);
-            continue;
-          }
+        if (!source) {
+          console.error(`Source not found for schedule ${schedule.id}`);
+          continue;
+        }
+
+        // Initialize array to collect all generated posts
+        const generatedPosts: GeneratedPost[] = [];
 
         // Scrape content once
         const baseUrl = process.env.NEXTAUTH_URL || 'http://localhost:3000';
@@ -169,7 +179,7 @@ export async function GET(req: NextRequest) {
           // Process each platform
           for (const platform of schedule.platforms) {
             try {
-              await generatePostWithTimeout({
+              const result = await generatePostWithTimeout({
                 sourceUrl: source.url,
                 platform: platform.toLowerCase(),
                 tone: schedule.tonality.toLowerCase(),
@@ -180,13 +190,38 @@ export async function GET(req: NextRequest) {
                 scrapedContent: scrapedData.content
               });
 
-              console.log(`Successfully generated post for platform ${platform} from schedule ${schedule.id}`);
-              
-              // Add delay between platform processing
-              //await delay(5000); // 5 second delay between platforms
+              // Collect successful generations
+              if (result.success && result.content) {
+                generatedPosts.push({
+                  platform,
+                  content: result.content
+                });
+              }
 
+              console.log(`Successfully generated post for platform ${platform} from schedule ${schedule.id}`);
             } catch (error) {
               console.error(`Failed to generate post for platform ${platform}:`, error);
+            }
+          }
+
+          // Send single email with all generated posts
+          if (generatedPosts.length > 0) {
+            try {
+              await fetch(`${baseUrl}/api/postMail`, {
+                method: 'POST',
+                headers: {
+                  'Content-Type': 'application/json',
+                },
+                body: JSON.stringify({
+                  email: schedule.user.email,
+                  userId: schedule.userId,
+                  generatedPosts: generatedPosts,
+                  scheduleId: schedule.id
+                }),
+              });
+              console.log(`Email notification sent for schedule ${schedule.id}`);
+            } catch (emailError) {
+              console.error(`Failed to send email notification:`, emailError);
             }
           }
 
