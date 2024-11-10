@@ -216,7 +216,8 @@ export async function GET(req: NextRequest) {
                   email: schedule.user.email,
                   userId: schedule.userId,
                   generatedPosts: generatedPosts,
-                  scheduleId: schedule.id
+                  scheduleId: schedule.id,
+                  sourceUrl: source.url
                 }),
               });
               console.log(`Email notification sent for schedule ${schedule.id}`);
