@@ -228,7 +228,6 @@ export function GeneratePostDialog({ open, onOpenChange, onSuccess }: GeneratePo
         setIsEditing(false);
         setHasUnsavedChanges(false);
         onSuccess?.();
-        onOpenChange(false); // Only close dialog here
       } catch (error) {
         toast.error('Failed to save changes');
       }
