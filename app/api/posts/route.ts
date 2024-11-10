@@ -45,7 +45,7 @@ export async function POST(request: Request) {
   try {
     const session = await getServerSession(authOptions);
     
-    if (!session?.user?.email) {
+    if (!session?.user?.email || !session?.user?.id) {
       return NextResponse.json({ 
         success: false, 
         error: 'Unauthorized' 
@@ -61,22 +61,21 @@ export async function POST(request: Request) {
       }, { status: 400 });
     }
 
-    // Only save if this is not a regeneration
-    if (isRegeneration) {
+    if (!platform) {
       return NextResponse.json({ 
-        success: true, 
-        post: { content, platform, status }
-      });
+        success: false, 
+        error: 'Platform is required' 
+      }, { status: 400 });
     }
 
     const post = await prisma.generatedPost.create({
       data: {
         content,
-        platform: platform || 'twitter',
+        platform,
         status: status || 'draft',
         user: {
           connect: {
-            email: session.user.email
+            id: session.user.id
           }
         }
       },
@@ -96,5 +95,7 @@ export async function POST(request: Request) {
       success: false, 
       error: error instanceof Error ? error.message : 'Failed to save post' 
     }, { status: 500 });
+  } finally {
+    await prisma.$disconnect();
   }
 }

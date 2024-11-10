@@ -49,6 +49,7 @@ export function GeneratePostDialog({ open, onOpenChange, onSuccess }: GeneratePo
   const [scrapedContent, setScrapedContent] = useState<string | null>(null);
   const [isRegenerating, setIsRegenerating] = useState(false);
   const [hasUnsavedChanges, setHasUnsavedChanges] = useState(false);
+  const [isClosing, setIsClosing] = useState(false);
 
   const TONES = [
     { value: "professional", label: "Professional" },
@@ -127,6 +128,8 @@ export function GeneratePostDialog({ open, onOpenChange, onSuccess }: GeneratePo
 
   // Modify the handleDialogClose function
   const handleDialogClose = async (open: boolean) => {
+    console.log('Dialog close triggered', { open, hasUnsavedChanges });
+    
     if (!open && hasUnsavedChanges) {
       const confirm = window.confirm('You have unsaved changes. Are you sure you want to close?');
       if (!confirm) {
@@ -135,6 +138,7 @@ export function GeneratePostDialog({ open, onOpenChange, onSuccess }: GeneratePo
     }
     
     if (!open) {
+      console.log('Resetting dialog');
       resetDialog();
     }
     onOpenChange(open);
@@ -183,6 +187,7 @@ export function GeneratePostDialog({ open, onOpenChange, onSuccess }: GeneratePo
   // Function for quick-saving generated content
   const handleSavePost = async (event?: React.MouseEvent) => {
     event?.preventDefault(); // Prevent any default actions
+    console.log('Save post started');
     setIsSaving(true);
     try {
       const response = await fetch('/api/posts', {
@@ -204,11 +209,13 @@ export function GeneratePostDialog({ open, onOpenChange, onSuccess }: GeneratePo
       setHasUnsavedChanges(false);
       toast.success('Post saved successfully');
       onSuccess?.(); // Refresh the posts list if needed
+      console.log('Save post completed successfully');
     } catch (error) {
       console.error('Save error:', error);
       toast.error('Failed to save post');
     } finally {
       setIsSaving(false);
+      console.log('Save post finished');
     }
   };
 
@@ -347,8 +354,21 @@ export function GeneratePostDialog({ open, onOpenChange, onSuccess }: GeneratePo
   }, [editor]);
 
   return (
-    <Dialog open={open} onOpenChange={handleDialogClose}>
-      <DialogContent className="sm:max-w-[600px]">
+    <Dialog 
+      open={open} 
+      onOpenChange={handleDialogClose}
+    >
+      <DialogContent 
+        className="sm:max-w-[600px]"
+        onInteractOutside={(e) => {
+          console.log('Interaction outside dialog');
+          e.preventDefault(); // Prevent closing on outside click
+        }}
+        onEscapeKeyDown={(e) => {
+          console.log('Escape key pressed');
+          e.preventDefault(); // Prevent closing on escape
+        }}
+      >
         <DialogHeader>
           <DialogTitle>Generate Post from Sources</DialogTitle>
         </DialogHeader>
@@ -491,7 +511,7 @@ export function GeneratePostDialog({ open, onOpenChange, onSuccess }: GeneratePo
                 </Button>
                 <Button
                   variant="outline"
-                  onClick={handleSavePost}
+                  onClick={(e) => handleSavePost(e)}
                   disabled={isSaving}
                 >
                   {isSaving ? (

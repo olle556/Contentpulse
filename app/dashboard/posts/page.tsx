@@ -15,6 +15,11 @@ export default function PostsPage() {
     setKey(prev => prev + 1); // Force PostList to remount and refetch
   }, []);
 
+  const handleSuccess = () => {
+    console.log('Success callback triggered');
+    setKey(prev => prev + 1);
+  };
+
   return (
     <div className="space-y-6 sm:p-6">
       <div className="flex flex-col sm:flex-row justify-between items-center gap-4">
@@ -32,7 +37,7 @@ export default function PostsPage() {
       <GeneratePostDialog 
         open={isGenerateOpen} 
         onOpenChange={setIsGenerateOpen}
-        onSuccess={handleGenerateSuccess}
+        onSuccess={handleSuccess}
       />
     </div>
   );

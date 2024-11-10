@@ -168,6 +168,7 @@ Please generate the post now:`;
       content: generatedContent,
       post: savedPost,
       sourceUrl,
+      scrapedContent: scrapedContent,
     });
 
   } catch (error) {
