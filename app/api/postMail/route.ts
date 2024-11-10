@@ -14,6 +14,21 @@ interface GeneratedPost {
   content: string;
 }
 
+const getShareUrl = (platform: string, content: string) => {
+  switch (platform.toLowerCase()) {
+    case 'twitter':
+      return `https://twitter.com/intent/tweet?text=${encodeURIComponent(content)}`;
+    case 'threads':
+      return `https://threads.net/intent/post?text=${encodeURIComponent(content)}`;
+    case 'linkedin':
+      return `https://www.linkedin.com/sharing/share-offsite/?url=${encodeURIComponent(content)}`;
+    case 'facebook':
+      return `https://www.facebook.com/sharer/sharer.php?u=${encodeURIComponent(content)}`;
+    default:
+      return '#';
+  }
+};
+
 export async function POST(req: NextRequest) {
   if (!process.env.MAILGUN_DOMAIN || !process.env.MAILGUN_API_KEY) {
     return NextResponse.json({ error: 'Server configuration error' }, { status: 500 });
@@ -27,7 +42,6 @@ export async function POST(req: NextRequest) {
     }
 
     const currentDate = new Date().toLocaleDateString('en-US', {
-      year: 'numeric',
       month: 'long',
       day: 'numeric'
     });
@@ -40,12 +54,12 @@ export async function POST(req: NextRequest) {
             ${post.content}
           </div>
           <div style="display: flex; gap: 10px;">
-            <a href="#" 
-               style="background-color: #f3f4f6; color: #374151; padding: 8px 16px; border-radius: 4px; text-decoration: none; display: inline-flex; align-items: center; gap: 8px;"
-               onclick="navigator.clipboard.writeText('${post.content.replace(/'/g, "\\'")}'); return false;">
-              📋 Copy
+            <a href="${process.env.NEXTAUTH_URL}/dashboard/posts" 
+               target="_blank" 
+               style="background-color: #f3f4f6; color: #374151; padding: 8px 16px; border-radius: 4px; text-decoration: none; display: inline-flex; align-items: center; gap: 8px;">
+              📋 View in Dashboard
             </a>
-            <a href="https://twitter.com/intent/tweet?text=${encodeURIComponent(post.content)}" 
+            <a href="${getShareUrl(post.platform, post.content)}" 
                target="_blank" 
                style="background-color: #f3f4f6; color: #374151; padding: 8px 16px; border-radius: 4px; text-decoration: none; display: inline-flex; align-items: center; gap: 8px;">
               🔗 Share on ${post.platform}
@@ -56,17 +70,17 @@ export async function POST(req: NextRequest) {
       .join('');
 
     const userResult = await mailgunClient.messages.create(process.env.MAILGUN_DOMAIN, {
-      from: `Content Pulse <hello@${process.env.MAILGUN_DOMAIN}>`,
+      from: `Content Pulse <no-reply@${process.env.MAILGUN_DOMAIN}>`,
       to: email,
-      subject: "Your Content Pulse posts are ready!",
+      subject: `Your Content Pulse ${generatedPosts.length > 1 ? 'posts are' : 'post is'} ready!`,
       html: `<!DOCTYPE html>
 <html>
 <body style="font-family: Arial, sans-serif; padding: 20px; color: #333;">
-    <h2 style="color: #2563eb;">Your Generated Posts are Ready!</h2>
+    <h2 style="color: #2563eb;">Your Generated ${generatedPosts.length > 1 ? 'posts are' : 'post is'} Ready!</h2>
     <p>Here ${generatedPosts.length > 1 ? 'are your generated posts' : 'is your generated post'} for ${currentDate} based on <a href="${sourceUrl}" style="color: #2563eb;">${sourceUrl}</a></p>
     <p style="color: #666;">Schedule ID: ${scheduleId}</p>
     ${postsHtml}
-    <p style="margin-top: 30px; color: #666;">You can view and edit these posts in your <a href="${process.env.NEXTAUTH_URL}/dashboard" style="color: #2563eb;">Content Pulse dashboard</a>.</p>
+    <p style="margin-top: 30px; color: #666;">You can view and edit your ${generatedPosts.length > 1 ? 'posts' : 'post'} in your <a href="${process.env.NEXTAUTH_URL}/dashboard/posts" style="color: #2563eb;">Content Pulse dashboard</a>.</p>
 </body>
 </html>`
     });
