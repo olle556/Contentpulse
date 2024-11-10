@@ -14,9 +14,11 @@ import {
   DropdownMenuTrigger,
 } from "@/components/ui/dropdown-menu";
 import { Avatar, AvatarFallback } from "@/components/ui/avatar";
+import { useSession } from "next-auth/react";
 
 export function MobileHeader() {
   const [open, setOpen] = useState(false);
+  const { data: session } = useSession();
 
   const handleSignOut = async () => {
     await signOut({ redirect: true, callbackUrl: '/' });
@@ -43,6 +45,13 @@ export function MobileHeader() {
           <DropdownMenuTrigger asChild>
             <Button variant="ghost" className="relative h-8 w-8 rounded-full">
               <Avatar className="h-8 w-8">
+                {session?.user?.image && (
+                  <img
+                    src={session.user.image}
+                    alt="Profile picture"
+                    className="h-full w-full object-cover"
+                  />
+                )}
                 <AvatarFallback>CP</AvatarFallback>
               </Avatar>
             </Button>

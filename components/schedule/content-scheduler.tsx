@@ -164,8 +164,8 @@ export function ContentScheduler({ open, onOpenChange, contentSources, editSched
 
   return (
     <Dialog open={open} onOpenChange={onOpenChange}>
-      <DialogContent className="sm:max-w-[550px] max-h-[90vh] flex flex-col">
-        <DialogHeader>
+      <DialogContent className="sm:max-w-[550px] max-h-[90vh] overflow-hidden p-0">
+        <DialogHeader className="p-4 sm:p-6">
           <DialogTitle>
             {editSchedule ? 'Edit Schedule' : 'Schedule Content Generation'}
           </DialogTitle>
@@ -173,7 +173,7 @@ export function ContentScheduler({ open, onOpenChange, contentSources, editSched
         <Form {...form}>
           <form 
             onSubmit={form.handleSubmit(onSubmit)} 
-            className="space-y-6 overflow-y-auto pr-4"
+            className="space-y-6 overflow-y-auto px-4 sm:px-6 pb-4 sm:pb-6"
           >
             <FormField
               control={form.control}

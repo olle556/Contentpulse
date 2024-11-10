@@ -35,7 +35,7 @@ export function Sidebar({ mobile, onNavigate }: { mobile?: boolean, onNavigate?:
           </Link>
         </div>
       )}
-      <nav className="flex-1 space-y-1 p-2 md:px-3 md:py-4">
+      <nav className="flex-1 space-y-1 p-2 md:px-3 md:py-4 pt-10">
         {navigation.map((item) => {
           const isActive = pathname === item.href;
           return (
