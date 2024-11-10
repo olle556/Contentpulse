@@ -64,7 +64,15 @@ ${tone === 'professional' ? '- Use industry-appropriate terminology\n- Maintain 
   tone === 'casual' ? '- Use conversational language\n- Be friendly and approachable\n- Use common expressions' :
   tone === 'funny' ? '- Include appropriate humor\n- Use wordplay or puns if relevant\n- Keep it light but informative' :
   tone === 'creative' ? '- Use unique perspectives\n- Include metaphors or analogies\n- Be imaginative in presentation' :
-  '- Use formal language\n- Maintain strict professionalism\n- Focus on facts and accuracy'}
+  tone === 'formal' ? '- Use formal language\n- Maintain strict professionalism\n- Focus on facts and accuracy' :
+  tone === 'inspirational' ? '- Motivate and encourage the audience\n- Use positive, uplifting language\n- Focus on potential and growth' :
+  tone === 'educational' ? '- Provide clear, informative content\n- Use straightforward language\n- Focus on delivering value' :
+  tone === 'empathetic' ? '- Show understanding and compassion\n- Use supportive language\n- Focus on connecting with the audience' :
+  tone === 'playful' ? '- Use lighthearted language\n- Incorporate fun expressions\n- Keep it cheerful and relaxed' :
+  tone === 'persuasive' ? '- Use compelling language\n- Emphasize benefits and value\n- Aim to convince and inspire action' :
+  tone === 'technical' ? '- Use precise, industry-specific language\n- Provide detailed explanations\n- Keep it informative and accurate' :
+  tone === 'neutral' ? '- Maintain an objective perspective\n- Use balanced language\n- Avoid bias or strong opinions' :
+  '- Keep the language warm and approachable\n- Foster a sense of community\n- Use friendly expressions'}
 ${useEmojis ? '\nEmoji usage:\n- Use emojis naturally and strategically\n- Don\'t overuse emojis\n- Ensure emojis complement the message' : ''}
 
 In your answer, exclude the following:

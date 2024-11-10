@@ -57,6 +57,13 @@ export function GeneratePostDialog({ open, onOpenChange, onSuccess }: GeneratePo
     { value: "funny", label: "Funny" },
     { value: "creative", label: "Creative" },
     { value: "formal", label: "Formal" },
+    { value: "inspirational", label: "Inspirational" },
+    { value: "educational", label: "Educational" },
+    { value: "empathetic", label: "Empathetic" },
+    { value: "playful", label: "Playful" },
+    { value: "persuasive", label: "Persuasive" },
+    { value: "technical", label: "Technical" },
+    { value: "neutral", label: "Neutral" },
   ];
 
   const PLATFORMS = [
@@ -485,57 +492,80 @@ export function GeneratePostDialog({ open, onOpenChange, onSuccess }: GeneratePo
             </Button>
           )}
 
-          {generatedContent && !isEditing ? (
+          {generatedContent && (
             <div className="space-y-4">
-              <div className="prose max-w-none whitespace-pre-wrap max-h-[400px] overflow-y-auto border rounded-md p-4">
-                {generatedContent}
-              </div>
-              <div className="flex justify-end gap-2 flex-wrap">
-                <Button
-                  variant="outline"
-                  onClick={() => handleGenerate(true)}
-                  disabled={isRegenerating}
-                  className="h-8 px-2 text-sm"
-                >
-                  {isRegenerating ? (
-                    <>
-                      <Loader2 className="w-3 h-3 mr-1 animate-spin" />
-                      Regenerating...
-                    </>
-                  ) : (
-                    <>
-                      <RefreshCw className="w-3 h-3 mr-1" />
-                      Regenerate
-                    </>
-                  )}
-                </Button>
-                <Button
-                  variant="outline"
-                  onClick={(e) => handleSavePost(e)}
-                  disabled={isSaving}
-                  className="h-8 px-2 text-sm"
-                >
-                  {isSaving ? (
-                    <>
-                      <Loader2 className="w-3 h-3 mr-1 animate-spin" />
-                      Saving...
-                    </>
-                  ) : (
-                    <>
-                      <Save className="w-3 h-3 mr-1" />
-                      Save Post
-                    </>
-                  )}
-                </Button>
-                <Button 
-                  onClick={() => setIsEditing(true)}
-                  className="h-8 px-2 text-sm"
-                >
-                  Edit Post
-                </Button>
-              </div>
+              {isEditing ? (
+                <>
+                  <EditorContent editor={editor} />
+                  <div className="flex justify-end gap-2">
+                    <Button
+                      variant="outline"
+                      onClick={handleCancelEdit}
+                      className="h-8 px-2 text-sm"
+                    >
+                      Cancel
+                    </Button>
+                    <Button
+                      onClick={handleDoneEditing}
+                      className="h-8 px-2 text-sm"
+                    >
+                      Done
+                    </Button>
+                  </div>
+                </>
+              ) : (
+                <>
+                  <div className="prose max-w-none whitespace-pre-wrap max-h-[400px] overflow-y-auto border rounded-md p-4">
+                    {generatedContent}
+                  </div>
+                  <div className="flex justify-end gap-2 flex-wrap">
+                    <Button
+                      variant="outline"
+                      onClick={() => handleGenerate(true)}
+                      disabled={isRegenerating}
+                      className="h-8 px-2 text-sm"
+                    >
+                      {isRegenerating ? (
+                        <>
+                          <Loader2 className="w-3 h-3 mr-1 animate-spin" />
+                          Regenerating...
+                        </>
+                      ) : (
+                        <>
+                          <RefreshCw className="w-3 h-3 mr-1" />
+                          Regenerate
+                        </>
+                      )}
+                    </Button>
+                    <Button
+                      variant="outline"
+                      onClick={(e) => handleSavePost(e)}
+                      disabled={isSaving}
+                      className="h-8 px-2 text-sm"
+                    >
+                      {isSaving ? (
+                        <>
+                          <Loader2 className="w-3 h-3 mr-1 animate-spin" />
+                          Saving...
+                        </>
+                      ) : (
+                        <>
+                          <Save className="w-3 h-3 mr-1" />
+                          Save Post
+                        </>
+                      )}
+                    </Button>
+                    <Button 
+                      onClick={() => setIsEditing(true)}
+                      className="h-8 px-2 text-sm"
+                    >
+                      Edit Post
+                    </Button>
+                  </div>
+                </>
+              )}
             </div>
-          ) : null}
+          )}
         </div>
       </DialogContent>
     </Dialog>

@@ -71,7 +71,19 @@ const basicFields = [
     name: 'brandVoice', 
     label: 'Brand Voice', 
     type: 'select',
-    options: ['Professional', 'Casual', 'Friendly', 'Playful', 'Luxurious', 'Motivational','Caring', 'Other']
+    options: [ "Professional",
+      "Casual",
+      "Funny",
+      "Creative",
+      "Formal",
+      "Inspirational",
+      "Educational",
+      "Empathetic",
+      "Playful",
+      "Persuasive",
+      "Technical",
+      "Neutral",
+    ]
   },
   { name: 'description', label: 'Description', type: 'textarea' },
 ]
