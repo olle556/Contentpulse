@@ -88,3 +88,12 @@ export type ContentSchedule = {
   updatedAt: Date;
   useEmojis?: boolean;
 }
+
+export interface OnboardingStep {
+  id: 'brand' | 'sources' | 'posts' | 'schedule';
+  title: string;
+  description: string;
+  icon: JSX.Element;
+  href: string;
+  isCompleted: boolean;
+}

@@ -1,6 +1,7 @@
 import { Sidebar } from "@/components/dashboard/sidebar";
 import { Header } from "@/components/dashboard/header";
 import { MobileHeader } from "@/components/dashboard/mobile-header";
+import { OnboardingTester } from "@/components/dev/onboarding-tester";
 
 export default function DashboardLayout({
   children,
@@ -21,6 +22,7 @@ export default function DashboardLayout({
         </div>
         <main className="flex-1 overflow-y-auto p-4 md:p-6 bg-background">
           {children}
+          {process.env.NODE_ENV === 'development' && <OnboardingTester />}
         </main>
       </div>
     </div>

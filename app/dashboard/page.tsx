@@ -1,10 +1,36 @@
+"use client";
+
+import { useEffect, useState } from "react";
+import { WelcomeCard } from "@/components/dashboard/welcome-card";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { FileText, Users, Activity, TrendingUp } from "lucide-react";
 
 export default function Dashboard() {
+  const [showWelcome, setShowWelcome] = useState(true);
+
+  useEffect(() => {
+    const checkOnboardingStatus = async () => {
+      try {
+        const response = await fetch('/api/onboarding/progress');
+        const data = await response.json();
+        
+        if (data.success) {
+          // Hide welcome card if all steps are completed
+          setShowWelcome(data.completedSteps.length < 4);
+        }
+      } catch (error) {
+        console.error('Failed to check onboarding status:', error);
+      }
+    };
+
+    checkOnboardingStatus();
+  }, []);
+
   return (
     <div className="space-y-4 sm:space-y-6 p-4 sm:p-6">
       <h1 className="text-2xl sm:text-3xl font-bold tracking-tight">Welcome back</h1>
+      
+      {showWelcome && <WelcomeCard />}
       
       <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4 sm:gap-6">
         <StatsCard
