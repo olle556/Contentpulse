@@ -99,7 +99,7 @@ export function GeneratePostDialog({ open, onOpenChange, onSuccess }: GeneratePo
     content: generatedContent,
     editorProps: {
       attributes: {
-        class: "min-h-[150px] w-full rounded-md border border-input bg-background px-3 py-2 focus-visible:outline-none",
+        class: "min-h-[150px] w-full rounded-md border border-input bg-background px-3 py-2 focus-visible:outline-none text-base",
       },
     },
     onUpdate: ({ editor }) => {
@@ -411,7 +411,7 @@ export function GeneratePostDialog({ open, onOpenChange, onSuccess }: GeneratePo
           <div className="space-y-2">
             <Label>AI Instructions (Optional)</Label>
             <textarea
-              className="w-full min-h-[80px] rounded-md border border-input bg-background px-3 py-2 text-sm"
+              className="w-full min-h-[80px] rounded-md border border-input bg-background px-3 py-2 text-base"
               placeholder="Add specific instructions for how the AI should generate this post..."
               value={aiInstructions}
               onChange={(e) => setAiInstructions(e.target.value)}
