@@ -490,20 +490,21 @@ export function GeneratePostDialog({ open, onOpenChange, onSuccess }: GeneratePo
               <div className="prose max-w-none whitespace-pre-wrap max-h-[400px] overflow-y-auto border rounded-md p-4">
                 {generatedContent}
               </div>
-              <div className="flex justify-end space-x-2">
+              <div className="flex justify-end gap-2 flex-wrap">
                 <Button
                   variant="outline"
                   onClick={() => handleGenerate(true)}
                   disabled={isRegenerating}
+                  className="h-8 px-2 text-sm"
                 >
                   {isRegenerating ? (
                     <>
-                      <Loader2 className="w-4 h-4 mr-2 animate-spin" />
+                      <Loader2 className="w-3 h-3 mr-1 animate-spin" />
                       Regenerating...
                     </>
                   ) : (
                     <>
-                      <RefreshCw className="w-4 h-4 mr-2" />
+                      <RefreshCw className="w-3 h-3 mr-1" />
                       Regenerate
                     </>
                   )}
@@ -512,49 +513,25 @@ export function GeneratePostDialog({ open, onOpenChange, onSuccess }: GeneratePo
                   variant="outline"
                   onClick={(e) => handleSavePost(e)}
                   disabled={isSaving}
+                  className="h-8 px-2 text-sm"
                 >
                   {isSaving ? (
                     <>
-                      <Loader2 className="w-4 h-4 mr-2 animate-spin" />
+                      <Loader2 className="w-3 h-3 mr-1 animate-spin" />
                       Saving...
                     </>
                   ) : (
                     <>
-                      <Save className="w-4 h-4 mr-2" />
+                      <Save className="w-3 h-3 mr-1" />
                       Save Post
                     </>
                   )}
                 </Button>
-                <Button onClick={() => setIsEditing(true)}>
+                <Button 
+                  onClick={() => setIsEditing(true)}
+                  className="h-8 px-2 text-sm"
+                >
                   Edit Post
-                </Button>
-              </div>
-            </div>
-          ) : isEditing ? (
-            <div className="space-y-4">
-              <div className="max-h-[400px] overflow-y-auto">
-                <EditorContent editor={editor} />
-              </div>
-              <div className="flex justify-end space-x-2">
-                <Button 
-                  variant="outline" 
-                  onClick={handleCancelEdit}
-                >
-                  Cancel
-                </Button>
-                <Button 
-                  variant="outline" 
-                  onClick={handleDoneEditing}
-                  disabled={isSaving}
-                >
-                  {isSaving ? (
-                    <>
-                      <Loader2 className="mr-2 h-4 w-4 animate-spin" />
-                      Saving...
-                    </>
-                  ) : (
-                    'Done Editing'
-                  )}
                 </Button>
               </div>
             </div>

@@ -61,7 +61,7 @@ export function EditPostDialog({
 
   return (
     <Dialog open={open} onOpenChange={onOpenChange}>
-      <DialogContent>
+      <DialogContent className="sm:max-w-[600px]">
         <DialogHeader>
           <DialogTitle>Edit Post</DialogTitle>
         </DialogHeader>
@@ -72,11 +72,11 @@ export function EditPostDialog({
               id="content"
               value={content}
               onChange={(e) => setContent(e.target.value)}
-              rows={5}
+              className="min-h-[300px] resize-none"
               required
             />
           </div>
-          <div className="flex justify-end space-x-2">
+          <div className="flex justify-end space-x-2 pt-4">
             <Button
               type="button"
               variant="outline"
