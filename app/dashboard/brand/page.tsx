@@ -68,7 +68,28 @@ const basicFields = [
     name: 'brandType', 
     label: 'Brand Type', 
     type: 'select',
-    options: ['Manufacturing Company', 'Service Company', 'Influencer', 'Personal Brand', 'Non-profit', 'Other']
+    options: [
+      'Influencer',
+      'Personal Brand',
+      'Non-profit',
+      'E-commerce',
+      'Tech Startup',
+      'Healthcare',
+      'Education',
+      'Media & Entertainment',
+      'Finance',
+      'Hospitality',
+      'Food & Beverage',
+      'Real Estate',
+      'Consulting Firm',
+      'Manufacturing Company',
+      'Service Company',
+      'Environmental Organization',
+      'Government or Public Sector',
+      'Transportation & Logistics',
+      'Fashion & Apparel',
+      'Other'
+    ]
   },
   { name: 'industry', label: 'Industry/Market Sector', type: 'text' },
   { name: 'language', label: 'Language', type: 'text' }, // New field
