@@ -354,7 +354,7 @@ export default function BrandInformationPage() {
   }
 
   return (
-    <div className="container mx-auto py-10 space-y-6">
+    <div className="container mx-auto  space-y-6">
       <div className="fixed bottom-4 right-4 z-50">
         <AutosaveToast show={showSaveToast} />
       </div>
