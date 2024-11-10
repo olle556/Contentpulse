@@ -5,6 +5,9 @@ import { useSearchParams } from "next/navigation";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
 import { useState } from "react";
+import { FcGoogle } from 'react-icons/fc';
+
+
 
 
 export default function Login() {
@@ -43,7 +46,7 @@ export default function Login() {
               "Signing in..."
             ) : (
               <>
-
+                <FcGoogle className="w-5 h-5" />
                 Continue with Google
               </>
             )}

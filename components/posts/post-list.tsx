@@ -94,9 +94,7 @@ export function PostList() {
           <Card key={post.id} className="flex flex-col h-[400px]">
             <CardHeader className="flex flex-row items-center justify-between space-y-0 flex-shrink-0">
               <div className="space-y-1">
-                <Badge variant={getStatusVariant(post.status)}>
-                  {post.status ? post.status.charAt(0).toUpperCase() + post.status.slice(1) : 'Unknown'}
-                </Badge>
+               
                 <p className="text-sm text-muted-foreground">
                   {format(new Date(post.createdAt), "PPP")}
                 </p>
