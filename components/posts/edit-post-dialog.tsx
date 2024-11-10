@@ -72,7 +72,8 @@ export function EditPostDialog({
               id="content"
               value={content}
               onChange={(e) => setContent(e.target.value)}
-              className="min-h-[300px] resize-none"
+              className="min-h-[300px] resize-none text-base"
+              style={{ fontSize: '16px' }}
               required
             />
           </div>
