@@ -91,6 +91,7 @@ export function AddSourceDialog({ open, onOpenChange, onSuccess }: AddSourceDial
               value={url}
               onChange={(e) => setUrl(e.target.value)}
               required
+              className="text-base"
             />
           </div>
           <div className="flex justify-end">

@@ -89,6 +89,7 @@ export function EditSourceDialog({
               value={url}
               onChange={(e) => setUrl(e.target.value)}
               required
+              className="text-base"
             />
           </div>
           <div className="space-y-2">
