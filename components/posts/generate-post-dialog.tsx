@@ -181,7 +181,8 @@ export function GeneratePostDialog({ open, onOpenChange, onSuccess }: GeneratePo
   };
 
   // Function for quick-saving generated content
-  const handleSavePost = async () => {
+  const handleSavePost = async (event?: React.MouseEvent) => {
+    event?.preventDefault(); // Prevent any default actions
     setIsSaving(true);
     try {
       const response = await fetch('/api/posts', {
