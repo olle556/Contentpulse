@@ -12,7 +12,7 @@ import { Label } from "@/components/ui/label";
 import { Checkbox } from "@/components/ui/checkbox";
 import { toast } from "sonner";
 import { ContentSource } from "@/types";
-import { Loader2, Check, RefreshCw } from "lucide-react";
+import { Loader2, Check, RefreshCw, Save } from "lucide-react";
 import { useEditor, EditorContent } from "@tiptap/react";
 import Document from '@tiptap/extension-document'
 import Text from '@tiptap/extension-text'
@@ -47,6 +47,8 @@ export function GeneratePostDialog({ open, onOpenChange, onSuccess }: GeneratePo
   const [savedPostId, setSavedPostId] = useState<string | null>(null);
   const [useEmojis, setUseEmojis] = useState(false);
   const [scrapedContent, setScrapedContent] = useState<string | null>(null);
+  const [isRegenerating, setIsRegenerating] = useState(false);
+  const [hasUnsavedChanges, setHasUnsavedChanges] = useState(false);
 
   const TONES = [
     { value: "professional", label: "Professional" },
@@ -85,7 +87,6 @@ export function GeneratePostDialog({ open, onOpenChange, onSuccess }: GeneratePo
       Document,
       Paragraph,
       Text,
-      // Remove StarterKit and only include specific extensions you need
     ],
     content: generatedContent,
     editorProps: {
@@ -96,7 +97,7 @@ export function GeneratePostDialog({ open, onOpenChange, onSuccess }: GeneratePo
     onUpdate: ({ editor }) => {
       const content = editor.getText(); // Use getText() instead of getHTML()
       setGeneratedContent(content);
-      handleAutosave(content);
+      setHasUnsavedChanges(true); // Mark that there are unsaved changes
     },
   });
 
@@ -106,20 +107,47 @@ export function GeneratePostDialog({ open, onOpenChange, onSuccess }: GeneratePo
     }
   }, [editor, generatedContent]);
 
-  // Handle dialog close
+  // Add this cleanup function
+  const resetDialog = () => {
+    setGeneratedContent("");
+    setScrapedContent(null);
+    setSavedPostId(null);
+    setSelectedSources([]);
+    setIsEditing(false);
+    setIsSaving(false);
+    setSavedPost(null);
+    setAiInstructions("");
+    setUseEmojis(false);
+    setIsRegenerating(false);
+    // Reset editor content if it exists
+    if (editor) {
+      editor.commands.setContent("");
+    }
+  };
+
+  // Modify the handleDialogClose function
   const handleDialogClose = async (open: boolean) => {
-    if (!open && editor?.getText() && isEditing) {
-      try {
-        await handleSave(editor.getText());
-      } catch (error) {
-        // Handle error if needed
+    if (!open && hasUnsavedChanges) {
+      const confirm = window.confirm('You have unsaved changes. Are you sure you want to close?');
+      if (!confirm) {
+        return;
       }
     }
-    setIsEditing(false);
+    
+    if (!open) {
+      resetDialog();
+    }
     onOpenChange(open);
   };
 
-  // Save content
+  // Add an effect to reset when dialog opens
+  useEffect(() => {
+    if (open) {
+      resetDialog();
+    }
+  }, [open]);
+
+  // Function for saving during editing
   const handleSave = async (content: string) => {
     setIsSaving(true);
     try {
@@ -152,25 +180,47 @@ export function GeneratePostDialog({ open, onOpenChange, onSuccess }: GeneratePo
     }
   };
 
-  // Autosave with debounce
-  let autosaveTimeout: NodeJS.Timeout;
-  const handleAutosave = (content: string) => {
-    clearTimeout(autosaveTimeout);
-    autosaveTimeout = setTimeout(() => {
-      if (content) {
-        handleSave(content);
+  // Function for quick-saving generated content
+  const handleSavePost = async () => {
+    setIsSaving(true);
+    try {
+      const response = await fetch('/api/posts', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({
+          content: generatedContent,
+          platform: selectedPlatform,
+          status: 'draft'
+        }),
+      });
+
+      if (!response.ok) {
+        throw new Error('Failed to save post');
       }
-    }, 1000);
+
+      const data = await response.json();
+      setSavedPostId(data.post.id);
+      setHasUnsavedChanges(false);
+      toast.success('Post saved successfully');
+      onSuccess?.(); // Refresh the posts list if needed
+    } catch (error) {
+      console.error('Save error:', error);
+      toast.error('Failed to save post');
+    } finally {
+      setIsSaving(false);
+    }
   };
 
+  // Function for completing the editing process
   const handleDoneEditing = async () => {
     if (editor) {
       const content = editor.getText();
       try {
         await handleSave(content);
         setIsEditing(false);
+        setHasUnsavedChanges(false);
         onSuccess?.();
-        onOpenChange(false);
+        onOpenChange(false); // Only close dialog here
       } catch (error) {
         toast.error('Failed to save changes');
       }
@@ -208,20 +258,15 @@ export function GeneratePostDialog({ open, onOpenChange, onSuccess }: GeneratePo
     }
   }
 
-  async function handleGenerate(isRegeneration: boolean = false) {
+  async function handleGenerate(event: React.MouseEvent<HTMLButtonElement> | boolean = false) {
+    const isRegeneration = typeof event === 'boolean' ? event : false;
+    
     if (!isRegeneration) {
-      // Clear previous state when generating fresh
-      setScrapedContent(null);
-      setSavedPostId(null);
-      setGeneratedContent("");
+      setGeneratingPost(true);
+      setIsScraping(true);
+    } else {
+      setIsRegenerating(true);
     }
-    if (selectedSources.length === 0) {
-      toast.error("Please select a source");
-      return;
-    }
-
-    setGeneratingPost(true);
-    setIsScraping(true);
 
     try {
       const selectedSource = sources.find(source => source.id === selectedSources[0]);
@@ -231,18 +276,15 @@ export function GeneratePostDialog({ open, onOpenChange, onSuccess }: GeneratePo
 
       const endpoint = isRegeneration ? '/api/generate-post/regenerate' : '/api/generate-post';
       
-      const requestBody = isRegeneration ? {
-        scrapedContent,
-        platform: selectedPlatform,
-        tone: selectedTone,
-        useEmojis,
-        aiInstructions,
-      } : {
+      console.log('Current scrapedContent:', scrapedContent);
+      
+      const requestBody = {
         sourceUrl: selectedSource.url,
         platform: selectedPlatform,
         tone: selectedTone,
         useEmojis,
         aiInstructions,
+        ...(scrapedContent && { scrapedContent })
       };
 
       console.log('Sending request to:', endpoint, requestBody);
@@ -255,30 +297,53 @@ export function GeneratePostDialog({ open, onOpenChange, onSuccess }: GeneratePo
         body: JSON.stringify(requestBody),
       });
 
-      console.log('Response status:', response.status);
       const data = await response.json();
-      console.log('Response data:', data);
-
+      
       if (!response.ok) {
         throw new Error(data.error || `HTTP error! status: ${response.status}`);
       }
       
-      setGeneratedContent(data.content);
-      setSavedPostId(data.post.id);
-      if (!scrapedContent) {
+      if (!isRegeneration) {
+        console.log('Setting scraped content from response:', data.scrapedContent);
         setScrapedContent(data.scrapedContent);
       }
+      
+      setGeneratedContent(data.content);
+      setSavedPostId(data.post?.id);
+      
       if (editor) {
         editor.commands.setContent(data.content);
       }
-      toast.success('Post generated successfully');
+      
+      toast.success(isRegeneration ? 'Post regenerated successfully' : 'Post generated successfully');
     } catch (error: any) {
+      console.error('Generation error:', error);
       toast.error(error.message || 'Failed to generate post');
     } finally {
       setGeneratingPost(false);
       setIsScraping(false);
+      setIsRegenerating(false);
     }
   }
+
+  // Add a function to handle canceling edit mode
+  const handleCancelEdit = () => {
+    setIsEditing(false);
+    if (editor) {
+      editor.commands.setContent(generatedContent);
+    }
+  };
+
+  // Update the editor's onUpdate handler to track changes
+  useEffect(() => {
+    if (editor) {
+      editor.on('update', ({ editor }) => {
+        const content = editor.getText();
+        setGeneratedContent(content);
+        setHasUnsavedChanges(true);
+      });
+    }
+  }, [editor]);
 
   return (
     <Dialog open={open} onOpenChange={handleDialogClose}>
@@ -383,8 +448,24 @@ export function GeneratePostDialog({ open, onOpenChange, onSuccess }: GeneratePo
             </div>
           )}
 
+          {!generatedContent && (
+            <Button
+              onClick={() => handleGenerate(false)}
+              disabled={generatingPost || selectedSources.length === 0}
+              className="w-full"
+            >
+              {generatingPost ? (
+                <>
+                  <Loader2 className="mr-2 h-4 w-4 animate-spin" />
+                  {isScraping ? 'Scraping content...' : 'Generating post...'}
+                </>
+              ) : (
+                'Generate Post'
+              )}
+            </Button>
+          )}
+
           {generatedContent && !isEditing ? (
-            // View mode - update to add max-height and scrolling
             <div className="space-y-4">
               <div className="prose max-w-none whitespace-pre-wrap max-h-[400px] overflow-y-auto border rounded-md p-4">
                 {generatedContent}
@@ -393,9 +474,36 @@ export function GeneratePostDialog({ open, onOpenChange, onSuccess }: GeneratePo
                 <Button
                   variant="outline"
                   onClick={() => handleGenerate(true)}
+                  disabled={isRegenerating}
                 >
-                  <RefreshCw className="w-4 h-4 mr-2" />
-                  Regenerate
+                  {isRegenerating ? (
+                    <>
+                      <Loader2 className="w-4 h-4 mr-2 animate-spin" />
+                      Regenerating...
+                    </>
+                  ) : (
+                    <>
+                      <RefreshCw className="w-4 h-4 mr-2" />
+                      Regenerate
+                    </>
+                  )}
+                </Button>
+                <Button
+                  variant="outline"
+                  onClick={handleSavePost}
+                  disabled={isSaving}
+                >
+                  {isSaving ? (
+                    <>
+                      <Loader2 className="w-4 h-4 mr-2 animate-spin" />
+                      Saving...
+                    </>
+                  ) : (
+                    <>
+                      <Save className="w-4 h-4 mr-2" />
+                      Save Post
+                    </>
+                  )}
                 </Button>
                 <Button onClick={() => setIsEditing(true)}>
                   Edit Post
@@ -403,12 +511,17 @@ export function GeneratePostDialog({ open, onOpenChange, onSuccess }: GeneratePo
               </div>
             </div>
           ) : isEditing ? (
-            // Edit mode - update TipTap container styles
             <div className="space-y-4">
               <div className="max-h-[400px] overflow-y-auto">
                 <EditorContent editor={editor} />
               </div>
               <div className="flex justify-end space-x-2">
+                <Button 
+                  variant="outline" 
+                  onClick={handleCancelEdit}
+                >
+                  Cancel
+                </Button>
                 <Button 
                   variant="outline" 
                   onClick={handleDoneEditing}
@@ -425,22 +538,7 @@ export function GeneratePostDialog({ open, onOpenChange, onSuccess }: GeneratePo
                 </Button>
               </div>
             </div>
-          ) : (
-            // Initial state
-            <Button 
-              onClick={handleGenerate}
-              disabled={generatingPost || selectedSources.length === 0}
-            >
-              {generatingPost ? (
-                <>
-                  <Loader2 className="mr-2 h-4 w-4 animate-spin" />
-                  {isScraping ? 'Scraping content...' : 'Generating post...'}
-                </>
-              ) : (
-                'Generate Post'
-              )}
-            </Button>
-          )}
+          ) : null}
         </div>
       </DialogContent>
     </Dialog>
