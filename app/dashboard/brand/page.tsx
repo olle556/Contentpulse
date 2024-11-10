@@ -30,6 +30,12 @@ import { generateBrandEmbedding } from '@/utils/embeddings'
 import debounce from 'lodash/debounce'
 import { useRouter } from 'next/navigation'
 import AutosaveToast from '@/components/autosave-toast'
+import {
+  Dialog,
+  DialogContent,
+  DialogHeader,
+  DialogTitle,
+} from "@/components/ui/dialog"
 
 // Define custom interfaces for your brand data
 interface BrandInput {
@@ -164,7 +170,7 @@ const formSchema = z.object({
 })
 
 export default function BrandInformationPage() {
-  const [showAdvanced, setShowAdvanced] = useState(false)
+  const [dialogOpen, setDialogOpen] = useState(false)
   const { data: session } = useSession()
   const router = useRouter()
   
@@ -343,8 +349,16 @@ export default function BrandInformationPage() {
     }
   }
 
+  const handleDialogClose = () => {
+    setDialogOpen(false)
+  }
+
   return (
     <div className="container mx-auto py-10 space-y-6">
+      <div className="fixed bottom-4 right-4 z-50">
+        <AutosaveToast show={showSaveToast} />
+      </div>
+
       <Card>
         <CardContent className="p-6">
           <h2 className="text-2xl font-bold mb-6">Basic Brand Identity</h2>
@@ -395,73 +409,75 @@ export default function BrandInformationPage() {
         <CardContent className="p-6">
           <div className="flex justify-between items-center mb-6">
             <h2 className="text-2xl font-bold">Advanced Brand Settings</h2>
-            <div className="flex gap-2">
-              {showAdvanced && (
-                <Button type="submit" onClick={form.handleSubmit(onSubmit)}>Submit</Button>
-              )}
-              <Button
-                variant="outline"
-                onClick={() => setShowAdvanced(!showAdvanced)}
-              >
-                {showAdvanced ? 'Hide' : 'Edit'}
-              </Button>
-            </div>
+            <Button
+              variant="outline"
+              onClick={() => setDialogOpen(true)}
+            >
+              Edit
+            </Button>
           </div>
-
-          {showAdvanced && (
-            <Form {...form}>
-              <form onSubmit={form.handleSubmit(onSubmit)} className="space-y-6">
-                {advancedSteps.map((section) => (
-                  <div key={section.id} className="space-y-4">
-                    <h3 className="text-xl font-semibold">{section.name}</h3>
-                    {section.fields.map((field) => (
-                      <FormField
-                        key={field.name}
-                        control={form.control}
-                        name={field.name as any}
-                        render={({ field: formField }) => (
-                          <FormItem>
-                            <FormLabel>{field.label}</FormLabel>
-                            <FormControl>
-                              {field.type === 'select' ? (
-                                <Select
-                                  onValueChange={formField.onChange}
-                                  defaultValue={formField.value}
-                                >
-                                  <SelectTrigger>
-                                    <SelectValue placeholder="Select an option" />
-                                  </SelectTrigger>
-                                  <SelectContent>
-                                    {field.options?.map((option) => (
-                                      <SelectItem key={option} value={option.toLowerCase()}>
-                                        {option}
-                                      </SelectItem>
-                                    ))}
-                                  </SelectContent>
-                                </Select>
-                              ) : field.type === 'textarea' ? (
-                                <Textarea {...formField} />
-                              ) : (
-                                <Input {...formField} type={field.type} />
-                              )}
-                            </FormControl>
-                            <FormMessage />
-                          </FormItem>
-                        )}
-                      />
-                    ))}
-                  </div>
-                ))}
-                <div className="flex justify-end pt-4">
-                  <Button type="submit" onClick={form.handleSubmit(onSubmit)}>Submit</Button>
-                </div>
-              </form>
-            </Form>
-          )}
         </CardContent>
       </Card>
-      <AutosaveToast show={showSaveToast} />
 
+      <Dialog open={dialogOpen} onOpenChange={setDialogOpen}>
+        <DialogContent className="max-w-3xl max-h-[80vh] overflow-y-auto">
+          <DialogHeader>
+            <DialogTitle>Advanced Brand Settings</DialogTitle>
+          </DialogHeader>
+          
+          <Form {...form}>
+            <form onSubmit={form.handleSubmit((values) => {
+              onSubmit(values)
+              handleDialogClose()
+            })} className="space-y-6">
+              {advancedSteps.map((section) => (
+                <div key={section.id} className="space-y-4">
+                  <h3 className="text-xl font-semibold">{section.name}</h3>
+                  {section.fields.map((field) => (
+                    <FormField
+                      key={field.name}
+                      control={form.control}
+                      name={field.name as any}
+                      render={({ field: formField }) => (
+                        <FormItem>
+                          <FormLabel>{field.label}</FormLabel>
+                          <FormControl>
+                            {field.type === 'select' ? (
+                              <Select
+                                onValueChange={formField.onChange}
+                                defaultValue={formField.value}
+                              >
+                                <SelectTrigger>
+                                  <SelectValue placeholder="Select an option" />
+                                </SelectTrigger>
+                                <SelectContent>
+                                  {field.options?.map((option) => (
+                                    <SelectItem key={option} value={option.toLowerCase()}>
+                                      {option}
+                                    </SelectItem>
+                                  ))}
+                                </SelectContent>
+                              </Select>
+                            ) : field.type === 'textarea' ? (
+                              <Textarea {...formField} />
+                            ) : (
+                              <Input {...formField} type={field.type} />
+                            )}
+                          </FormControl>
+                          <FormMessage />
+                        </FormItem>
+                      )}
+                    />
+                  ))}
+                </div>
+              ))}
+              <div className="flex justify-end pt-4">
+                <Button type="submit">Done</Button>
+              </div>
+            </form>
+          </Form>
+        </DialogContent>
+      </Dialog>
     </div>
   )
 }
