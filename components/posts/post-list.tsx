@@ -117,10 +117,9 @@ export function PostList() {
               </div>
             </CardHeader>
             <CardContent className="overflow-y-auto flex-grow">
-              <div 
-                className="prose prose-sm dark:prose-invert"
-                dangerouslySetInnerHTML={{ __html: post.content }}
-              />
+              <div className="prose prose-sm dark:prose-invert whitespace-pre-wrap">
+                {post.content}
+              </div>
             </CardContent>
             <div className="p-4 border-t flex items-center justify-between flex-shrink-0">
               <div className="flex gap-2">
