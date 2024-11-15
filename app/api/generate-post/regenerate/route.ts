@@ -19,7 +19,7 @@ export async function POST(request: Request) {
       }, { status: 401 });
     }
 
-    const { scrapedContent, platform, tone, useEmojis, aiInstructions, sourceUrl } = await request.json();
+    const { scrapedContent, platform, tone, useEmojis, aiInstructions, sourceUrl, threadCount = 1 } = await request.json();
     
     // Validate required fields
     if (!scrapedContent || !platform || !tone) {
@@ -36,10 +36,16 @@ export async function POST(request: Request) {
     // Reuse the platform limits and prompt construction
     const platformLimits = {
       twitter: '280 characters',
+      twitter_premium: '25000 characters, but aim for concise content',
       linkedin: '3000 characters',
       facebook: 'no strict limit, but aim for concise content',
       threads: '500 characters',
     };
+
+    // Add thread instructions for supported platforms
+    const threadInstructions = ['twitter', 'twitter_premium', 'threads'].includes(platform) 
+      ? `\nCreate ${threadCount} thread${threadCount > 1 ? 's' : ''} for this post. Separate each thread with "#Thread X#" where X is the thread number.`
+      : '';
 
     const prompt = `You are a social media content creator. Your task is to create an engaging ${platform} post using a ${tone} tone based on the following brand context and source material.
 
@@ -56,8 +62,15 @@ ${aiInstructions}
 
 Instructions:
 1. Create a single, engaging post for ${platform} (limit: ${platformLimits[platform as keyof typeof platformLimits]})
-// ... existing prompt instructions ...
+2. Maintain the brand voice and ${tone} tone throughout
+3. Include key information that aligns with the brand's mission and USP
+4. Make it conversational and engaging while staying true to brand identity
+5. For Twitter/X, include relevant hashtags that match brand preferences
+6. For LinkedIn, focus on professional insights that reinforce brand positioning
+7. For Facebook, aim for engaging, shareable content that builds brand awareness
+8. For Threads, create concise, discussion-worthy content that reflects brand values
 ${useEmojis ? '9. Include relevant emojis throughout the post to enhance engagement and readability' : '9. Do not use any emojis in the post'}
+${threadInstructions}
 
 Additional tone guidance for "${tone}":
 ${tone === 'professional' ? '- Use industry-appropriate terminology\n- Maintain business etiquette\n- Focus on value and insights' :
@@ -80,7 +93,6 @@ Any explanation of the content, just the post.
 Any answer that is not the post.
 Any reference to the source URL.
 Any reference to the brand context.
-JUST THE POST.
 
 Please generate the post now:`;
 

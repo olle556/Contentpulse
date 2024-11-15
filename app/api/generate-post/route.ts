@@ -18,7 +18,7 @@ export async function POST(request: Request) {
   try {
     // Read request body once at the beginning
     const requestData = await request.json();
-    const { sourceUrl, platform, tone, useEmojis, userId: cronUserId , aiInstructions} = requestData;
+    const { sourceUrl, platform, tone, useEmojis, userId: cronUserId , aiInstructions, threadCount = 1} = requestData;
 
     // Check if request is from cron job
     const authHeader = request.headers.get('authorization');
@@ -92,10 +92,15 @@ export async function POST(request: Request) {
     // 2. Create a platform-specific prompt
     const platformLimits = {
       twitter: '280 characters',
+      twitter_premium: '25000 characters, but aim for concise content',
       linkedin: '3000 characters',
       facebook: 'no strict limit, but aim for concise content',
       threads: '500 characters',
     };
+
+    const threadInstructions = ['twitter', 'twitter_premium', 'threads'].includes(platform) 
+      ? `\nCreate ${threadCount} thread${threadCount > 1 ? 's' : ''} for this post. Separate each thread with "#Thread X#" where X is the thread number.`
+      : '';
 
     const prompt = `You are a social media content creator. Your task is to create an engaging ${platform} post using a ${tone} tone based on the following brand context and source material.
 
@@ -121,6 +126,8 @@ Instructions:
 8. For Threads, create concise, discussion-worthy content that reflects brand values
 ${useEmojis ? '9. Include relevant emojis throughout the post to enhance engagement and readability' : '9. Do not use any emojis in the post'}
 
+${threadInstructions}
+
 Additional tone guidance for "${tone}":
 ${tone === 'professional' ? '- Use industry-appropriate terminology\n- Maintain business etiquette\n- Focus on value and insights' :
   tone === 'casual' ? '- Use conversational language\n- Be friendly and approachable\n- Use common expressions' :
@@ -136,12 +143,12 @@ ${tone === 'professional' ? '- Use industry-appropriate terminology\n- Maintain 
   tone === 'neutral' ? '- Maintain an objective perspective\n- Use balanced language\n- Avoid bias or strong opinions' :
   '- Keep the language warm and approachable\n- Foster a sense of community\n- Use friendly expressions'}
 ${useEmojis ? '\n\n#### Emoji usage:\n- Use emojis naturally and strategically\n- Don\'t overuse emojis\n- Ensure emojis complement the message' : ''}
+
 In your answer, exclude the following:
 Any explanation of the content, just the post.
 Any answer that is not the post.
 Any reference to the source URL.
 Any reference to the brand context.
-JUST THE POST.
 
 Please generate the post now:`;
 

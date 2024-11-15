@@ -50,6 +50,7 @@ export function GeneratePostDialog({ open, onOpenChange, onSuccess }: GeneratePo
   const [isRegenerating, setIsRegenerating] = useState(false);
   const [hasUnsavedChanges, setHasUnsavedChanges] = useState(false);
   const [isClosing, setIsClosing] = useState(false);
+  const [threadCount, setThreadCount] = useState(1);
 
   const TONES = [
     { value: "professional", label: "Professional" },
@@ -71,21 +72,31 @@ export function GeneratePostDialog({ open, onOpenChange, onSuccess }: GeneratePo
       value: "twitter", 
       label: "Twitter/X",
       maxLength: 280,
+      supportsThreads: true
+    },
+    { 
+      value: "twitter_premium", 
+      label: "Twitter/X Premium",
+      maxLength: 25000,
+      supportsThreads: true
     },
     { 
       value: "threads", 
       label: "Threads",
       maxLength: 500,
+      supportsThreads: true
     },
     { 
       value: "linkedin", 
       label: "LinkedIn",
       maxLength: 3000,
+      supportsThreads: false
     },
     { 
       value: "facebook", 
       label: "Facebook",
       maxLength: 63206,
+      supportsThreads: false
     },
   ];
 
@@ -466,6 +477,27 @@ export function GeneratePostDialog({ open, onOpenChange, onSuccess }: GeneratePo
               </Select>
             </div>
           </div>
+
+          {PLATFORMS.find(p => p.value === selectedPlatform)?.supportsThreads && (
+            <div className="space-y-2 mt-4">
+              <Label>Number of Threads</Label>
+              <Select
+                value={threadCount.toString()}
+                onValueChange={(value) => setThreadCount(parseInt(value))}
+              >
+                <SelectTrigger>
+                  <SelectValue placeholder="Select number of threads" />
+                </SelectTrigger>
+                <SelectContent>
+                  {Array.from({length: 10}, (_, i) => i + 1).map((num) => (
+                    <SelectItem key={num} value={num.toString()}>
+                      {num} {num === 1 ? 'thread' : 'threads'}
+                    </SelectItem>
+                  ))}
+                </SelectContent>
+              </Select>
+            </div>
+          )}
 
           {isEditing && (
             <div className="text-sm text-muted-foreground text-right">
