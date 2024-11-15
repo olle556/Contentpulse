@@ -18,7 +18,7 @@ export async function POST(request: Request) {
   try {
     // Read request body once at the beginning
     const requestData = await request.json();
-    const { sourceUrl, platform, tone, useEmojis, userId: cronUserId , aiInstructions, threadCount = 1} = requestData;
+    const { sourceUrl, platform, tone, useEmojis, userId: cronUserId , aiInstructions, threadCount } = requestData;
 
     // Check if request is from cron job
     const authHeader = request.headers.get('authorization');

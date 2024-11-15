@@ -309,6 +309,7 @@ export function GeneratePostDialog({ open, onOpenChange, onSuccess }: GeneratePo
         tone: selectedTone,
         useEmojis,
         aiInstructions,
+        threadCount,
         ...(scrapedContent && { scrapedContent })
       };
 

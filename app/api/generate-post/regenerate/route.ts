@@ -19,7 +19,7 @@ export async function POST(request: Request) {
       }, { status: 401 });
     }
 
-    const { scrapedContent, platform, tone, useEmojis, aiInstructions, sourceUrl, threadCount = 1 } = await request.json();
+    const { scrapedContent, platform, tone, useEmojis, aiInstructions, sourceUrl, threadCount } = await request.json();
     
     // Validate required fields
     if (!scrapedContent || !platform || !tone) {
