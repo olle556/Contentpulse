@@ -44,7 +44,19 @@ export async function POST(request: Request) {
 
     // Add thread instructions for supported platforms
     const threadInstructions = ['twitter', 'twitter_premium', 'threads'].includes(platform) 
-      ? `\nCreate ${threadCount} thread${threadCount > 1 ? 's' : ''} for this post. Separate each thread with "#Thread X#" where X is the thread number.`
+      ? `\nThreads Explanation:
+Sometimes we need more than one post to express ourselves. A thread is a series of connected posts from one person. With a thread you can provide additional context, an update, or an extended point by connecting multiple posts together.
+
+Please create exactly ${threadCount} connected posts that form a coherent thread. Each post should be able to stand alone but also flow naturally into the next post. Separate each post with "## Thread X" where X is the thread number (1 to ${threadCount}).
+
+The first post in the thread should be a hook to get the reader interested in the thread. When it comes to writing a thread hook, there are 2 main goals you're looking to achieve:
+
+1 - Get the reader to stop scrolling.
+2 - Get the reader to click to read more.
+
+Every single word in your hook should help with one of these two goals, otherwise, you should cut the word.
+
+Each individual post must respect the platform's character limit (${platformLimits[platform as keyof typeof platformLimits]}).`
       : '';
 
     const prompt = `You are a social media content creator. Your task is to create an engaging ${platform} post using a ${tone} tone based on the following brand context and source material.
