@@ -47,7 +47,7 @@ export async function POST(request: Request) {
       ? `\nThreads Explanation:
 Sometimes we need more than one post to express ourselves. A thread is a series of connected posts from one person. With a thread you can provide additional context, an update, or an extended point by connecting multiple posts together.
 
-Please create exactly ${threadCount} connected posts that form a coherent thread. Each post should be able to stand alone but also flow naturally into the next post. Separate each post with "## Thread X" where X is the thread number (1 to ${threadCount}).
+Please create exactly ${threadCount} connected posts that form a coherent thread. Each post should be able to stand alone but also flow naturally into the next post. Separate each post with "Thread X" where X is the thread number (1 to ${threadCount}).
 
 The first post in the thread should be a hook to get the reader interested in the thread. When it comes to writing a thread hook, there are 2 main goals you're looking to achieve:
 
