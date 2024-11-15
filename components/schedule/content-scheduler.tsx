@@ -100,6 +100,12 @@ export function ContentScheduler({ open, onOpenChange, contentSources, editSched
 
   useEffect(() => {
     if (editSchedule) {
+      // Convert UTC time from database to local time
+      const [utcHours, utcMinutes] = editSchedule.time.split(':').map(Number);
+      const localDate = new Date();
+      localDate.setUTCHours(utcHours, utcMinutes, 0, 0);
+      const localTime = `${localDate.getHours().toString().padStart(2, '0')}:${localDate.getMinutes().toString().padStart(2, '0')}`;
+
       setIsRecurring(editSchedule.isRecurring);
       form.reset({
         contentSourceId: editSchedule.contentSourceId,
@@ -109,12 +115,28 @@ export function ContentScheduler({ open, onOpenChange, contentSources, editSched
         recurringDays: editSchedule.recurringDays,
         startDate: editSchedule.startDate ? new Date(editSchedule.startDate) : undefined,
         date: editSchedule.date ? new Date(editSchedule.date) : undefined,
-        time: editSchedule.time,
+        time: localTime, // Use the converted local time
         aiInstructions: editSchedule.aiInstructions || "",
         useEmojis: editSchedule.useEmojis || false,
       });
     }
   }, [editSchedule, form]);
+
+  useEffect(() => {
+    if (!open) {
+      form.reset({
+        contentSourceId: "",
+        tonality: "",
+        platforms: [],
+        isRecurring: false,
+        recurringDays: [],
+        time: "",
+        aiInstructions: "",
+        useEmojis: false,
+      })
+      setIsRecurring(false)
+    }
+  }, [open, form])
 
   const onSubmit = async (values: z.infer<typeof formSchema>) => {
     try {

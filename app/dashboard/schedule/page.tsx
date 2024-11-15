@@ -45,7 +45,7 @@ export default function SchedulePage() {
         </h1>
         <Button 
           onClick={() => setIsScheduleOpen(true)}
-          disabled={contentSources.length === 0}
+          //disabled={contentSources.length === 0}
           className="w-full sm:w-auto"
         >
           <Calendar className="h-4 w-4 mr-2" />
