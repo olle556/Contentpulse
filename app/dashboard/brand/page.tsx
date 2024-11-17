@@ -37,6 +37,7 @@ import {
   DialogTitle,
 } from "@/components/ui/dialog"
 import { useOnboarding } from '@/hooks/use-onboarding'
+import { cache } from 'react'
 
 // Define custom interfaces for your brand data
 interface BrandInput {
@@ -191,6 +192,24 @@ const formSchema = z.object({
   brandStory: z.string().optional().nullable(),
 })
 
+// Add this fetch wrapper with caching
+const getBrand = cache(async () => {
+  try {
+    const response = await fetch('/api/brand', {
+      // Add cache configuration
+      cache: 'force-cache',
+      next: {
+        revalidate: 300 // Revalidate every 5 minutes
+      }
+    })
+    if (!response.ok) throw new Error('Failed to fetch brand')
+    return response.json()
+  } catch (error) {
+    console.error('Error fetching brand:', error)
+    return null
+  }
+})
+
 export default function BrandInformationPage() {
   const { markStepCompleted } = useOnboarding();
   const [dialogOpen, setDialogOpen] = useState(false)
@@ -217,14 +236,11 @@ export default function BrandInformationPage() {
     },
   })
 
-  // Fetch and initialize form with saved data
+  // Update the useEffect to use the cached fetch
   useEffect(() => {
     const fetchBrand = async () => {
       try {
-        const response = await fetch('/api/brand')
-        if (!response.ok) throw new Error('Failed to fetch brand')
-        
-        const brand = await response.json()
+        const brand = await getBrand()
         if (brand?.id) {
           localStorage.setItem('brandId', brand.id.toString())
           form.reset(brand)
