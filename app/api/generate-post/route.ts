@@ -178,21 +178,11 @@ Please generate the post now:`;
       ? message.content[0].text
       : '';
 
-    // 4. Save the generated post to the database with the correct userId
-    const savedPost = await prisma.generatedPost.create({
-      data: {
-        content: generatedContent,
-        platform,
-        status: 'draft',
-        userId: userId,
-      },
-    });
 
-    // 5. Return the response
+    // Return the response
     return NextResponse.json({
       success: true,
       content: generatedContent,
-      post: savedPost,
       sourceUrl,
       scrapedContent: scrapedContent,
     });

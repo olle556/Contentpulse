@@ -335,7 +335,6 @@ export function GeneratePostDialog({ open, onOpenChange, onSuccess }: GeneratePo
       }
       
       setGeneratedContent(data.content);
-      setSavedPostId(data.post?.id);
       
       if (editor) {
         editor.commands.setContent(data.content);
