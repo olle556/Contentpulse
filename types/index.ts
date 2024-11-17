@@ -97,3 +97,8 @@ export interface OnboardingStep {
   href: string;
   isCompleted: boolean;
 }
+
+export interface Post {
+  id: string;
+  title: string;
+}

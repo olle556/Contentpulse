@@ -1,22 +1,38 @@
 "use client";
 
-import { useState, useCallback } from "react";
+import { useState } from "react";
+import { useQuery } from "@tanstack/react-query";
 import { Button } from "@/components/ui/button";
 import { Wand2 } from "lucide-react";
 import { GeneratePostDialog } from "@/components/posts/generate-post-dialog";
 import { PostList } from "@/components/posts/post-list";
+import { GeneratedPost } from "@/types";
 
 export default function PostsPage() {
   const [isGenerateOpen, setIsGenerateOpen] = useState(false);
-  const [key, setKey] = useState(0); // Add this to force refresh
+  const [key, setKey] = useState(0);
 
-  const handleGenerateSuccess = useCallback(() => {
-    setIsGenerateOpen(false);
-    setKey(prev => prev + 1); // Force PostList to remount and refetch
-  }, []);
+  const { data: posts = [], refetch: refreshPosts } = useQuery<GeneratedPost[]>({
+    queryKey: ['posts'],
+    queryFn: async () => {
+      const response = await fetch('/api/posts');
+      const data = await response.json();
+      if (data.success) {
+        return data.posts;
+      }
+      return [];
+    },
+    staleTime: 1000 * 60 * 5,
+    gcTime: 1000 * 60 * 30,
+  });
 
-  const handleSuccess = () => {
+  const handleRefresh = async () => {
+    await refreshPosts();
+  };
+
+  const handleSuccess = async () => {
     console.log('Success callback triggered');
+    await handleRefresh();
     setKey(prev => prev + 1);
   };
 
@@ -33,7 +49,11 @@ export default function PostsPage() {
         </Button>
       </div>
 
-      <PostList key={key} />
+      <PostList 
+        key={key} 
+        posts={posts} 
+        onRefresh={handleRefresh}
+      />
       <GeneratePostDialog 
         open={isGenerateOpen} 
         onOpenChange={setIsGenerateOpen}

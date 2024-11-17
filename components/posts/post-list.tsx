@@ -15,43 +15,19 @@ import { DeletePostDialog } from "./delete-post-dialog";
 import { EditPostDialog } from "./edit-post-dialog";
 import { GeneratePostDialog } from "./generate-post-dialog";
 import { toast } from "react-toastify";
+import { useQuery } from "@tanstack/react-query";
 
+interface PostListProps {
+  posts: GeneratedPost[];
+  onRefresh: () => Promise<void>;
+}
 
-export function PostList() {
-  const [posts, setPosts] = useState<GeneratedPost[]>([]);
-  const [loading, setLoading] = useState(true);
+export function PostList({ posts, onRefresh }: PostListProps): JSX.Element {
   const [selectedPost, setSelectedPost] = useState<GeneratedPost | null>(null);
   const [isDeleteOpen, setIsDeleteOpen] = useState(false);
   const [isEditOpen, setIsEditOpen] = useState(false);
   const [isGenerateOpen, setIsGenerateOpen] = useState(false);
   const [copyingStates, setCopyingStates] = useState<{ [key: string]: boolean }>({});
-
-  useEffect(() => {
-    fetchPosts();
-  }, [isGenerateOpen]);
-
-  async function fetchPosts() {
-    try {
-      setLoading(true);
-      const response = await fetch('/api/posts');
-      const data = await response.json();
-      
-      console.log('API Response:', data);
-      
-      if (data.success) {
-        console.log('Setting posts:', data.posts);
-        setPosts(data.posts);
-      } else {
-        console.error('Failed to fetch posts:', data.error);
-        toast.error('Failed to fetch posts');
-      }
-    } catch (error) {
-      console.error('Error fetching posts:', error);
-      toast.error('Failed to fetch posts');
-    } finally {
-      setLoading(false);
-    }
-  }
 
   function handleEdit(post: GeneratedPost) {
     setSelectedPost(post);
@@ -74,10 +50,6 @@ export function PostList() {
       console.error('Failed to copy:', err);
     }
   };
-
-  if (loading) {
-    return <div>Loading posts...</div>;
-  }
 
   if (posts.length === 0) {
     return (
@@ -152,25 +124,20 @@ export function PostList() {
         post={selectedPost}
         open={isDeleteOpen}
         onOpenChange={setIsDeleteOpen}
-        onSuccess={() => {
-          fetchPosts();
-          setSelectedPost(null);
-        }}
+        onSuccess={onRefresh}
       />
 
       <EditPostDialog
         post={selectedPost}
         open={isEditOpen}
         onOpenChange={setIsEditOpen}
-        onSuccess={fetchPosts}
+        onSuccess={onRefresh}
       />
 
       <GeneratePostDialog
         open={isGenerateOpen}
         onOpenChange={setIsGenerateOpen}
-        onSuccess={() => {
-          fetchPosts();
-        }}
+        onSuccess={onRefresh}
       />
       
 

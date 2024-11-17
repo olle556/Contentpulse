@@ -377,21 +377,21 @@ export function GeneratePostDialog({ open, onOpenChange, onSuccess }: GeneratePo
       onOpenChange={handleDialogClose}
     >
       <DialogContent 
-        className="sm:max-w-[600px]"
+        className="sm:max-w-[600px] max-h-[90vh] flex flex-col"
         onInteractOutside={(e) => {
           console.log('Interaction outside dialog');
-          e.preventDefault(); // Prevent closing on outside click
+          e.preventDefault();
         }}
         onEscapeKeyDown={(e) => {
           console.log('Escape key pressed');
-          e.preventDefault(); // Prevent closing on escape
+          e.preventDefault();
         }}
       >
         <DialogHeader>
           <DialogTitle>Generate Post from Sources</DialogTitle>
         </DialogHeader>
         
-        <div className="space-y-4">
+        <div className="space-y-4 flex-1 overflow-y-auto">
           <div className="space-y-2">
             <Label>Select Source</Label>
             <Select
@@ -529,8 +529,10 @@ export function GeneratePostDialog({ open, onOpenChange, onSuccess }: GeneratePo
             <div className="space-y-4">
               {isEditing ? (
                 <>
-                  <EditorContent editor={editor} />
-                  <div className="flex justify-end gap-2">
+                  <div className="max-h-[40vh] overflow-y-auto">
+                    <EditorContent editor={editor} />
+                  </div>
+                  <div className="flex justify-end gap-2 sticky bottom-0 bg-background pt-2">
                     <Button
                       variant="outline"
                       onClick={handleCancelEdit}
@@ -548,10 +550,10 @@ export function GeneratePostDialog({ open, onOpenChange, onSuccess }: GeneratePo
                 </>
               ) : (
                 <>
-                  <div className="prose max-w-none whitespace-pre-wrap max-h-[400px] overflow-y-auto border rounded-md p-4">
+                  <div className="prose max-w-none whitespace-pre-wrap max-h-[40vh] overflow-y-auto border rounded-md p-4">
                     {generatedContent}
                   </div>
-                  <div className="flex justify-end gap-2 flex-wrap">
+                  <div className="flex justify-end gap-2 flex-wrap sticky bottom-0 bg-background pt-2">
                     <Button
                       variant="outline"
                       onClick={() => handleGenerate(true)}

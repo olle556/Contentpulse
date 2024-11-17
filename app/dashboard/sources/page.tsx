@@ -1,6 +1,7 @@
 "use client";
 
-import { useState, useEffect } from "react";
+import { useState } from "react";
+import { useQuery } from "@tanstack/react-query";
 import { Plus } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { ContentSourceList } from "@/components/sources/content-source-list";
@@ -12,7 +13,25 @@ export default function SourcesPage() {
   const [url, setUrl] = useState("");
   const [analysis, setAnalysis] = useState("");
   const [isLoading, setIsLoading] = useState(false);
-  const [sources, setSources] = useState<ContentSource[]>([]);
+
+  const { data: sources = [], refetch: refreshSources } = useQuery({
+    queryKey: ['sources'],
+    queryFn: async () => {
+      const response = await fetch('/api/sources');
+      const data = await response.json();
+      if (data.success) {
+        return data.sources;
+      }
+      return [];
+    },
+    staleTime: 1000 * 60 * 5, // Consider data fresh for 5 minutes
+    gcTime: 1000 * 60 * 30, // Keep unused data in cache for 30 minutes
+  });
+
+  // Create a wrapper function that returns void
+  const handleRefresh = async () => {
+    await refreshSources();
+  };
 
   const handleAnalyzeUrl = async () => {
     setIsLoading(true);
@@ -26,11 +45,11 @@ export default function SourcesPage() {
       });
       
       const data = await response.json();
-      console.log('Scraped content:', data.content);
       setAnalysis(data.analysis);
       
       if (data.source) {
-        setSources(prevSources => [...prevSources, data.source]);
+        // Trigger a refresh of the sources query instead of manual state update
+        await refreshSources();
       }
     } catch (error) {
       console.error('Error analyzing URL:', error);
@@ -38,22 +57,6 @@ export default function SourcesPage() {
       setIsLoading(false);
     }
   };
-
-  const refreshSources = async () => {
-    try {
-      const response = await fetch('/api/sources');
-      const data = await response.json();
-      if (data.success) {
-        setSources(data.sources);
-      }
-    } catch (error) {
-      console.error('Error fetching sources:', error);
-    }
-  };
-
-  useEffect(() => {
-    refreshSources();
-  }, []);
 
   return (
     <div className="space-y-6 sm:p-6">
@@ -68,14 +71,14 @@ export default function SourcesPage() {
       <div className="mt-6">
         <ContentSourceList 
           sources={sources} 
-          onSourceDeleted={refreshSources}
+          onSourceDeleted={handleRefresh}
         />
       </div>
       
       <AddSourceDialog 
         open={isAddSourceOpen} 
         onOpenChange={setIsAddSourceOpen}
-        onSuccess={refreshSources}
+        onSuccess={handleRefresh}
       />
     </div>
   );
