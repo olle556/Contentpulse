@@ -36,6 +36,7 @@ import {
   DialogHeader,
   DialogTitle,
 } from "@/components/ui/dialog"
+import { useOnboarding } from '@/hooks/use-onboarding'
 
 // Define custom interfaces for your brand data
 interface BrandInput {
@@ -191,6 +192,7 @@ const formSchema = z.object({
 })
 
 export default function BrandInformationPage() {
+  const { markStepCompleted } = useOnboarding();
   const [dialogOpen, setDialogOpen] = useState(false)
   const { data: session } = useSession()
   const router = useRouter()
@@ -361,6 +363,9 @@ export default function BrandInformationPage() {
       // Clear localStorage
       localStorage.removeItem('brandFormData')
       localStorage.removeItem('brandId')
+      
+      // Mark the brand step as completed
+      await markStepCompleted('brand');
       
       // Redirect to brands page
       router.push('/dashboard/brands')

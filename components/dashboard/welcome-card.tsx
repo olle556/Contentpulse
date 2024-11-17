@@ -5,9 +5,13 @@ import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { ArrowRight, Wand2, Target, Settings, Calendar, CheckCircle2 } from "lucide-react";
 import Link from "next/link";
+import { useQuery } from "@tanstack/react-query";
 import { OnboardingStep } from "@/types";
+import { useOnboarding } from "@/hooks/use-onboarding";
 
 export function WelcomeCard() {
+  const { completedSteps, isLoading } = useOnboarding();
+
   const [steps, setSteps] = useState<OnboardingStep[]>([
     {
       id: 'brand',
@@ -44,26 +48,45 @@ export function WelcomeCard() {
   ]);
 
   useEffect(() => {
-    checkStepCompletion();
-  }, []);
-
-  const checkStepCompletion = async () => {
-    try {
-      const response = await fetch('/api/onboarding/progress');
-      const data = await response.json();
-      
-      if (data.success) {
-        setSteps(prevSteps => 
-          prevSteps.map(step => ({
-            ...step,
-            isCompleted: data.completedSteps.includes(step.id)
-          }))
-        );
-      }
-    } catch (error) {
-      console.error('Failed to fetch onboarding progress:', error);
+    if (completedSteps) {
+      setSteps(prevSteps => 
+        prevSteps.map(step => ({
+          ...step,
+          isCompleted: completedSteps.includes(step.id)
+        }))
+      );
     }
-  };
+  }, [completedSteps]);
+
+  // Return null if all steps are completed
+  if (completedSteps?.length === steps.length) {
+    return null;
+  }
+
+  // Show loading state
+  if (isLoading) {
+    return (
+      <Card>
+        <CardHeader>
+          <CardTitle className="text-xl animate-pulse bg-muted h-6 w-48 rounded" />
+        </CardHeader>
+        <CardContent className="space-y-6">
+          <p className="animate-pulse bg-muted h-4 w-3/4 rounded" />
+          <div className="space-y-4">
+            {[1, 2, 3, 4].map((_, index) => (
+              <div key={index} className="flex items-start gap-4">
+                <div className="animate-pulse bg-muted h-8 w-8 rounded-lg" />
+                <div className="space-y-1.5 flex-1">
+                  <div className="animate-pulse bg-muted h-4 w-1/2 rounded" />
+                  <div className="animate-pulse bg-muted h-3 w-3/4 rounded" />
+                </div>
+              </div>
+            ))}
+          </div>
+        </CardContent>
+      </Card>
+    );
+  }
 
   return (
     <Card>

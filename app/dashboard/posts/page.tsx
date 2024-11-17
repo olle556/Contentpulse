@@ -7,8 +7,10 @@ import { Wand2 } from "lucide-react";
 import { GeneratePostDialog } from "@/components/posts/generate-post-dialog";
 import { PostList } from "@/components/posts/post-list";
 import { GeneratedPost } from "@/types";
+import { useOnboarding } from "@/hooks/use-onboarding";
 
 export default function PostsPage() {
+  const { markStepCompleted } = useOnboarding();
   const [isGenerateOpen, setIsGenerateOpen] = useState(false);
   const [key, setKey] = useState(0);
 
@@ -33,6 +35,7 @@ export default function PostsPage() {
   const handleSuccess = async () => {
     console.log('Success callback triggered');
     await handleRefresh();
+    await markStepCompleted('posts');
     setKey(prev => prev + 1);
   };
 

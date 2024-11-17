@@ -5,8 +5,10 @@ import { Button } from "@/components/ui/button";
 import { Calendar } from "lucide-react";
 import { ScheduledPostList } from "@/components/schedule/scheduled-post-list";
 import { ContentScheduler } from "@/components/schedule/content-scheduler";
+import { useOnboarding } from "@/hooks/use-onboarding";
 
 export default function SchedulePage() {
+  const { markStepCompleted } = useOnboarding();
   const [isScheduleOpen, setIsScheduleOpen] = useState(false);
   const [contentSources, setContentSources] = useState([]);
   const [loading, setLoading] = useState(true);
@@ -33,8 +35,9 @@ export default function SchedulePage() {
     fetchContentSources();
   }, []);
 
-  const handleScheduleUpdate = () => {
+  const handleScheduleUpdate = async () => {
     setRefreshTrigger(prev => prev + 1);
+    await markStepCompleted('schedule');
   };
 
   return (

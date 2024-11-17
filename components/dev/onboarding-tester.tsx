@@ -4,9 +4,11 @@ import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { toast } from "sonner";
 import { useState } from "react";
+import { useOnboarding } from "@/hooks/use-onboarding";
 
 export function OnboardingTester() {
   const [isLoading, setIsLoading] = useState<string | null>(null);
+  const { completedSteps, markStepCompleted } = useOnboarding();
 
   // Only render in development
   if (process.env.NODE_ENV !== 'development') return null;
@@ -19,8 +21,7 @@ export function OnboardingTester() {
       
       if (!response.ok) throw new Error(data.error || 'Failed to check progress');
       
-      console.log('Onboarding Progress:', data);
-      toast.success('Progress checked! Check console for details.');
+      toast.success(`Completed steps: ${data.completedSteps.join(', ') || 'none'}`);
     } catch (error) {
       console.error('Error checking progress:', error);
       toast.error(error instanceof Error ? error.message : 'Failed to check progress');
@@ -40,7 +41,7 @@ export function OnboardingTester() {
       if (!response.ok) throw new Error(data.error || 'Failed to reset progress');
       
       toast.success('Progress reset successfully');
-      await checkProgress(); // Check progress after reset
+      await checkProgress();
     } catch (error) {
       console.error('Error resetting progress:', error);
       toast.error(error instanceof Error ? error.message : 'Failed to reset progress');
@@ -52,38 +53,11 @@ export function OnboardingTester() {
   const simulateCompletion = async (step: string) => {
     setIsLoading(step);
     try {
-      let endpoint = '';
-      let data = {};
-      
-      switch (step) {
-        case 'brand':
-          endpoint = '/api/brands';
-          data = { name: 'Test Brand', description: 'Test Description' };
-          break;
-        case 'sources':
-          endpoint = '/api/sources';
-          data = { url: 'https://example.com', name: 'Test Source' };
-          break;
-        default:
-          throw new Error('Unknown step');
-      }
-
-      const response = await fetch(endpoint, {
-        method: 'POST',
-        headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify(data),
-      });
-
-      if (!response.ok) {
-        const errorData = await response.json();
-        throw new Error(errorData.error || `Failed to simulate ${step}`);
-      }
-
-      toast.success(`Simulated ${step} completion`);
-      await checkProgress(); // Check progress after simulation
+      await markStepCompleted(step);
+      toast.success(`Marked ${step} as completed`);
     } catch (error) {
-      console.error(`Error simulating ${step}:`, error);
-      toast.error(error instanceof Error ? error.message : `Failed to simulate ${step}`);
+      console.error(`Error marking ${step} as completed:`, error);
+      toast.error(error instanceof Error ? error.message : `Failed to mark ${step} as completed`);
     } finally {
       setIsLoading(null);
     }
@@ -92,7 +66,14 @@ export function OnboardingTester() {
   return (
     <Card className="fixed bottom-4 right-4 w-80 z-50">
       <CardHeader>
-        <CardTitle className="text-sm">Onboarding Tester (Dev Only)</CardTitle>
+        <CardTitle className="text-sm">
+          Onboarding Tester (Dev Only)
+          {completedSteps && (
+            <span className="text-xs text-muted-foreground ml-2">
+              {completedSteps.length}/4 completed
+            </span>
+          )}
+        </CardTitle>
       </CardHeader>
       <CardContent className="space-y-2">
         <Button 
@@ -114,22 +95,17 @@ export function OnboardingTester() {
           {isLoading === 'reset' ? 'Resetting...' : 'Reset Progress'}
         </Button>
         <div className="grid grid-cols-2 gap-2">
-          <Button 
-            onClick={() => simulateCompletion('brand')} 
-            variant="outline" 
-            size="sm"
-            disabled={!!isLoading}
-          >
-            {isLoading === 'brand' ? 'Adding...' : 'Add Brand'}
-          </Button>
-          <Button 
-            onClick={() => simulateCompletion('sources')} 
-            variant="outline" 
-            size="sm"
-            disabled={!!isLoading}
-          >
-            {isLoading === 'sources' ? 'Adding...' : 'Add Source'}
-          </Button>
+          {['brand', 'sources', 'posts', 'schedule'].map((step) => (
+            <Button 
+              key={step}
+              onClick={() => simulateCompletion(step)} 
+              variant={completedSteps?.includes(step) ? 'success' : 'outline'}
+              size="sm"
+              disabled={!!isLoading}
+            >
+              {isLoading === step ? 'Adding...' : `Add ${step}`}
+            </Button>
+          ))}
         </div>
       </CardContent>
     </Card>

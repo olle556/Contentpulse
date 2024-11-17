@@ -7,8 +7,10 @@ import { Button } from "@/components/ui/button";
 import { ContentSourceList } from "@/components/sources/content-source-list";
 import { AddSourceDialog } from "@/components/sources/add-source-dialog";
 import { ContentSource } from "@/types";
+import { useOnboarding } from "@/hooks/use-onboarding";
 
 export default function SourcesPage() {
+  const { markStepCompleted } = useOnboarding();
   const [isAddSourceOpen, setIsAddSourceOpen] = useState(false);
   const [url, setUrl] = useState("");
   const [analysis, setAnalysis] = useState("");
@@ -48,8 +50,8 @@ export default function SourcesPage() {
       setAnalysis(data.analysis);
       
       if (data.source) {
-        // Trigger a refresh of the sources query instead of manual state update
         await refreshSources();
+        await markStepCompleted('sources');
       }
     } catch (error) {
       console.error('Error analyzing URL:', error);
