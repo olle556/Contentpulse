@@ -3,16 +3,13 @@
 import * as React from "react"
 import { motion, AnimatePresence } from "framer-motion"
 import { CheckIcon } from "@radix-ui/react-icons"
-import { createPortal } from 'react-dom'
 
 interface AutosaveToastProps {
   show: boolean;
 }
 
 export default function AutosaveToast({ show }: AutosaveToastProps) {
-  if (typeof window === 'undefined') return null
-
-  return createPortal(
+  return (
     <div className="fixed bottom-0 right-0 p-6 z-[9999]">
       <AnimatePresence>
         {show && (
@@ -28,7 +25,6 @@ export default function AutosaveToast({ show }: AutosaveToastProps) {
           </motion.div>
         )}
       </AnimatePresence>
-    </div>,
-    document.body
+    </div>
   )
 }

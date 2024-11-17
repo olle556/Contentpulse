@@ -38,6 +38,7 @@ import {
 } from "@/components/ui/dialog"
 import { useOnboarding } from '@/hooks/use-onboarding'
 import { cache } from 'react'
+import * as React from "react"
 
 // Define custom interfaces for your brand data
 interface BrandInput {
@@ -192,14 +193,14 @@ const formSchema = z.object({
   brandStory: z.string().optional().nullable(),
 })
 
-// Add this fetch wrapper with caching
+// Add this fetch wrapper with caching and revalidation
 const getBrand = cache(async () => {
   try {
     const response = await fetch('/api/brand', {
-      // Add cache configuration
-      cache: 'force-cache',
+      // Remove force-cache to allow revalidation
       next: {
-        revalidate: 300 // Revalidate every 5 minutes
+        tags: ['brand'], // Add a cache tag
+        revalidate: 0 // Set to 0 to opt out of cache
       }
     })
     if (!response.ok) throw new Error('Failed to fetch brand')
@@ -268,10 +269,20 @@ export default function BrandInformationPage() {
     }
   }, [session?.user?.id])
 
-  // Replace the [saveStatus, setSaveStatus] with [showSaveToast, setShowSaveToast]
+  // Move the toast state inside useEffect to avoid hydration mismatch
   const [showSaveToast, setShowSaveToast] = useState(false)
 
-  
+  // Wrap the toast component in a useEffect
+  useEffect(() => {
+    // This ensures the toast only renders on the client side
+    const toastContainer = document.createElement('div')
+    toastContainer.className = 'fixed bottom-4 right-4 z-50'
+    document.body.appendChild(toastContainer)
+
+    return () => {
+      document.body.removeChild(toastContainer)
+    }
+  }, [])
 
   // Auto-save to localStorage
   const autoSaveToStorage = debounce((values: z.infer<typeof formSchema>) => {
@@ -290,8 +301,6 @@ export default function BrandInformationPage() {
 
       setShowSaveToast(true)
       const brandId = localStorage.getItem('brandId')
-      
-      console.log('Saving brand:', { values, brandId }) // Debug log
       
       const response = await fetch('/api/brand/save', {
         method: 'POST',
@@ -314,6 +323,9 @@ export default function BrandInformationPage() {
       if (data.id) {
         localStorage.setItem('brandId', data.id.toString())
       }
+
+      // Revalidate the cache after successful save
+      await fetch('/api/revalidate?tag=brand')
 
       setTimeout(() => {
         setShowSaveToast(false)
@@ -395,131 +407,145 @@ export default function BrandInformationPage() {
     setDialogOpen(false)
   }
 
+  const [mounted, setMounted] = React.useState(false);
+
+  React.useEffect(() => {
+    setMounted(true);
+  }, []);
+
   return (
-    <div className="container mx-auto  space-y-6">
-      <div className="fixed bottom-4 right-4 z-50">
-        <AutosaveToast show={showSaveToast} />
+    <>
+      <div className="container mx-auto space-y-6">
+        <Card>
+          <CardContent className="p-6">
+            <h2 className="text-2xl font-bold mb-6">Basic Brand Identity</h2>
+            <Form {...form}>
+              <form onSubmit={form.handleSubmit(onSubmit)} className="space-y-6">
+                {basicFields.map((field) => (
+                  <FormField
+                    key={field.name}
+                    control={form.control}
+                    name={field.name as any}
+                    render={({ field: formField }) => (
+                      <FormItem>
+                        <FormLabel>{field.label}</FormLabel>
+                        <FormControl>
+                          {field.type === 'select' ? (
+                            <Select
+                              onValueChange={formField.onChange}
+                              value={formField.value?.toLowerCase()}
+                              defaultValue={formField.value?.toLowerCase()}
+                            >
+                              <SelectTrigger>
+                                <SelectValue placeholder="Select an option" />
+                              </SelectTrigger>
+                              <SelectContent>
+                                {field.options?.map((option) => (
+                                  <SelectItem 
+                                    key={option} 
+                                    value={option.toLowerCase()}
+                                  >
+                                    {option}
+                                  </SelectItem>
+                                ))}
+                              </SelectContent>
+                            </Select>
+                          ) : field.type === 'textarea' ? (
+                            <Textarea {...formField} />
+                          ) : (
+                            <Input {...formField} type={field.type} />
+                          )}
+                        </FormControl>
+                        <FormMessage />
+                      </FormItem>
+                    )}
+                  />
+                ))}
+              </form>
+            </Form>
+          </CardContent>
+        </Card>
+
+        <Card>
+          <CardContent className="p-6">
+            <div className="flex justify-between items-center mb-6">
+              <h2 className="text-2xl font-bold">Advanced Brand Settings</h2>
+              <Button
+                variant="outline"
+                onClick={() => setDialogOpen(true)}
+              >
+                Edit
+              </Button>
+            </div>
+          </CardContent>
+        </Card>
+
+        <Dialog open={dialogOpen} onOpenChange={setDialogOpen}>
+          <DialogContent className="max-w-3xl max-h-[80vh] overflow-y-auto">
+            <DialogHeader>
+              <DialogTitle>Advanced Brand Settings</DialogTitle>
+            </DialogHeader>
+            
+            <Form {...form}>
+              <form onSubmit={form.handleSubmit((values) => {
+                onSubmit(values)
+                handleDialogClose()
+              })} className="space-y-6">
+                {advancedSteps.map((section) => (
+                  <div key={section.id} className="space-y-4">
+                    <h3 className="text-xl font-semibold">{section.name}</h3>
+                    {section.fields.map((field) => (
+                      <FormField
+                        key={field.name}
+                        control={form.control}
+                        name={field.name as any}
+                        render={({ field: formField }) => (
+                          <FormItem>
+                            <FormLabel>{field.label}</FormLabel>
+                            <FormControl>
+                              {field.type === 'select' ? (
+                                <Select
+                                  onValueChange={formField.onChange}
+                                  value={formField.value?.toLowerCase()}
+                                  defaultValue={formField.value?.toLowerCase()}
+                                >
+                                  <SelectTrigger>
+                                    <SelectValue placeholder="Select an option" />
+                                  </SelectTrigger>
+                                  <SelectContent>
+                                    {field.options?.map((option) => (
+                                      <SelectItem 
+                                        key={option} 
+                                        value={option.toLowerCase()}
+                                      >
+                                        {option}
+                                      </SelectItem>
+                                    ))}
+                                  </SelectContent>
+                                </Select>
+                              ) : field.type === 'textarea' ? (
+                                <Textarea {...formField} />
+                              ) : (
+                                <Input {...formField} type={field.type} />
+                              )}
+                            </FormControl>
+                            <FormMessage />
+                          </FormItem>
+                        )}
+                      />
+                    ))}
+                  </div>
+                ))}
+                <div className="flex justify-end pt-4">
+                  <Button type="submit">Done</Button>
+                </div>
+              </form>
+            </Form>
+          </DialogContent>
+        </Dialog>
       </div>
 
-      <Card>
-        <CardContent className="p-6">
-          <h2 className="text-2xl font-bold mb-6">Basic Brand Identity</h2>
-          <Form {...form}>
-            <form onSubmit={form.handleSubmit(onSubmit)} className="space-y-6">
-              {basicFields.map((field) => (
-                <FormField
-                  key={field.name}
-                  control={form.control}
-                  name={field.name as any}
-                  render={({ field: formField }) => (
-                    <FormItem>
-                      <FormLabel>{field.label}</FormLabel>
-                      <FormControl>
-                        {field.type === 'select' ? (
-                          <Select
-                            onValueChange={formField.onChange}
-                            defaultValue={formField.value}
-                          >
-                            <SelectTrigger>
-                              <SelectValue placeholder="Select an option" />
-                            </SelectTrigger>
-                            <SelectContent>
-                              {field.options?.map((option) => (
-                                <SelectItem key={option} value={option.toLowerCase()}>
-                                  {option}
-                                </SelectItem>
-                              ))}
-                            </SelectContent>
-                          </Select>
-                        ) : field.type === 'textarea' ? (
-                          <Textarea {...formField} />
-                        ) : (
-                          <Input {...formField} type={field.type} />
-                        )}
-                      </FormControl>
-                      <FormMessage />
-                    </FormItem>
-                  )}
-                />
-              ))}
-            </form>
-          </Form>
-        </CardContent>
-      </Card>
-
-      <Card>
-        <CardContent className="p-6">
-          <div className="flex justify-between items-center mb-6">
-            <h2 className="text-2xl font-bold">Advanced Brand Settings</h2>
-            <Button
-              variant="outline"
-              onClick={() => setDialogOpen(true)}
-            >
-              Edit
-            </Button>
-          </div>
-        </CardContent>
-      </Card>
-
-      <Dialog open={dialogOpen} onOpenChange={setDialogOpen}>
-        <DialogContent className="max-w-3xl max-h-[80vh] overflow-y-auto">
-          <DialogHeader>
-            <DialogTitle>Advanced Brand Settings</DialogTitle>
-          </DialogHeader>
-          
-          <Form {...form}>
-            <form onSubmit={form.handleSubmit((values) => {
-              onSubmit(values)
-              handleDialogClose()
-            })} className="space-y-6">
-              {advancedSteps.map((section) => (
-                <div key={section.id} className="space-y-4">
-                  <h3 className="text-xl font-semibold">{section.name}</h3>
-                  {section.fields.map((field) => (
-                    <FormField
-                      key={field.name}
-                      control={form.control}
-                      name={field.name as any}
-                      render={({ field: formField }) => (
-                        <FormItem>
-                          <FormLabel>{field.label}</FormLabel>
-                          <FormControl>
-                            {field.type === 'select' ? (
-                              <Select
-                                onValueChange={formField.onChange}
-                                defaultValue={formField.value}
-                              >
-                                <SelectTrigger>
-                                  <SelectValue placeholder="Select an option" />
-                                </SelectTrigger>
-                                <SelectContent>
-                                  {field.options?.map((option) => (
-                                    <SelectItem key={option} value={option.toLowerCase()}>
-                                      {option}
-                                    </SelectItem>
-                                  ))}
-                                </SelectContent>
-                              </Select>
-                            ) : field.type === 'textarea' ? (
-                              <Textarea {...formField} />
-                            ) : (
-                              <Input {...formField} type={field.type} />
-                            )}
-                          </FormControl>
-                          <FormMessage />
-                        </FormItem>
-                      )}
-                    />
-                  ))}
-                </div>
-              ))}
-              <div className="flex justify-end pt-4">
-                <Button type="submit">Done</Button>
-              </div>
-            </form>
-          </Form>
-        </DialogContent>
-      </Dialog>
-    </div>
+      {mounted && <AutosaveToast show={showSaveToast} />}
+    </>
   )
 }
