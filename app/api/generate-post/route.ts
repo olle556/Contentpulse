@@ -189,8 +189,31 @@ Please generate the post now:`;
       ? message.content[0].text
       : '';
 
+    // Add this new section to save the post if it's from a schedule
+    if (isCronRequest) {
+      // Save the generated post to the database
+      const savedPost = await prisma.generatedPost.create({
+        data: {
+          content: generatedContent,
+          platform: standardizedPlatform,
+          status: 'generated',
+          userId: userId,
+        },
+      });
 
-    // Return the response
+      console.log('Post saved from schedule:', savedPost.id);
+
+      // Return the response with the saved post
+      return NextResponse.json({
+        success: true,
+        content: generatedContent,
+        sourceUrl,
+        scrapedContent: scrapedContent,
+        post: savedPost, // Include the saved post in the response
+      });
+    }
+
+    // Return the regular response for non-scheduled generations
     return NextResponse.json({
       success: true,
       content: generatedContent,
