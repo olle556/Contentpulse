@@ -34,6 +34,7 @@ export async function POST(req: Request) {
         time: data.time,
         aiInstructions: data.aiInstructions,
         useEmojis: data.useEmojis,
+        threadCount: data.threadCount || 1,
       },
     })
 

@@ -5,6 +5,14 @@ import { getServerSession } from "next-auth/next";
 import { authOptions } from "@/lib/auth-options";
 import { getRelevantBrandContext } from '@/utils/getBrandContext';
 
+// Map platform names to standardized values
+const platformMapping = {
+  'X': 'twitter',
+  'X Premium': 'twitter_premium',
+  'twitter': 'twitter',
+  'twitter_premium': 'twitter_premium'
+};
+
 export async function GET() {
   return NextResponse.json({ status: 'Route is working' });
 }
@@ -19,6 +27,9 @@ export async function POST(request: Request) {
     // Read request body once at the beginning
     const requestData = await request.json();
     const { sourceUrl, platform, tone, useEmojis, userId: cronUserId , aiInstructions, threadCount } = requestData;
+
+    // Map the platform to its standardized name
+    const standardizedPlatform = platformMapping[platform as keyof typeof platformMapping] || platform.toLowerCase(); // dtnadardiz eplatform name
 
     // Check if request is from cron job
     const authHeader = request.headers.get('authorization');
@@ -98,7 +109,7 @@ export async function POST(request: Request) {
       threads: '500 characters',
     };
 
-    const threadInstructions = ['twitter', 'twitter_premium', 'threads'].includes(platform) 
+    const threadInstructions = ['twitter', 'twitter_premium', 'threads'].includes(standardizedPlatform) 
       ? `\nThreads Explanation:
 Sometimes we need more than one post to express ourselves. A thread is a series of connected posts from one person. With a thread you can provide additional context, an update, or an extended point by connecting multiple posts together.
 
@@ -111,10 +122,10 @@ The first post in the thread should be a hook to get the reader interested in th
 
 Every single word in your hook should help with one of these two goals, otherwise, you should cut the word.
 
-Each individual post must respect the platform's character limit (${platformLimits[platform as keyof typeof platformLimits]}).`
+Each individual post must respect the platform's character limit (${platformLimits[standardizedPlatform as keyof typeof platformLimits]}).`
       : '';
 
-    const prompt = `You are a social media content creator. Your task is to create an engaging ${platform} post using a ${tone} tone based on the following brand context and source material.
+    const prompt = `You are a social media content creator. Your task is to create an engaging ${standardizedPlatform} post using a ${tone} tone based on the following brand context and source material.
 
 Brand Context:
 ${brandInfo}
@@ -128,7 +139,7 @@ ${aiInstructions}
 ` : ''}
 
 Instructions:
-1. Create a single, engaging post for ${platform} (limit: ${platformLimits[platform as keyof typeof platformLimits]})
+1. Create a single, engaging post for ${standardizedPlatform} (limit: ${platformLimits[standardizedPlatform as keyof typeof platformLimits]})
 2. Maintain the brand voice and ${tone} tone throughout
 3. Include key information that aligns with the brand's mission and USP
 4. Make it conversational and engaging while staying true to brand identity

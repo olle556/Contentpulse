@@ -156,6 +156,7 @@ model ContentSchedule {
   createdAt       DateTime      @default(now())
   updatedAt       DateTime      @updatedAt
   useEmojis       Boolean       @default(false)
+  threadCount     Int           @default(1)
 
   @@index([userId])
   @@index([contentSourceId])

@@ -53,6 +53,7 @@ export async function PUT(
         time: body.time,
         aiInstructions: body.aiInstructions,
         useEmojis: body.useEmojis,
+        threadCount: body.threadCount || 1,
       },
     });
 

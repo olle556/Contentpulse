@@ -87,6 +87,7 @@ export type ContentSchedule = {
   createdAt: Date;
   updatedAt: Date;
   useEmojis?: boolean;
+  threadCount: number;
 }
 
 export interface OnboardingStep {

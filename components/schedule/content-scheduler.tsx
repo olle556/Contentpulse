@@ -52,6 +52,7 @@ const formSchema = z.object({
   time: z.string(),
   aiInstructions: z.string().optional(),
   useEmojis: z.boolean().default(false),
+  threadCount: z.number().min(1).max(10).default(1),
 })
 
 type ContentSchedulerProps = {
@@ -76,7 +77,7 @@ const tonalities = [
   "Neutral",
 ];
 
-const platforms = ["X", "LinkedIn", "Threads", "Facebook"]
+const platforms = ["X", "X Premium", "LinkedIn", "Threads", "Facebook"]
 
 const daysOfWeek = ["Mon", "Tue", "Wed", "Thu", "Fri", "Sat", "Sun"]
 
@@ -95,6 +96,7 @@ export function ContentScheduler({ open, onOpenChange, contentSources, editSched
       time: "",
       aiInstructions: "",
       useEmojis: false,
+      threadCount: 1,
     },
   })
 
@@ -118,6 +120,7 @@ export function ContentScheduler({ open, onOpenChange, contentSources, editSched
         time: localTime, // Use the converted local time
         aiInstructions: editSchedule.aiInstructions || "",
         useEmojis: editSchedule.useEmojis || false,
+        threadCount: editSchedule.threadCount || 1,
       });
     }
   }, [editSchedule, form]);
@@ -133,6 +136,7 @@ export function ContentScheduler({ open, onOpenChange, contentSources, editSched
         time: "",
         aiInstructions: "",
         useEmojis: false,
+        threadCount: 1,
       })
       setIsRecurring(false)
     }
@@ -163,7 +167,7 @@ export function ContentScheduler({ open, onOpenChange, contentSources, editSched
         time: dbTime,
         date: selectedDate,
         startDate: selectedDate, // if it's recurring
-        useEmojis: values.useEmojis // Explicitly include useEmojis field
+        useEmojis: values.useEmojis, // Explicitly include useEmojis field
       };
 
       const url = editSchedule
@@ -476,6 +480,37 @@ export function ContentScheduler({ open, onOpenChange, contentSources, editSched
                   </FormItem>
                 )}
               />
+
+              {form.watch("platforms").some(platform => 
+                ["X", "Threads"].includes(platform)
+              ) && (
+                <FormField
+                  control={form.control}
+                  name="threadCount"
+                  render={({ field }) => (
+                    <FormItem>
+                      <FormLabel>Number of Threads</FormLabel>
+                      <Select
+                        value={field.value.toString()}
+                        onValueChange={(value) => field.onChange(parseInt(value))}
+                      >
+                        <FormControl>
+                          <SelectTrigger>
+                            <SelectValue placeholder="Select number of threads" />
+                          </SelectTrigger>
+                        </FormControl>
+                        <SelectContent>
+                          {Array.from({length: 10}, (_, i) => i + 1).map((num) => (
+                            <SelectItem key={num} value={num.toString()}>
+                              {num} {num === 1 ? 'thread' : 'threads'}
+                            </SelectItem>
+                          ))}
+                        </SelectContent>
+                      </Select>
+                    </FormItem>
+                  )}
+                />
+              )}
             </div>
             
             <div className="sticky bottom-0 pt-4 mt-auto bg-background border-t">

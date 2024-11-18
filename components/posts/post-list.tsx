@@ -15,7 +15,7 @@ import { DeletePostDialog } from "./delete-post-dialog";
 import { EditPostDialog } from "./edit-post-dialog";
 import { GeneratePostDialog } from "./generate-post-dialog";
 import { toast } from "react-toastify";
-import { useQuery } from "@tanstack/react-query";
+//import { useQuery } from "@tanstack/react-query";
 
 interface PostListProps {
   posts: GeneratedPost[];

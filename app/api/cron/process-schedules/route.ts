@@ -41,6 +41,7 @@ const generatePostWithTimeout = async (params: {
   userId: string,
   instructions: string,
   baseUrl: string,
+  threadCount: number,
   scrapedContent?: string
 }) => {
   const controller = new AbortController();
@@ -187,6 +188,7 @@ export async function GET(req: NextRequest) {
                 useEmojis: schedule.useEmojis || false,
                 userId: schedule.userId,
                 baseUrl,
+                threadCount: schedule.threadCount || 1,
                 scrapedContent: scrapedData.content
               });
 
