@@ -29,7 +29,8 @@ type ContentSchedule = {
   startDate?: Date | null;
   createdAt: Date;
   updatedAt: Date;
-  useEmojis: boolean; 
+  useEmojis: boolean;
+  threadCount: number;
 };
 
 // Add this type to help with the content source mapping
