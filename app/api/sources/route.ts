@@ -2,6 +2,7 @@ import { NextResponse } from 'next/server';
 import { prisma } from '@/lib/prisma';
 import { getServerSession } from 'next-auth';
 import { authOptions } from '@/lib/auth-options';
+import { revalidateTag } from 'next/cache';
 
 export async function GET() {
   try {
@@ -80,10 +81,13 @@ export async function POST(req: Request) {
       },
     });
 
+    revalidateTag('sources');
+
     return NextResponse.json({ 
       success: true, 
       data: contentSource 
     });
+      
   } catch (error) {
     console.error("Detailed error in POST /api/sources:", error);
     return NextResponse.json({ 

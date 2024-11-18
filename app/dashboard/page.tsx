@@ -8,6 +8,7 @@ import { FileText, Users, Activity, TrendingUp } from "lucide-react";
 export default function Dashboard() {
   const [showWelcome, setShowWelcome] = useState(true);
   const [postsCount, setPostsCount] = useState<string>("--");
+  const [sourcesCount, setSourcesCount] = useState<string>("--");
 
   useEffect(() => {
     const checkOnboardingStatus = async () => {
@@ -29,11 +30,13 @@ export default function Dashboard() {
 
     const fetchPostsCount = async () => {
       try {
-        const response = await fetch('/api/posts/count');
+        const response = await fetch('/api/posts/count', {
+          cache: 'no-store'
+        });
         const data = await response.json();
         
         if (data.success) {
-          setPostsCount(data.count.toString());
+          setPostsCount(data.count);
         }
       } catch (error) {
         console.error('Failed to fetch posts count:', error);
@@ -41,6 +44,24 @@ export default function Dashboard() {
     };
 
     fetchPostsCount();
+
+    const fetchSourcesCount = async () => {
+      try {
+        const response = await fetch('/api/sources/count', {
+          cache: 'no-store',
+        });
+        const data = await response.json();
+
+        if (data.success) {
+          setSourcesCount(data.count);
+        }
+      }
+      catch (error) {
+        console.error('Failed to fetch sources count:', error);
+      }
+    };
+    
+    fetchSourcesCount();
   }, []);
 
   return (
@@ -57,27 +78,15 @@ export default function Dashboard() {
           icon={<FileText className="h-5 w-5 sm:h-6 sm:w-6" />}
         />
         <StatsCard
-          title="Engagement Rate"
-          value="4.2%"
-          description="Average across platforms"
-          icon={<Activity className="h-5 w-5 sm:h-6 sm:w-6" />}
-        />
-        <StatsCard
-          title="Audience Growth"
-          value="+12%"
-          description="Increase in followers"
-          icon={<TrendingUp className="h-5 w-5 sm:h-6 sm:w-6" />}
-        />
-        <StatsCard
           title="Active Sources"
-          value="15"
+          value={sourcesCount}
           description="Content sources monitored"
           icon={<Users className="h-5 w-5 sm:h-6 sm:w-6" />}
         />
       </div>
     </div>
   );
-}
+
 
 function StatsCard({
   title,
@@ -101,5 +110,6 @@ function StatsCard({
         <p className="text-xs text-muted-foreground mt-1 line-clamp-2">{description}</p>
       </CardContent>
     </Card>
-  );
+    );
+  }
 }
