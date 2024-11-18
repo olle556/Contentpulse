@@ -8,6 +8,7 @@ import {
   DialogTitle,
 } from "@/components/ui/dialog";
 import { Button } from "@/components/ui/button";
+import { Textarea } from "@/components/ui/textarea";
 import { Label } from "@/components/ui/label";
 import { Checkbox } from "@/components/ui/checkbox";
 import { toast } from "sonner";
@@ -421,7 +422,7 @@ export function GeneratePostDialog({ open, onOpenChange, onSuccess }: GeneratePo
 
           <div className="space-y-2">
             <Label>AI Instructions (Optional)</Label>
-            <textarea
+            <Textarea
               className="w-full min-h-[80px] rounded-md border border-input bg-background px-3 py-2 text-base"
               placeholder="Add specific instructions for how the AI should generate this post..."
               value={aiInstructions}
