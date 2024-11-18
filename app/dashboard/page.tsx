@@ -74,7 +74,7 @@ export default function Dashboard() {
         <StatsCard
           title="Total Posts"
           value={postsCount}
-          description="Posts generated this month"
+          description="Posts generated"
           icon={<FileText className="h-5 w-5 sm:h-6 sm:w-6" />}
         />
         <StatsCard

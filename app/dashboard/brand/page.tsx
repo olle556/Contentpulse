@@ -216,6 +216,7 @@ export default function BrandInformationPage() {
   const [dialogOpen, setDialogOpen] = useState(false)
   const { data: session } = useSession()
   const router = useRouter()
+  const [showSaveToast, setShowSaveToast] = useState(false)
   
   const form = useForm<z.infer<typeof formSchema>>({
     resolver: zodResolver(formSchema),
@@ -269,21 +270,6 @@ export default function BrandInformationPage() {
     }
   }, [session?.user?.id])
 
-  // Move the toast state inside useEffect to avoid hydration mismatch
-  const [showSaveToast, setShowSaveToast] = useState(false)
-
-  // Wrap the toast component in a useEffect
-  useEffect(() => {
-    // This ensures the toast only renders on the client side
-    const toastContainer = document.createElement('div')
-    toastContainer.className = 'fixed bottom-4 right-4 z-50'
-    document.body.appendChild(toastContainer)
-
-    return () => {
-      document.body.removeChild(toastContainer)
-    }
-  }, [])
-
   // Auto-save to localStorage
   const autoSaveToStorage = debounce((values: z.infer<typeof formSchema>) => {
     try {
@@ -299,7 +285,7 @@ export default function BrandInformationPage() {
     try {
       if (!session?.user?.id) return
 
-      setShowSaveToast(true)
+      // Only show toast after actual save attempt, not on initial load
       const brandId = localStorage.getItem('brandId')
       
       const response = await fetch('/api/brand/save', {
@@ -312,6 +298,14 @@ export default function BrandInformationPage() {
           brandId: brandId ? parseInt(brandId) : null 
         }),
       })
+
+      // Show toast only after successful save
+      if (response.ok) {
+        setShowSaveToast(true)
+        setTimeout(() => {
+          setShowSaveToast(false)
+        }, 2000)
+      }
 
       const data = await response.json()
       
@@ -327,10 +321,6 @@ export default function BrandInformationPage() {
       // Revalidate the cache after successful save
       await fetch('/api/revalidate?tag=brand')
 
-      setTimeout(() => {
-        setShowSaveToast(false)
-      }, 2000)
-      
     } catch (error) {
       console.error('Failed to auto-save:', error)
       setShowSaveToast(false)
