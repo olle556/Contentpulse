@@ -54,7 +54,10 @@ const generatePostWithTimeout = async (params: {
         'Content-Type': 'application/json',
         'Authorization': `Bearer ${process.env.CRON_SECRET}`,
       },
-      body: JSON.stringify(params),
+      body: JSON.stringify({
+        ...params,
+        threadCount: params.threadCount || 1,
+      }),
       signal: controller.signal,
     });
 
