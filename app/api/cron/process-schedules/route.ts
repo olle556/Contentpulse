@@ -48,6 +48,12 @@ const generatePostWithTimeout = async (params: {
   const timeoutId = setTimeout(() => controller.abort(), 120000); // Reduced to 120 seconds (2 minutes)
 
   try {
+    // Ensure threadCount is properly passed for supported platforms
+    const platformsWithThreads = ['twitter', 'twitter_premium', 'threads', 'X', 'X Premium'];
+    const finalThreadCount = platformsWithThreads.includes(params.platform.toLowerCase()) 
+      ? params.threadCount 
+      : 1;
+
     const response = await fetch(`${params.baseUrl}/api/generate-post`, {
       method: 'POST',
       headers: {
@@ -56,7 +62,7 @@ const generatePostWithTimeout = async (params: {
       },
       body: JSON.stringify({
         ...params,
-        threadCount: params.threadCount || 1,
+        threadCount: finalThreadCount,
       }),
       signal: controller.signal,
     });

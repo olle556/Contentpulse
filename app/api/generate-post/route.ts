@@ -13,6 +13,9 @@ const platformMapping = {
   'twitter_premium': 'twitter_premium'
 };
 
+// At the top with other constants
+const THREAD_ENABLED_PLATFORMS = ['twitter', 'twitter_premium', 'threads'];
+
 export async function GET() {
   return NextResponse.json({ status: 'Route is working' });
 }
@@ -109,7 +112,7 @@ export async function POST(request: Request) {
       threads: '500 characters',
     };
 
-    const threadInstructions = ['twitter', 'twitter_premium', 'threads'].includes(standardizedPlatform.toLowerCase())
+    const threadInstructions = THREAD_ENABLED_PLATFORMS.includes(standardizedPlatform)
       ? `\nThreads Explanation:
 Sometimes we need more than one post to express ourselves. A thread is a series of connected posts from one person. With a thread you can provide additional context, an update, or an extended point by connecting multiple posts together.
 
