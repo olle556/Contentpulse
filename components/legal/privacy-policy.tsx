@@ -113,7 +113,7 @@ export function PrivacyPolicy() {
         <section className="mb-6">
           <h2 className="text-2xl font-semibold mb-4">9. Contact Information</h2>
           <p>If you have questions about this Privacy Policy, please contact us at:</p>
-          <p>Email: olleevertsson@gmail.com</p>
+          <p>Email: hello@coove.studio</p>
         </section>
       </div>
     </div>

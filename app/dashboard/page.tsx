@@ -7,6 +7,7 @@ import { FileText, Users, Activity, TrendingUp } from "lucide-react";
 
 export default function Dashboard() {
   const [showWelcome, setShowWelcome] = useState(true);
+  const [postsCount, setPostsCount] = useState<string>("--");
 
   useEffect(() => {
     const checkOnboardingStatus = async () => {
@@ -21,9 +22,25 @@ export default function Dashboard() {
       } catch (error) {
         console.error('Failed to check onboarding status:', error);
       }
+      
     };
 
     checkOnboardingStatus();
+
+    const fetchPostsCount = async () => {
+      try {
+        const response = await fetch('/api/posts/count');
+        const data = await response.json();
+        
+        if (data.success) {
+          setPostsCount(data.count.toString());
+        }
+      } catch (error) {
+        console.error('Failed to fetch posts count:', error);
+      }
+    };
+
+    fetchPostsCount();
   }, []);
 
   return (
@@ -35,7 +52,7 @@ export default function Dashboard() {
       <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4 sm:gap-6">
         <StatsCard
           title="Total Posts"
-          value="128"
+          value={postsCount}
           description="Posts generated this month"
           icon={<FileText className="h-5 w-5 sm:h-6 sm:w-6" />}
         />

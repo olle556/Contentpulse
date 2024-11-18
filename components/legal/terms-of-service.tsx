@@ -109,7 +109,7 @@ export function TermsOfService() {
         <section className="mb-6">
           <h2 className="text-2xl font-semibold mb-4">10. Contact Information</h2>
           <p>For questions about these Terms of Service, please contact us at:</p>
-          <p>Email: olleevertsson@gmail.com</p>
+          <p>Email: hello@coove.studio</p>
         </section>
       </div>
     </div>
