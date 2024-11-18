@@ -311,6 +311,37 @@ export function ContentScheduler({ open, onOpenChange, contentSources, editSched
                 )}
               />
 
+              {form.watch("platforms").some(platform => 
+                ["X", "X Premium", "Threads"].includes(platform)
+              ) && (
+                <FormField
+                  control={form.control}
+                  name="threadCount"
+                  render={({ field }) => (
+                    <FormItem>
+                      <FormLabel>Number of Threads</FormLabel>
+                      <Select
+                        value={field.value.toString()}
+                        onValueChange={(value) => field.onChange(parseInt(value))}
+                      >
+                        <FormControl>
+                          <SelectTrigger>
+                            <SelectValue placeholder="Select number of threads" />
+                          </SelectTrigger>
+                        </FormControl>
+                        <SelectContent>
+                          {Array.from({length: 10}, (_, i) => i + 1).map((num) => (
+                            <SelectItem key={num} value={num.toString()}>
+                              {num} {num === 1 ? 'thread' : 'threads'}
+                            </SelectItem>
+                          ))}
+                        </SelectContent>
+                      </Select>
+                    </FormItem>
+                  )}
+                />
+              )}
+
               <FormField
                 control={form.control}
                 name="isRecurring"
@@ -480,37 +511,6 @@ export function ContentScheduler({ open, onOpenChange, contentSources, editSched
                   </FormItem>
                 )}
               />
-
-              {form.watch("platforms").some(platform => 
-                ["X", "Threads"].includes(platform)
-              ) && (
-                <FormField
-                  control={form.control}
-                  name="threadCount"
-                  render={({ field }) => (
-                    <FormItem>
-                      <FormLabel>Number of Threads</FormLabel>
-                      <Select
-                        value={field.value.toString()}
-                        onValueChange={(value) => field.onChange(parseInt(value))}
-                      >
-                        <FormControl>
-                          <SelectTrigger>
-                            <SelectValue placeholder="Select number of threads" />
-                          </SelectTrigger>
-                        </FormControl>
-                        <SelectContent>
-                          {Array.from({length: 10}, (_, i) => i + 1).map((num) => (
-                            <SelectItem key={num} value={num.toString()}>
-                              {num} {num === 1 ? 'thread' : 'threads'}
-                            </SelectItem>
-                          ))}
-                        </SelectContent>
-                      </Select>
-                    </FormItem>
-                  )}
-                />
-              )}
             </div>
             
             <div className="sticky bottom-0 pt-4 mt-auto bg-background border-t">
