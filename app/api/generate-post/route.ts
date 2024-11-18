@@ -109,7 +109,7 @@ export async function POST(request: Request) {
       threads: '500 characters',
     };
 
-    const threadInstructions = ['twitter', 'twitter_premium', 'threads'].includes(standardizedPlatform) 
+    const threadInstructions = ['twitter', 'twitter_premium', 'threads'].includes(standardizedPlatform.toLowerCase())
       ? `\nThreads Explanation:
 Sometimes we need more than one post to express ourselves. A thread is a series of connected posts from one person. With a thread you can provide additional context, an update, or an extended point by connecting multiple posts together.
 
