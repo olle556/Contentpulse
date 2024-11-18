@@ -390,14 +390,14 @@ export function GeneratePostDialog({ open, onOpenChange, onSuccess }: GeneratePo
           <DialogTitle>Generate Post from Sources</DialogTitle>
         </DialogHeader>
         
-        <div className="space-y-4 flex-1 overflow-y-auto">
+        <div className="space-y-4 flex-1 py-y px-2 overflow-y-auto">
           <div className="space-y-2">
             <Label>Select Source</Label>
             <Select
               value={selectedSources[0] || ""}
               onValueChange={(sourceId) => setSelectedSources([sourceId])}
             >
-              <SelectTrigger>
+              <SelectTrigger className="w-full focus-visible:ring-offset-2">
                 <SelectValue placeholder="Select a source" />
               </SelectTrigger>
               <SelectContent>
