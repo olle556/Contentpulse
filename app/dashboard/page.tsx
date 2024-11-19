@@ -9,6 +9,7 @@ export default function Dashboard() {
   const [showWelcome, setShowWelcome] = useState(true);
   const [postsCount, setPostsCount] = useState<string>("--");
   const [sourcesCount, setSourcesCount] = useState<string>("--");
+  const [schedulesCount, setSchedulesCount] = useState<string>("--");
 
   useEffect(() => {
     const checkOnboardingStatus = async () => {
@@ -62,6 +63,21 @@ export default function Dashboard() {
     };
     
     fetchSourcesCount();
+
+    const fetchSchedulesCount = async () => {
+      try {
+        const response = await fetch('/api/schedule/count', { cache: 'no-store' });
+        const data = await response.json();
+
+        if (data.success) {
+          setSchedulesCount(data.count);
+        }
+      } catch (error) {
+        console.error('Failed to fetch schedules count:', error);
+      }
+    };
+
+    fetchSchedulesCount();
   }, []);
 
   return (
@@ -81,6 +97,12 @@ export default function Dashboard() {
           title="Active Sources"
           value={sourcesCount}
           description="Content sources monitored"
+          icon={<Users className="h-5 w-5 sm:h-6 sm:w-6" />}
+        />
+        <StatsCard
+          title="Active Schedules"
+          value={schedulesCount}
+          description="Schedules in action"
           icon={<Users className="h-5 w-5 sm:h-6 sm:w-6" />}
         />
       </div>
