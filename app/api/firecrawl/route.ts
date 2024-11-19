@@ -1,6 +1,6 @@
 import { NextResponse } from 'next/server';
 import FirecrawlApp from "@mendable/firecrawl-js";
-
+import { toast } from 'sonner';
 const app = new FirecrawlApp({ apiKey: process.env.FIRECRAWL_API_KEY || "" });
 
 export const maxDuration = 60; // Set to 1 minute instead of 2
@@ -30,13 +30,30 @@ export async function POST(request: Request) {
 
     console.log('Attempting to crawl URL:', url);
     const crawlResponse = await app.crawlUrl(url, {
-      maxDepth: 0,
+      maxDepth: 1,
       limit: 1,
       allowExternalLinks: false,
       allowBackwardLinks: false,
+      ignoreSitemap: true,
       scrapeOptions: {
         formats: ["markdown"],
         onlyMainContent: true,
+        excludeTags: [
+          "div.advertisement",
+          "script",
+          "#sidebar",
+          "nav",
+          "header",
+          "footer",
+          ".ads",
+          ".cookie-notice",
+          ".social-share",
+          "iframe",
+          ".navigation",
+          ".menu",
+          ".comments",
+          ".related-posts"
+        ]
       }
     });
 
@@ -44,6 +61,7 @@ export async function POST(request: Request) {
 
     if (!crawlResponse.success) {
       console.error('Crawl failed:', crawlResponse.error);
+      toast.error(crawlResponse.error || 'Crawl failed');
       return NextResponse.json({
         success: false,
         error: crawlResponse.error || 'Crawl failed'
