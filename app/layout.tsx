@@ -6,6 +6,7 @@ import { Toaster } from "@/components/ui/toaster";
 import { getServerSession } from 'next-auth';
 import { authOptions } from '@/lib/auth-options';
 import { Footer } from "@/components/layout/footer";
+import { Analytics } from "@vercel/analytics/react"
 
 
 const inter = Inter({ subsets: ['latin'] });
@@ -31,6 +32,7 @@ export default async function RootLayout({
           <Providers session={session}>{children}</Providers>
         <Toaster />
         <Footer />
+        <Analytics/>
       </body>
     </html>
   );
