@@ -31,6 +31,7 @@ const getShareUrl = (platform: string, content: string) => {
 
 export async function POST(req: NextRequest) {
   if (!process.env.MAILGUN_DOMAIN || !process.env.MAILGUN_API_KEY) {
+    console.error('Missing Mailgun configuration');
     return NextResponse.json({ error: 'Server configuration error' }, { status: 500 });
   }
 
@@ -38,6 +39,7 @@ export async function POST(req: NextRequest) {
     const { email, userId, generatedPosts, scheduleId, sourceUrl } = await req.json();
 
     if (!userId || !email || !generatedPosts || generatedPosts.length === 0) {
+      console.error('Missing required fields:', { userId, email, postsLength: generatedPosts?.length });
       return NextResponse.json({ error: 'Missing required fields' }, { status: 400 });
     }
 
@@ -70,7 +72,7 @@ export async function POST(req: NextRequest) {
       .join('');
 
     const userResult = await mailgunClient.messages.create(process.env.MAILGUN_DOMAIN, {
-      from: `Content Pulse <no-reply@${process.env.MAILGUN_DOMAIN}>`,
+      from: `Content Pulse <noreply@${process.env.MAILGUN_DOMAIN}>`,
       to: email,
       subject: `Your Content Pulse ${generatedPosts.length > 1 ? 'posts are' : 'post is'} ready!`,
       html: `<!DOCTYPE html>
@@ -91,7 +93,11 @@ export async function POST(req: NextRequest) {
 
     return NextResponse.json({ message: 'Email sent successfully' });
   } catch (error) {
+    console.error('General error in postMail:', error);
     const errorMessage = error instanceof Error ? error.message : 'An unknown error occurred';
-    return NextResponse.json({ error: `Failed to send email: ${errorMessage}` }, { status: 500 });
+    return NextResponse.json({ 
+      error: `Failed to send email: ${errorMessage}`,
+      timestamp: new Date().toISOString()
+    }, { status: 500 });
   }
 }
