@@ -28,7 +28,7 @@ export async function POST(req: NextRequest) {
 
     const formMailResult = await mailgunClient.messages.create(process.env.MAILGUN_DOMAIN, {
       from: `Content Pulse Form <noreply@${process.env.MAILGUN_DOMAIN}>`,
-      to: "jesperviktormollb@gmail.com",
+      to: "jesperviktormollbrant@gmail.com",
       subject: `Content Pulse ${swicthValue} from ${name}`,
       html: `
         <h2>${swicthValue} from ${name}</h2>
