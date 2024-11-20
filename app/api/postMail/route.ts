@@ -30,6 +30,14 @@ const getShareUrl = (platform: string, content: string) => {
   }
 };
 
+const formatContent = (content: string) => {
+  return content
+    .split('\n')
+    .filter(paragraph => paragraph.trim() !== '')
+    .map(paragraph => `<p style="margin: 0;">${paragraph}</p>`)
+    .join('');
+};
+
 export async function POST(req: NextRequest) {
   if (!process.env.MAILGUN_DOMAIN || !process.env.MAILGUN_API_KEY) {
     console.error('Missing Mailgun configuration');
@@ -77,7 +85,7 @@ export async function POST(req: NextRequest) {
     .subtitle {
       margin: 0 0 8px 0;
       color: #666666;
-      text-size: 1.5rem;
+      font-size: 1.2rem;
     }
     .schedule-id {
       margin: 0 0 24px 0;
@@ -85,7 +93,7 @@ export async function POST(req: NextRequest) {
       color: #666666;
     }
     .post-card {
-      margin-bottom: 24px;
+      margin-bottom: 16px;
       border: 1px solid #e5e5e5;
       border-radius: 8px;
       overflow: hidden;
@@ -117,8 +125,8 @@ export async function POST(req: NextRequest) {
     }
     .button-group {
       padding: 16px;
-      border-top: 1px solid #e5e5e5;
-      background-color: #ffffff;
+     
+      
     }
     .button-primary {
       display: inline-block;
@@ -134,8 +142,8 @@ export async function POST(req: NextRequest) {
       display: inline-block;
       padding: 8px 16px;
       background-color: #f5f5f5;
-      color: #ffffff;
-      text-decoration: none;
+      color: #0A0A0A;
+      text-decoration: none !important;
       border-radius: 6px;
       border: 1px solid #e5e5e5;
       font-size: 14px;
@@ -166,9 +174,9 @@ export async function POST(req: NextRequest) {
           </div>
           
           <div class="content-box">
-            <p style="margin: 0;">${post.content}</p>
+            ${formatContent(post.content)}
           </div>
-        </div>"
+        </div>
       
         
         <div class="button-group">

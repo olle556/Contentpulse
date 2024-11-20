@@ -13,12 +13,16 @@ import {
   FormLabel,
 } from "@/components/ui/form";
 import { Switch } from "@/components/ui/switch";
+import { useState } from "react";
+import { toast } from "sonner";
 
 const notificationFormSchema = z.object({
   postScheduleReminders: z.boolean(),
 });
 
 export function NotificationSettings() {
+  const [isLoading, setIsLoading] = useState(false);
+
   const form = useForm<z.infer<typeof notificationFormSchema>>({
     resolver: zodResolver(notificationFormSchema),
     defaultValues: {
@@ -27,6 +31,7 @@ export function NotificationSettings() {
   });
 
   async function onSubmit(values: z.infer<typeof notificationFormSchema>) {
+    setIsLoading(true);
     try {
       const response = await fetch('/api/user/preferences', {
         method: 'POST',
@@ -41,8 +46,13 @@ export function NotificationSettings() {
       if (!response.ok) {
         throw new Error('Failed to update preferences');
       }
+      
+      toast.success("Preferences updated successfully");
     } catch (error) {
       console.error('Error updating preferences:', error);
+      toast.error("Failed to update preferences");
+    } finally {
+      setIsLoading(false);
     }
   }
 
@@ -69,7 +79,9 @@ export function NotificationSettings() {
             </FormItem>
           )}
         />
-        <Button type="submit">Save Preferences</Button>
+        <Button type="submit" disabled={isLoading}>
+          {isLoading ? "Saving..." : "Save Preferences"}
+        </Button>
       </form>
     </Form>
   );
