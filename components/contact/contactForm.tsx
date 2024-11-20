@@ -77,6 +77,11 @@ export function ContactForm({ defaultTab }: ContactFormProps) {
         <Form {...form}>
             <form onSubmit={form.handleSubmit(onSubmit)} className="space-y-6">
                 <div className="space-y-4">
+                    <FormDescription className="max-w-[50%]">
+                        {form.watch("isFeedback")
+                            ? "We love your feedback! Please share your thoughts about Content Pulse! Are there any features you would like to see? Or, do you have any suggestions for improvements?"
+                            : "Have a question? We're here to help! Write your question below and we will get back to you as soon as possible."}
+                    </FormDescription>
                     <FormField
                         control={form.control}
                         name="name"
@@ -111,11 +116,7 @@ export function ContactForm({ defaultTab }: ContactFormProps) {
                                 <FormLabel>
                                     {form.watch("isFeedback") ? "Feedback" : "Question"}
                                 </FormLabel>
-                                <FormDescription>
-                                    {form.watch("isFeedback")
-                                        ? "We appreciate your feedback! Please share your thoughts about Content Pulse."
-                                        : "Have a question? We're here to help! Please provide as much detail as possible."}
-                                </FormDescription>
+
                                 <FormControl>
                                     <Textarea
                                         placeholder={form.watch("isFeedback")
@@ -131,7 +132,11 @@ export function ContactForm({ defaultTab }: ContactFormProps) {
                 </div>
 
                 <Button type="submit" disabled={isLoading}>
-                    {isLoading ? "Sending..." : "Send Message"}
+                    {isLoading 
+                        ? "Sending..." 
+                        : form.watch("isFeedback") 
+                            ? "Send Feedback" 
+                            : "Send Question"}
                 </Button>
             </form>
         </Form>

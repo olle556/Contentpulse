@@ -18,6 +18,7 @@ const getShareUrl = (platform: string, content: string) => {
   switch (platform.toLowerCase()) {
     case 'twitter':
     case 'x':
+    case 'X Premium':
       return `https://twitter.com/intent/tweet?text=${encodeURIComponent(content)}`;
     case 'threads':
       return `https://threads.net/intent/post?text=${encodeURIComponent(content)}`;
@@ -180,7 +181,7 @@ export async function POST(req: NextRequest) {
       
         
         <div class="button-group">
-          <a href="${getShareUrl(post.platform, post.content)}" target="_blank" class="button-secondary">🔗 Share on ${post.platform}</a>
+          <a href="${getShareUrl(post.platform, post.content)}" style="color: #0A0A0A;" target="_blank" class="button-secondary">🔗 Share on ${post.platform}</a>
         </div>
       </div>
     `).join('')}
