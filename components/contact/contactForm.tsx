@@ -25,7 +25,11 @@ const contactFormSchema = z.object({
   isFeedback: z.boolean(),
 });
 
-export function ContactForm() {
+interface ContactFormProps {
+  defaultTab: 'feedback' | 'question';
+}
+
+export function ContactForm({ defaultTab }: ContactFormProps) {
   const [isLoading, setIsLoading] = useState(false);
 
   const form = useForm<z.infer<typeof contactFormSchema>>({
@@ -34,7 +38,7 @@ export function ContactForm() {
       name: "",
       email: "",
       message: "",
-      isFeedback: true,
+      isFeedback: defaultTab === 'feedback',
     },
   });
 
@@ -71,27 +75,6 @@ export function ContactForm() {
   return (
     <Form {...form}>
       <form onSubmit={form.handleSubmit(onSubmit)} className="space-y-6">
-        <FormField
-          control={form.control}
-          name="isFeedback"
-          render={({ field }) => (
-            <FormItem className="flex flex-row items-center justify-between rounded-lg border p-4">
-              <div className="space-y-0.5">
-                <FormLabel className="text-base">Message Type</FormLabel>
-                <FormDescription>
-                  Switch between feedback and question
-                </FormDescription>
-              </div>
-              <FormControl>
-                <Switch
-                  checked={field.value}
-                  onCheckedChange={field.onChange}
-                />
-              </FormControl>
-            </FormItem>
-          )}
-        />
-
         <div className="space-y-4">
           <FormField
             control={form.control}

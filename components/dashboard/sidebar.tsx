@@ -11,6 +11,7 @@ import {
   Calendar,
   LayoutDashboard,
   Palette,
+  MessageCircle,
 } from "lucide-react";
 
 const navigation = [
@@ -19,8 +20,8 @@ const navigation = [
   { name: "Content Sources", href: "/dashboard/sources", icon: LinkIcon },
   { name: "Generated Posts", href: "/dashboard/posts", icon: PenTool },
   { name: "Schedule", href: "/dashboard/schedule", icon: Calendar },
-
   { name: "Settings", href: "/dashboard/settings", icon: Settings },
+  { name: "Contact", href: "/dashboard/contact", icon: MessageCircle },
 ];
 
 export function Sidebar({ mobile, onNavigate }: { mobile?: boolean, onNavigate?: () => void }) {
