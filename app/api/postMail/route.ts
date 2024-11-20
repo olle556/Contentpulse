@@ -152,10 +152,8 @@ export async function POST(req: NextRequest) {
     
     <p class="subtitle">
       Here ${generatedPosts.length > 1 ? 'are your generated posts' : 'is your generated post'} for ${currentDate} based on 
-      <a href="${sourceUrl}" style="color: #0A0A0A; text-decoration: underline;">${sourceUrl}</a>
+      <a href="${sourceUrl}" style="color: #0A0A0A; text-decoration: underline;">${new URL(sourceUrl).hostname.replace('www.', '')}</a>
     </p>
-    
-    <p class="schedule-id">Schedule ID: ${scheduleId}</p>
 
     ${generatedPosts.map((post: GeneratedPost, index: number) => `
       <div class="post-card">
@@ -168,10 +166,11 @@ export async function POST(req: NextRequest) {
           <div class="content-box">
             <p style="margin: 0;">${post.content}</p>
           </div>
-        </div>
+        </div>"
+      
         
         <div class="button-group">
-          <a href="#" onclick="copyContent(${index}); return false;" class="button-primary">📋 Copy Content</a>
+          <a href="#" onclick="selectContent(${index}); return false;" class="button-primary">📋 Copy Content</a>
           <a href="${getShareUrl(post.platform, post.content)}" target="_blank" class="button-secondary">🔗 Share on ${post.platform}</a>
         </div>
       </div>
