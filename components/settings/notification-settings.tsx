@@ -15,26 +15,35 @@ import {
 import { Switch } from "@/components/ui/switch";
 
 const notificationFormSchema = z.object({
-  emailNotifications: z.boolean(),
-  pushNotifications: z.boolean(),
   postScheduleReminders: z.boolean(),
-  performanceUpdates: z.boolean(),
 });
 
 export function NotificationSettings() {
   const form = useForm<z.infer<typeof notificationFormSchema>>({
     resolver: zodResolver(notificationFormSchema),
     defaultValues: {
-      emailNotifications: true,
-      pushNotifications: true,
       postScheduleReminders: true,
-      performanceUpdates: true,
     },
   });
 
-  function onSubmit(values: z.infer<typeof notificationFormSchema>) {
-    // Submit to your API here
-    console.log(values);
+  async function onSubmit(values: z.infer<typeof notificationFormSchema>) {
+    try {
+      const response = await fetch('/api/user/preferences', {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json',
+        },
+        body: JSON.stringify({
+          notificationOn: values.postScheduleReminders
+        }),
+      });
+
+      if (!response.ok) {
+        throw new Error('Failed to update preferences');
+      }
+    } catch (error) {
+      console.error('Error updating preferences:', error);
+    }
   }
 
   return (
@@ -42,35 +51,13 @@ export function NotificationSettings() {
       <form onSubmit={form.handleSubmit(onSubmit)} className="space-y-6">
         <FormField
           control={form.control}
-          name="emailNotifications"
-          render={({ field }) => (
-            <FormItem className="flex flex-row items-center justify-between rounded-lg border p-4">
-              <div className="space-y-0.5">
-                <FormLabel className="text-base">Email Notifications</FormLabel>
-                <FormDescription>
-                  Receive email notifications about your account activity.
-                </FormDescription>
-              </div>
-              <FormControl>
-                <Switch
-                  checked={field.value}
-                  onCheckedChange={field.onChange}
-                />
-              </FormControl>
-            </FormItem>
-          )}
-        />
-
-
-        <FormField
-          control={form.control}
           name="postScheduleReminders"
           render={({ field }) => (
             <FormItem className="flex flex-row items-center justify-between rounded-lg border p-4">
               <div className="space-y-0.5">
-                <FormLabel className="text-base">Schedule Reminders</FormLabel>
+                <FormLabel className="text-base">Post Generation Notification</FormLabel>
                 <FormDescription>
-                  Get reminded when new posts have been generated.
+                  Get your schedule generated posts sent to your email.
                 </FormDescription>
               </div>
               <FormControl>

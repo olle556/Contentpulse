@@ -77,6 +77,7 @@ export async function POST(req: NextRequest) {
     .subtitle {
       margin: 0 0 8px 0;
       color: #666666;
+      text-size: 1.5rem;
     }
     .schedule-id {
       margin: 0 0 24px 0;
@@ -101,6 +102,7 @@ export async function POST(req: NextRequest) {
     .platform-label {
       font-weight: 600;
       color: #0A0A0A;
+      font-size: 1.5rem;
     }
     .date {
       color: #666666;
@@ -132,7 +134,7 @@ export async function POST(req: NextRequest) {
       display: inline-block;
       padding: 8px 16px;
       background-color: #f5f5f5;
-      color: #0A0A0A;
+      color: #ffffff;
       text-decoration: none;
       border-radius: 6px;
       border: 1px solid #e5e5e5;
@@ -148,10 +150,10 @@ export async function POST(req: NextRequest) {
 </head>
 <body>
   <div class="container">
-    <h1>Your Generated ${generatedPosts.length > 1 ? 'posts are' : 'post is'} Ready!</h1>
+    <h1>Your Generated ${generatedPosts.length > 1 ? 'Posts are' : 'Post is'} Ready!</h1>
     
     <p class="subtitle">
-      Here ${generatedPosts.length > 1 ? 'are your generated posts' : 'is your generated post'} for ${currentDate} based on 
+      Here ${generatedPosts.length > 1 ? 'are your generated posts' : 'is your generated post'} for ${currentDate} based on the latest news from
       <a href="${sourceUrl}" style="color: #0A0A0A; text-decoration: underline;">${new URL(sourceUrl).hostname.replace('www.', '')}</a>
     </p>
 
@@ -159,8 +161,8 @@ export async function POST(req: NextRequest) {
       <div class="post-card">
         <div class="post-content">
           <div class="post-header">
-            <span class="platform-label">Platform: ${post.platform}</span>
-            <span class="date">${currentDate}</span>
+            <span class="platform-label"> ${post.platform}</span>
+            
           </div>
           
           <div class="content-box">
@@ -170,14 +172,13 @@ export async function POST(req: NextRequest) {
       
         
         <div class="button-group">
-          <a href="#" onclick="selectContent(${index}); return false;" class="button-primary">📋 Copy Content</a>
           <a href="${getShareUrl(post.platform, post.content)}" target="_blank" class="button-secondary">🔗 Share on ${post.platform}</a>
         </div>
       </div>
     `).join('')}
 
     <p class="footer">
-      You can view and edit your ${generatedPosts.length > 1 ? 'posts' : 'post'} in your 
+      You can view, edit and copy your ${generatedPosts.length > 1 ? 'posts' : 'post'} in your 
       <a href="${process.env.NEXTAUTH_URL}/dashboard/posts" style="color: #0A0A0A; text-decoration: underline;">Content Pulse dashboard</a>
     </p>
   </div>

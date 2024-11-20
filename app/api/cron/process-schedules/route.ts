@@ -217,23 +217,31 @@ export async function GET(req: NextRequest) {
 
           // Send single email with all generated posts
           if (generatedPosts.length > 0) {
-            try {
-              await fetch(`${baseUrl}/api/postMail`, {
-                method: 'POST',
-                headers: {
-                  'Content-Type': 'application/json',
-                },
-                body: JSON.stringify({
-                  email: schedule.user.email,
-                  userId: schedule.userId,
-                  generatedPosts: generatedPosts,
-                  scheduleId: schedule.id,
-                  sourceUrl: source.url
-                }),
-              });
-              console.log(`Email notification sent for schedule ${schedule.id}`);
-            } catch (emailError) {
-              console.error(`Failed to send email notification:`, emailError);
+            // Check user's notification preference
+            const userPreferences = schedule.user.preferences as { notificationOn?: boolean } | null;
+            const notificationsEnabled = userPreferences?.notificationOn ?? true; // Default to true if not set
+
+            if (notificationsEnabled) {
+              try {
+                await fetch(`${baseUrl}/api/postMail`, {
+                  method: 'POST',
+                  headers: {
+                    'Content-Type': 'application/json',
+                  },
+                  body: JSON.stringify({
+                    email: schedule.user.email,
+                    userId: schedule.userId,
+                    generatedPosts: generatedPosts,
+                    scheduleId: schedule.id,
+                    sourceUrl: source.url
+                  }),
+                });
+                console.log(`Email notification sent for schedule ${schedule.id}`);
+              } catch (emailError) {
+                console.error(`Failed to send email notification:`, emailError);
+              }
+            } else {
+              console.log(`Email notification skipped for schedule ${schedule.id} - notifications disabled`);
             }
           }
 
