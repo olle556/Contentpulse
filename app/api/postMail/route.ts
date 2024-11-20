@@ -76,83 +76,94 @@ export async function POST(req: NextRequest) {
   <style>
     :root {
       --background: #ffffff;
-      --foreground: #0A0A0A;
-      --muted: #f5f5f5;
-      --muted-foreground: #737373;
-      --border: #e5e5e5;
-      --primary: #0A0A0A;
-      --primary-foreground: #fafafa;
+      --foreground: #020817;      /* slate-950 */
+      --muted: #f1f5f9;          /* slate-100 */
+      --muted-foreground: #64748b; /* slate-500 */
+      --border: #e2e8f0;         /* slate-200 */
+      --primary: #020817;         /* slate-950 */
+      --primary-foreground: #ffffff;
+      --card: #ffffff;
+      --accent: #f1f5f9;         /* slate-100 */
+      --accent-foreground: #020817; /* slate-950 */
     }
     
     body {
       font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, 'Helvetica Neue', Arial, sans-serif;
-      padding: 24px;
-      color: var(--foreground);
+      padding: 32px;
       background: var(--background);
       line-height: 1.5;
       margin: 0;
     }
 
     .container {
-      max-width: 600px;
+      max-width: 42rem; /* equivalent to max-w-2xl */
       margin: 0 auto;
     }
 
-    h2 {
-      font-size: 24px;
-      font-weight: 600;
-      margin-bottom: 16px;
-      color: #2563eb;
+    h1 {
+      font-size: 30px;
+      font-weight: 700;
+      letter-spacing: -0.025em;
+      margin-bottom: 8px;
+      color: var(--foreground);
     }
 
     .post-card {
       border: 1px solid var(--border);
       border-radius: 8px;
-      padding: 24px;
+      background: var(--card);
+      box-shadow: 0 1px 2px rgba(0, 0, 0, 0.05);
       margin-bottom: 24px;
-      background: var(--background);
     }
 
-    .platform-label {
-      font-size: 16px;
-      font-weight: 500;
-      color: var(--foreground);
-      margin-bottom: 12px;
+    .post-header {
+      display: flex;
+      padding: 24px;
     }
 
     .content-box {
       background: var(--muted);
       padding: 16px;
       border-radius: 6px;
-      margin-bottom: 16px;
-      white-space: pre-wrap;
-      font-family: inherit;
+      margin: 0 24px;
+      font-size: 14px;
       line-height: 1.6;
     }
 
     .button-group {
+      border-top: 1px solid var(--border);
+      padding: 16px 24px;
       display: flex;
       gap: 8px;
     }
 
-    .button {
-      display: inline-flex;
-      align-items: center;
+    .button-primary {
+      background: var(--primary);
+      color: #ffffff;
       padding: 8px 16px;
       border-radius: 6px;
       font-size: 14px;
       font-weight: 500;
       text-decoration: none;
-      cursor: pointer;
-      background: var(--muted);
-      color: var(--foreground);
+    }
+
+    .button-secondary {
+      background: var(--background);
       border: 1px solid var(--border);
+      color: var(--foreground);
+      padding: 8px 16px;
+      border-radius: 6px;
+      font-size: 14px;
+      font-weight: 500;
+      text-decoration: none;
     }
 
     .footer {
-      margin-top: 32px;
-      padding-top: 16px;
-      border-top: 1px solid var(--border);
+      text-align: center;
+      padding: 16px;
+      border: 1px solid var(--border);
+      border-radius: 8px;
+      background: var(--card);
       color: var(--muted-foreground);
       font-size: 14px;
     }
@@ -160,14 +171,14 @@ export async function POST(req: NextRequest) {
 </head>
 <body>
   <div class="container">
-    <h2>Your Generated ${generatedPosts.length > 1 ? 'posts are' : 'post is'} Ready!</h2>
-    <p>Here ${generatedPosts.length > 1 ? 'are your generated posts' : 'is your generated post'} for ${currentDate} based on <a href="${sourceUrl}" style="color: #2563eb;">${sourceUrl}</a></p>
+    <h1>Your Generated ${generatedPosts.length > 1 ? 'posts are' : 'post is'} Ready!</h1>
+    <p>Here ${generatedPosts.length > 1 ? 'are your generated posts' : 'is your generated post'} for ${currentDate} based on <a href="${sourceUrl}" style="color: #0A0A0A;">${sourceUrl}</a></p>
     <p style="color: var(--muted-foreground);">Schedule ID: ${scheduleId}</p>
     
     ${postsHtml}
     
     <div class="footer">
-      <p>You can view and edit your ${generatedPosts.length > 1 ? 'posts' : 'post'} in your <a href="${process.env.NEXTAUTH_URL}/dashboard/posts" style="color: #2563eb;">Content Pulse dashboard</a>.</p>
+      <p>You can view and edit your ${generatedPosts.length > 1 ? 'posts' : 'post'} in your <a href="${process.env.NEXTAUTH_URL}/dashboard/posts" style="color: #0A0A0A;">Content Pulse dashboard</a>.</p>
     </div>
   </div>
   <script>
