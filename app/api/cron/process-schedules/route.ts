@@ -245,7 +245,7 @@ export async function GET(req: NextRequest) {
             }
           }
 
-          // Delete one-time schedule if needed
+          // Move deletion here, after all processing is successful
           if (!schedule.isRecurring) {
             await prisma.contentSchedule.delete({
               where: { id: schedule.id }
@@ -255,6 +255,7 @@ export async function GET(req: NextRequest) {
 
         } catch (error) {
           console.error(`Failed to process schedule ${schedule.id}:`, error);
+          // Error occurred, schedule won't be deleted
         } finally {
           clearTimeout(timeoutId);
         }

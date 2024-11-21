@@ -5,16 +5,8 @@ import { getServerSession } from "next-auth/next";
 import { authOptions } from "@/lib/auth-options";
 import { getRelevantBrandContext } from '@/utils/getBrandContext';
 
-// Map platform names to standardized values
-const platformMapping = {
-  'X': 'twitter',
-  'X Premium': 'twitter_premium',
-  'twitter': 'twitter',
-  'twitter_premium': 'twitter_premium'
-};
-
 // At the top with other constants
-const THREAD_ENABLED_PLATFORMS = ['twitter', 'twitter_premium', 'threads'];
+const THREAD_ENABLED_PLATFORMS = ['twitter', 'x', 'threads', 'twitter_premium', 'x premium', 'x_premium'];
 
 export async function GET() {
   return NextResponse.json({ status: 'Route is working' });
@@ -29,15 +21,19 @@ export async function POST(request: Request) {
   try {
     // Read request body once at the beginning
     const requestData = await request.json();
-    const { sourceUrl, platform, tone, useEmojis, userId: cronUserId , aiInstructions, threadCount } = requestData;
+    const { sourceUrl, platform, tone, useEmojis, userId: cronUserId, aiInstructions, threadCount } = requestData;
 
-    // Map the platform to its standardized name
-    const standardizedPlatform = platformMapping[platform as keyof typeof platformMapping] || platform.toLowerCase(); // dtnadardiz eplatform name
+    // Simplify platform handling - use platform directly without mapping
+    const displayPlatform = platform.toLowerCase() === 'twitter'
+      ? 'x'
+      : platform.toLowerCase() === 'twitter_premium' || platform.toLowerCase() === 'x premium'
+        ? 'x_premium'
+        : platform.toLowerCase();
 
     // Check if request is from cron job
     const authHeader = request.headers.get('authorization');
     const isCronRequest = authHeader === `Bearer ${process.env.CRON_SECRET}`;
-    
+
     let userId: string;
 
     if (isCronRequest) {
@@ -68,7 +64,7 @@ export async function POST(request: Request) {
 
     // Get base URL with fallback
     const baseUrl = process.env.NEXT_PUBLIC_BASE_URL || 'http://localhost:3000';
-    
+
     // 1. First, scrape the content using Firecrawl
     const scrapeUrl = `${baseUrl}/api/firecrawl`;
 
@@ -105,16 +101,20 @@ export async function POST(request: Request) {
 
     // 2. Create a platform-specific prompt
     const platformLimits = {
+      x: '280 characters',
       twitter: '280 characters',
+      x_premium: '25000 characters, but aim for concise content',
       twitter_premium: '25000 characters, but aim for concise content',
       linkedin: '3000 characters',
       facebook: 'no strict limit, but aim for concise content',
       threads: '500 characters',
     };
 
-    const threadInstructions = THREAD_ENABLED_PLATFORMS.includes(standardizedPlatform)
-      ? `\nThreads Explanation:
-Sometimes we need more than one post to express ourselves. A thread is a series of connected posts from one person. With a thread you can provide additional context, an update, or an extended point by connecting multiple posts together.
+    const isThreadEnabled = THREAD_ENABLED_PLATFORMS.includes(platform.toLowerCase()) && threadCount > 1;
+    const threadInstructions = isThreadEnabled
+      ? `\n
+      Threads Explanation:
+Generate a thread of ${threadCount} connected posts. A thread is a series of connected posts from one person. With a thread you can provide additional context, an update, or an extended point by connecting multiple posts together.
 
 Please create exactly ${threadCount} connected posts that form a coherent thread. Each post should be able to stand alone but also flow naturally into the next post. Separate each post with "Thread X" where X is the thread number (1 to ${threadCount}).
 
@@ -125,10 +125,11 @@ The first post in the thread should be a hook to get the reader interested in th
 
 Every single word in your hook should help with one of these two goals, otherwise, you should cut the word.
 
-Each individual post must respect the platform's character limit (${platformLimits[standardizedPlatform as keyof typeof platformLimits]}).`
+Each individual post in the thread must respect the platform's character limit! Here is the character limit for each post in the thread: (${platformLimits[displayPlatform as keyof typeof platformLimits]}).`
       : '';
 
-    const prompt = `You are a social media content creator. Your task is to create an engaging ${standardizedPlatform} post using a ${tone} tone based on the following brand context and source material.
+    const prompt =
+`You are a social media content creator. Your task is to create an engaging ${displayPlatform} ${isThreadEnabled ? 'thread' : 'post'} using a ${tone} tone based on the following brand context, scraped content, instructions, and guidance.
 
 Brand Context:
 ${brandInfo}
@@ -137,12 +138,14 @@ Source URL: ${sourceUrl}
 Scraped Content:
 ${scrapedContent}
 
-${aiInstructions ? `Special Instructions:
+${aiInstructions ? `Special Instructions from the user:
 ${aiInstructions}
 ` : ''}
 
-Instructions:
-1. Create a single, engaging post for ${standardizedPlatform} (limit: ${platformLimits[standardizedPlatform as keyof typeof platformLimits]})
+${threadInstructions}
+
+Instructions for each individual post:
+1. Create an engaging post for ${displayPlatform} (limit: ${platformLimits[displayPlatform as keyof typeof platformLimits]})
 2. Maintain the brand voice and ${tone} tone throughout
 3. Include key information that aligns with the brand's mission and USP
 4. Make it conversational and engaging while staying true to brand identity
@@ -151,32 +154,27 @@ Instructions:
 7. For Facebook, aim for engaging, shareable content that builds brand awareness
 8. For Threads, create concise, discussion-worthy content that reflects brand values
 ${useEmojis ? '9. Include relevant emojis throughout the post to enhance engagement and readability' : '9. Do not use any emojis in the post'}
-
-${threadInstructions}
+10. Use the language stated in the brand context.
+11. In your answer, exclude any explanation of your task to generate the post, any answer that is not related to the post, the name of the source URL, and any meta-reference about the brand information.
 
 Additional tone guidance for "${tone}":
 ${tone === 'professional' ? '- Use industry-appropriate terminology\n- Maintain business etiquette\n- Focus on value and insights' :
-  tone === 'casual' ? '- Use conversational language\n- Be friendly and approachable\n- Use common expressions' :
-  tone === 'funny' ? '- Include appropriate humor\n- Use wordplay or puns if relevant\n- Keep it light but informative' :
-  tone === 'creative' ? '- Use unique perspectives\n- Include metaphors or analogies\n- Be imaginative in presentation' :
-  tone === 'formal' ? '- Use formal language\n- Maintain strict professionalism\n- Focus on facts and accuracy' :
-  tone === 'inspirational' ? '- Motivate and encourage the audience\n- Use positive, uplifting language\n- Focus on potential and growth' :
-  tone === 'educational' ? '- Provide clear, informative content\n- Use straightforward language\n- Focus on delivering value' :
-  tone === 'empathetic' ? '- Show understanding and compassion\n- Use supportive language\n- Focus on connecting with the audience' :
-  tone === 'playful' ? '- Use lighthearted language\n- Incorporate fun expressions\n- Keep it cheerful and relaxed' :
-  tone === 'persuasive' ? '- Use compelling language\n- Emphasize benefits and value\n- Aim to convince and inspire action' :
-  tone === 'technical' ? '- Use precise, industry-specific language\n- Provide detailed explanations\n- Keep it informative and accurate' :
-  tone === 'neutral' ? '- Maintain an objective perspective\n- Use balanced language\n- Avoid bias or strong opinions' :
-  '- Keep the language warm and approachable\n- Foster a sense of community\n- Use friendly expressions'}
+        tone === 'casual' ? '- Use conversational language\n- Be friendly and approachable\n- Use common expressions' :
+          tone === 'funny' ? '- Include appropriate humor\n- Use wordplay or puns if relevant\n- Keep it light but informative' :
+            tone === 'creative' ? '- Use unique perspectives\n- Include metaphors or analogies\n- Be imaginative in presentation' :
+              tone === 'formal' ? '- Use formal language\n- Maintain strict professionalism\n- Focus on facts and accuracy' :
+                tone === 'inspirational' ? '- Motivate and encourage the audience\n- Use positive, uplifting language\n- Focus on potential and growth' :
+                  tone === 'educational' ? '- Provide clear, informative content\n- Use straightforward language\n- Focus on delivering value' :
+                    tone === 'empathetic' ? '- Show understanding and compassion\n- Use supportive language\n- Focus on connecting with the audience' :
+                      tone === 'playful' ? '- Use lighthearted language\n- Incorporate fun expressions\n- Keep it cheerful and relaxed' :
+                        tone === 'persuasive' ? '- Use compelling language\n- Emphasize benefits and value\n- Aim to convince and inspire action' :
+                          tone === 'technical' ? '- Use precise, industry-specific language\n- Provide detailed explanations\n- Keep it informative and accurate' :
+                            tone === 'neutral' ? '- Maintain an objective perspective\n- Use balanced language\n- Avoid bias or strong opinions' :
+                              '- Keep the language warm and approachable\n- Foster a sense of community\n- Use friendly expressions'}
 ${useEmojis ? '\n\n#### Emoji usage:\n- Use emojis naturally and strategically\n- Don\'t overuse emojis\n- Ensure emojis complement the message' : ''}
 
-In your answer, exclude the following:
-Any explanation of the content, just the post.
-Any answer that is not the post.
-Any reference to the source URL.
-Any reference to the brand context.
 
-Please generate the post now:`;
+Please generate the ${isThreadEnabled ? 'thread' : 'post'} now:`;
 
     // 3. Generate post using Claude
     const message = await anthropic.messages.create({
@@ -198,7 +196,7 @@ Please generate the post now:`;
       const savedPost = await prisma.generatedPost.create({
         data: {
           content: generatedContent,
-          platform: standardizedPlatform,
+          platform: platform,
           status: 'generated',
           userId: userId,
         },
