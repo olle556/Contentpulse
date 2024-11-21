@@ -19,8 +19,8 @@ import { useState } from "react";
 import { toast } from "sonner";
 
 const contactFormSchema = z.object({
-    name: z.string().min(2, "Name must be at least 2 characters"),
-    email: z.string().email("Invalid email address"),
+    name: z.string().min(2, "Name must be at least 2 characters").optional(),
+    email: z.string().email("Invalid email address").optional(),
     message: z.string().min(5, "Message must be at least 5 characters"),
     isFeedback: z.boolean(),
 });
@@ -87,7 +87,7 @@ export function ContactForm({ defaultTab }: ContactFormProps) {
                         name="name"
                         render={({ field }) => (
                             <FormItem>
-                                <FormLabel>Name</FormLabel>
+                                <FormLabel>Name (optional)</FormLabel>
                                 <FormControl>
                                     <Input placeholder="Your name" {...field} />
                                 </FormControl>
@@ -100,7 +100,7 @@ export function ContactForm({ defaultTab }: ContactFormProps) {
                         name="email"
                         render={({ field }) => (
                             <FormItem>
-                                <FormLabel>Email</FormLabel>
+                                <FormLabel>Email (optional)</FormLabel>
                                 <FormControl>
                                     <Input placeholder="your.email@example.com" {...field} />
                                 </FormControl>
