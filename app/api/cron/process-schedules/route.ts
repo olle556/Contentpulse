@@ -49,10 +49,17 @@ const generatePostWithTimeout = async (params: {
 
   try {
     // Ensure threadCount is properly passed for supported platforms
-    const platformsWithThreads = ['twitter', 'twitter_premium', 'threads', 'X', 'X Premium'];
+    const platformsWithThreads = ['twitter', 'twitter_premium', 'threads', 'x', 'x premium'];
     const finalThreadCount = platformsWithThreads.includes(params.platform.toLowerCase()) 
       ? params.threadCount 
       : 1;
+
+    console.log({
+      platformLower: params.platform.toLowerCase(),
+      isIncluded: platformsWithThreads.includes(params.platform.toLowerCase()),
+      threadCount: params.threadCount,
+      finalThreadCount
+    });
 
     const response = await fetch(`${params.baseUrl}/api/generate-post`, {
       method: 'POST',
@@ -61,8 +68,14 @@ const generatePostWithTimeout = async (params: {
         'Authorization': `Bearer ${process.env.CRON_SECRET}`,
       },
       body: JSON.stringify({
-        ...params,
+        sourceUrl: params.sourceUrl,
+        platform: params.platform,
+        tone: params.tone,
+        useEmojis: params.useEmojis,
+        userId: params.userId,
+        instructions: params.instructions,
         threadCount: finalThreadCount,
+        scrapedContent: params.scrapedContent
       }),
       signal: controller.signal,
     });
