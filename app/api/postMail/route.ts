@@ -18,6 +18,7 @@ const getShareUrl = (platform: string, content: string) => {
   switch (platform.toLowerCase()) {
     case 'twitter':
     case 'x':
+    case 'X Premium':
       return `https://twitter.com/intent/tweet?text=${encodeURIComponent(content)}`;
     case 'threads':
       return `https://threads.net/intent/post?text=${encodeURIComponent(content)}`;
@@ -28,6 +29,14 @@ const getShareUrl = (platform: string, content: string) => {
     default:
       return '#';
   }
+};
+
+const formatContent = (content: string) => {
+  return content
+    .split('\n')
+    .filter(paragraph => paragraph.trim() !== '')
+    .map(paragraph => `<p style="margin: 0;">${paragraph}</p>`)
+    .join('');
 };
 
 export async function POST(req: NextRequest) {
@@ -49,126 +58,138 @@ export async function POST(req: NextRequest) {
       day: 'numeric'
     });
 
-    const postsHtml = generatedPosts
-      .map((post: GeneratedPost, index: number) => `
-        <div class="post-card">
-          <div class="platform-label">Platform: ${post.platform}</div>
-          <div class="content-box">
-            ${post.content}
-          </div>
-          <div class="button-group">
-            <button onclick="copyContent(${index})" class="button">
-              📋 Copy Content
-            </button>
-            <a href="${getShareUrl(post.platform, post.content)}" 
-               target="_blank" 
-               class="button">
-              🔗 Share on ${post.platform}
-            </a>
-          </div>
-        </div>
-      `)
-      .join('');
-
     const emailHtml = `<!DOCTYPE html>
 <html>
 <head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Your Generated ${generatedPosts.length > 1 ? 'posts are' : 'post is'} Ready!</title>
   <style>
-    :root {
-      --background: #ffffff;
-      --foreground: #0A0A0A;
-      --muted: #f5f5f5;
-      --muted-foreground: #737373;
-      --border: #e5e5e5;
-      --primary: #0A0A0A;
-      --primary-foreground: #fafafa;
-    }
-    
     body {
-      font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, 'Helvetica Neue', Arial, sans-serif;
-      padding: 24px;
-      color: var(--foreground);
-      background: var(--background);
-      line-height: 1.5;
       margin: 0;
+      padding: 20px;
+      font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, 'Helvetica Neue', Arial, sans-serif;
+      line-height: 1.5;
+      color: #0A0A0A;
+      background-color: #ffffff;
     }
-
     .container {
       max-width: 600px;
       margin: 0 auto;
     }
-
-    h2 {
-      font-size: 24px;
-      font-weight: 600;
-      margin-bottom: 16px;
-      color: #2563eb;
+    h1 {
+      margin: 0 0 16px 0;
+      font-size: 32px;
+      font-weight: 700;
+      color: #0A0A0A;
     }
-
+    .subtitle {
+      margin: 0 0 8px 0;
+      color: #666666;
+      font-size: 1.2rem;
+    }
+    .schedule-id {
+      margin: 0 0 24px 0;
+      font-size: 14px;
+      color: #666666;
+    }
     .post-card {
-      border: 1px solid var(--border);
+      margin-bottom: 16px;
+      border: 1px solid #e5e5e5;
       border-radius: 8px;
-      padding: 24px;
-      margin-bottom: 24px;
-      background: var(--background);
+      overflow: hidden;
     }
-
+    .post-content {
+      padding: 20px;
+    }
+    .post-header {
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      margin-bottom: 16px;
+    }
     .platform-label {
-      font-size: 16px;
-      font-weight: 500;
-      color: var(--foreground);
-      margin-bottom: 12px;
+      font-weight: 600;
+      color: #0A0A0A;
+      font-size: 1.5rem;
     }
-
+    .date {
+      color: #666666;
+    }
     .content-box {
-      background: var(--muted);
       padding: 16px;
+      background-color: #f5f5f5;
       border-radius: 6px;
       margin-bottom: 16px;
-      white-space: pre-wrap;
-      font-family: inherit;
+      font-size: 14px;
       line-height: 1.6;
     }
-
     .button-group {
-      display: flex;
-      gap: 8px;
+      padding: 8px;
+     
+      
     }
-
-    .button {
-      display: inline-flex;
-      align-items: center;
+    .button-primary {
+      display: inline-block;
       padding: 8px 16px;
+      margin-right: 8px;
+      background-color: #0A0A0A;
+      color: #ffffff;
+      text-decoration: none;
       border-radius: 6px;
       font-size: 14px;
-      font-weight: 500;
-      text-decoration: none;
-      cursor: pointer;
-      background: var(--muted);
-      color: var(--foreground);
-      border: 1px solid var(--border);
     }
-
-    .footer {
-      margin-top: 32px;
-      padding-top: 16px;
-      border-top: 1px solid var(--border);
-      color: var(--muted-foreground);
+    .button-secondary {
+      display: inline-block;
+      padding: 8px 16px;
+      background-color: #f5f5f5;
+      color: #0A0A0A;
+      text-decoration: none !important;
+      border-radius: 6px;
+      border: 1px solid #e5e5e5;
       font-size: 14px;
+    }
+    .footer {
+      margin: 24px 0 0 0;
+      text-align: center;
+      font-size: 14px;
+      color: #666666;
     }
   </style>
 </head>
 <body>
   <div class="container">
-    <h2>Your Generated ${generatedPosts.length > 1 ? 'posts are' : 'post is'} Ready!</h2>
-    <p>Here ${generatedPosts.length > 1 ? 'are your generated posts' : 'is your generated post'} for ${currentDate} based on <a href="${sourceUrl}" style="color: #2563eb;">${sourceUrl}</a></p>
-    <p style="color: var(--muted-foreground);">Schedule ID: ${scheduleId}</p>
+    <h1>Your Generated ${generatedPosts.length > 1 ? 'Posts are' : 'Post is'} Ready!</h1>
     
-    ${postsHtml}
-    
-    <div class="footer">
-      <p>You can view and edit your ${generatedPosts.length > 1 ? 'posts' : 'post'} in your <a href="${process.env.NEXTAUTH_URL}/dashboard/posts" style="color: #2563eb;">Content Pulse dashboard</a>.</p>
-    </div>
+    <p class="subtitle">
+      Here ${generatedPosts.length > 1 ? 'are your generated posts' : 'is your generated post'} for ${currentDate} based on the latest news from
+      <a href="${sourceUrl}" style="color: #0A0A0A; text-decoration: underline;">${new URL(sourceUrl).hostname.replace('www.', '')}</a>
+    </p>
+
+    ${generatedPosts.map((post: GeneratedPost, index: number) => `
+      <div class="post-card">
+        <div class="post-content">
+          <div class="post-header">
+            <span class="platform-label"> ${post.platform}</span>
+            
+          </div>
+          
+          <div class="content-box">
+            ${formatContent(post.content)}
+          </div>
+        </div>
+      
+        
+        <div class="button-group">
+          <a href="${getShareUrl(post.platform, post.content)}" style="color: #0A0A0A;" target="_blank" class="button-secondary">🔗 Share on ${post.platform}</a>
+        </div>
+      </div>
+    `).join('')}
+
+    <p class="footer">
+      You can view, edit and copy your ${generatedPosts.length > 1 ? 'posts' : 'post'} in your 
+      <a href="${process.env.NEXTAUTH_URL}/dashboard/posts" style="color: #0A0A0A; text-decoration: underline;">Content Pulse dashboard</a>
+    </p>
   </div>
   <script>
     function copyContent(index) {

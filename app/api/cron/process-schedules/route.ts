@@ -49,10 +49,17 @@ const generatePostWithTimeout = async (params: {
 
   try {
     // Ensure threadCount is properly passed for supported platforms
-    const platformsWithThreads = ['twitter', 'twitter_premium', 'threads', 'X', 'X Premium'];
+    const platformsWithThreads = ['twitter', 'twitter_premium', 'threads', 'x', 'x premium'];
     const finalThreadCount = platformsWithThreads.includes(params.platform.toLowerCase()) 
       ? params.threadCount 
       : 1;
+
+    console.log({
+      platformLower: params.platform.toLowerCase(),
+      isIncluded: platformsWithThreads.includes(params.platform.toLowerCase()),
+      threadCount: params.threadCount,
+      finalThreadCount
+    });
 
     const response = await fetch(`${params.baseUrl}/api/generate-post`, {
       method: 'POST',
@@ -61,8 +68,14 @@ const generatePostWithTimeout = async (params: {
         'Authorization': `Bearer ${process.env.CRON_SECRET}`,
       },
       body: JSON.stringify({
-        ...params,
+        sourceUrl: params.sourceUrl,
+        platform: params.platform,
+        tone: params.tone,
+        useEmojis: params.useEmojis,
+        userId: params.userId,
+        instructions: params.instructions,
         threadCount: finalThreadCount,
+        scrapedContent: params.scrapedContent
       }),
       signal: controller.signal,
     });
@@ -217,27 +230,35 @@ export async function GET(req: NextRequest) {
 
           // Send single email with all generated posts
           if (generatedPosts.length > 0) {
-            try {
-              await fetch(`${baseUrl}/api/postMail`, {
-                method: 'POST',
-                headers: {
-                  'Content-Type': 'application/json',
-                },
-                body: JSON.stringify({
-                  email: schedule.user.email,
-                  userId: schedule.userId,
-                  generatedPosts: generatedPosts,
-                  scheduleId: schedule.id,
-                  sourceUrl: source.url
-                }),
-              });
-              console.log(`Email notification sent for schedule ${schedule.id}`);
-            } catch (emailError) {
-              console.error(`Failed to send email notification:`, emailError);
+            // Check user's notification preference
+            const userPreferences = schedule.user.preferences as { notificationOn?: boolean } | null;
+            const notificationsEnabled = userPreferences?.notificationOn ?? true; // Default to true if not set
+
+            if (notificationsEnabled) {
+              try {
+                await fetch(`${baseUrl}/api/postMail`, {
+                  method: 'POST',
+                  headers: {
+                    'Content-Type': 'application/json',
+                  },
+                  body: JSON.stringify({
+                    email: schedule.user.email,
+                    userId: schedule.userId,
+                    generatedPosts: generatedPosts,
+                    scheduleId: schedule.id,
+                    sourceUrl: source.url
+                  }),
+                });
+                console.log(`Email notification sent for schedule ${schedule.id}`);
+              } catch (emailError) {
+                console.error(`Failed to send email notification:`, emailError);
+              }
+            } else {
+              console.log(`Email notification skipped for schedule ${schedule.id} - notifications disabled`);
             }
           }
 
-          // Delete one-time schedule if needed
+          // Move deletion here, after all processing is successful
           if (!schedule.isRecurring) {
             await prisma.contentSchedule.delete({
               where: { id: schedule.id }
@@ -247,6 +268,7 @@ export async function GET(req: NextRequest) {
 
         } catch (error) {
           console.error(`Failed to process schedule ${schedule.id}:`, error);
+          // Error occurred, schedule won't be deleted
         } finally {
           clearTimeout(timeoutId);
         }
