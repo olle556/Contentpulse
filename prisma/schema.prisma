@@ -101,6 +101,8 @@ model ContentSource {
   scrapedContent ScrapedContent[]
 
   @@index([userId])
+  @@index([url])
+  @@unique([userId, url])
 }
 
 model ScrapedContent {

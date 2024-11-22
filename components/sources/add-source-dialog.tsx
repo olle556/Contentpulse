@@ -30,9 +30,6 @@ export function AddSourceDialog({ open, onOpenChange, onSuccess }: AddSourceDial
     setIsLoading(true);
 
     try {
-      console.log("Submit - Session status:", status);
-      console.log("Submit - Session data:", session);
-
       if (status !== "authenticated" || !session) {
         throw new Error("Not authenticated");
       }
@@ -43,6 +40,23 @@ export function AddSourceDialog({ open, onOpenChange, onSuccess }: AddSourceDial
         throw new Error("Invalid URL");
       }
 
+      // Validate URL first
+      const validateResponse = await fetch('/api/sources/validate', {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json',
+        },
+        body: JSON.stringify({ url: formattedUrl }),
+        credentials: 'include',
+      });
+
+      const validateData = await validateResponse.json();
+      
+      if (!validateResponse.ok) {
+        throw new Error(validateData.error || 'Invalid URL');
+      }
+
+      // Proceed with adding the source if validation passed
       const response = await fetch('/api/sources', {
         method: 'POST',
         headers: {
