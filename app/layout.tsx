@@ -6,6 +6,7 @@ import { Toaster } from "@/components/ui/toaster";
 import { getServerSession } from 'next-auth';
 import { authOptions } from '@/lib/auth-options';
 import { Analytics } from "@vercel/analytics/react"
+import { CookieBanner } from "@/components/cookie/cookie-banner";
 
 
 const inter = Inter({ subsets: ['latin'] });
@@ -32,6 +33,7 @@ export default async function RootLayout({
         <Toaster />
 
         <Analytics/>
+        <CookieBanner />
       </body>
     </html>
   );
