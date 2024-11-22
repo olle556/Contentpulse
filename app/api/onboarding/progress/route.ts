@@ -16,6 +16,9 @@ export async function GET() {
 
     const user = await prisma.user.findUnique({
       where: { email: session.user.email },
+      include: {
+        onboardingProgress: true
+      }
     });
 
     if (!user) {
@@ -25,7 +28,10 @@ export async function GET() {
       }, { status: 404 });
     }
 
-    // Get counts instead of full records
+    // Use the stored progress instead of counting records
+    const completedSteps = user.onboardingProgress?.completedSteps || [];
+
+    // Keep counts for debugging purposes only
     const [brandCount, sourceCount, postCount, scheduleCount] = await Promise.all([
       prisma.brand.count({
         where: { userId: user.id }
@@ -41,13 +47,6 @@ export async function GET() {
       })
     ]);
 
-    const completedSteps = [];
-
-    if (brandCount > 0) completedSteps.push('brand');
-    if (sourceCount > 0) completedSteps.push('sources');
-    if (postCount > 0) completedSteps.push('posts');
-    if (scheduleCount > 0) completedSteps.push('schedule');
-
     return NextResponse.json({
       success: true,
       completedSteps,
@@ -55,7 +54,8 @@ export async function GET() {
         brandCount,
         sourceCount,
         postCount,
-        scheduleCount
+        scheduleCount,
+        storedProgress: completedSteps
       }
     });
 

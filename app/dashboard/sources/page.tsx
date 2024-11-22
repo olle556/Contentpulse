@@ -51,6 +51,7 @@ export default function SourcesPage() {
       
       if (data.source) {
         await refreshSources();
+        console.log('Marking sources step as completed after URL analysis');
         await markStepCompleted('sources');
       }
     } catch (error) {
@@ -58,6 +59,13 @@ export default function SourcesPage() {
     } finally {
       setIsLoading(false);
     }
+  };
+
+  // Create a wrapper function that handles both refresh and completion
+  const handleSourceAdded = async () => {
+    await refreshSources();
+    console.log('Marking sources step as completed after adding source');
+    await markStepCompleted('sources');
   };
 
   return (
@@ -80,7 +88,7 @@ export default function SourcesPage() {
       <AddSourceDialog 
         open={isAddSourceOpen} 
         onOpenChange={setIsAddSourceOpen}
-        onSuccess={handleRefresh}
+        onSuccess={handleSourceAdded}
       />
     </div>
   );

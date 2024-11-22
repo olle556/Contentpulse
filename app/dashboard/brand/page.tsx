@@ -285,7 +285,6 @@ export default function BrandInformationPage() {
     try {
       if (!session?.user?.id) return
 
-      // Only show toast after actual save attempt, not on initial load
       const brandId = localStorage.getItem('brandId')
       
       const response = await fetch('/api/brand/save', {
@@ -299,27 +298,29 @@ export default function BrandInformationPage() {
         }),
       })
 
-      // Show toast only after successful save
       if (response.ok) {
         setShowSaveToast(true)
         setTimeout(() => {
           setShowSaveToast(false)
         }, 2000)
-      }
 
-      const data = await response.json()
-      
-      if (!response.ok) {
-        console.error('Save failed:', data)
-        throw new Error(data.error || 'Failed to save')
-      }
+        const data = await response.json()
+        
+        if (data.id) {
+          localStorage.setItem('brandId', data.id.toString())
+          
+          // If we have the minimum required fields, mark the step as completed
+          if (values.brandName && values.brandType && values.industry && values.brandVoice) {
+            console.log('Marking brand step as completed after successful save');
+            await markStepCompleted('brand');
+          }
+        }
 
-      if (data.id) {
-        localStorage.setItem('brandId', data.id.toString())
+        // Revalidate the cache after successful save
+        await fetch('/api/revalidate?tag=brand')
+      } else {
+        console.error('Save failed:', await response.json())
       }
-
-      // Revalidate the cache after successful save
-      await fetch('/api/revalidate?tag=brand')
 
     } catch (error) {
       console.error('Failed to auto-save:', error)

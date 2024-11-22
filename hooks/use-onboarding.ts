@@ -6,8 +6,15 @@ export function useOnboarding() {
   const { data: completedSteps, isLoading } = useQuery({
     queryKey: ['onboarding-progress'],
     queryFn: async () => {
+      console.log('useOnboarding - Fetching progress');
       const response = await fetch('/api/onboarding/progress');
       const data = await response.json();
+      console.log('useOnboarding - Received progress data:', data);
+      
+      if (!data.success) {
+        throw new Error(data.error || 'Failed to fetch progress');
+      }
+      
       return data.completedSteps || [];
     },
     staleTime: 1000 * 60 * 5,
@@ -18,31 +25,36 @@ export function useOnboarding() {
 
   const markStepCompleted = async (stepId: string) => {
     try {
-      // Optimistically update the cache
+      console.log('useOnboarding - Marking step as completed:', stepId);
+      
       queryClient.setQueryData(['onboarding-progress'], (old: string[] = []) => {
+        console.log('useOnboarding - Current progress:', old);
         if (!old.includes(stepId)) {
           return [...old, stepId];
         }
         return old;
       });
 
-      // Make the API call
       const response = await fetch('/api/onboarding/complete', {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({ stepId }),
       });
 
+      const data = await response.json();
+      console.log('useOnboarding - Step completion response:', data);
+
       if (!response.ok) {
-        throw new Error('Failed to mark step as completed');
+        throw new Error(data.error || 'Failed to mark step as completed');
       }
 
-      // Force a refetch to ensure all components have the latest data
       await queryClient.invalidateQueries({ queryKey: ['onboarding-progress'] });
+      
+      return data;
     } catch (error) {
-      // Revert optimistic update on error
-      queryClient.invalidateQueries({ queryKey: ['onboarding-progress'] });
-      console.error('Failed to mark step as completed:', error);
+      console.error('useOnboarding - Error marking step as completed:', error);
+      await queryClient.invalidateQueries({ queryKey: ['onboarding-progress'] });
+      throw error;
     }
   };
 
