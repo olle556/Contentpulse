@@ -1,14 +1,21 @@
-"use client";
-
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
-import { Button } from "@/components/ui/button";
-import { ExternalLink } from "lucide-react";
-
 import { NotificationSettings } from "@/components/settings/notification-settings";
+import { PaymentForm } from "@/components/settings/payment-form";
+import { getServerSession } from "next-auth/next";
+import { prisma } from "@/lib/prisma";
 
+export default async function SettingsPage() {
+  // Fetch user subscription data
+  const session = await getServerSession();
+  const user = session?.user?.email ? await prisma.user.findUnique({
+    where: { email: session.user.email },
+    select: {
+      stripeCustomerId: true,
+      subscriptionStatus: true
+    }
+  }) : null;
 
-export default function SettingsPage() {
   return (
     <div className="space-y-6">
       <h1 className="text-3xl font-bold">Settings</h1>
@@ -37,12 +44,10 @@ export default function SettingsPage() {
               <CardTitle>Payment Settings</CardTitle>
             </CardHeader>
             <CardContent>
-              <Button 
-                onClick={() => window.open('https://billing.stripe.com', '_blank')}
-                className="flex items-center gap-2"
-              >
-                Manage Billing <ExternalLink className="h-4 w-4" />
-              </Button>
+              <PaymentForm 
+                stripeCustomerId={user?.stripeCustomerId}
+                subscriptionStatus={user?.subscriptionStatus}
+              />
             </CardContent>
           </Card>
         </TabsContent>
