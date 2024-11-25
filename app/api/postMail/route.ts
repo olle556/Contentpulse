@@ -25,7 +25,7 @@ const getShareUrl = (platform: string, content: string) => {
     case 'linkedin':
       return `https://www.linkedin.com/shareArticle?mini=true&url=${encodeURIComponent('')}&text=${encodeURIComponent(content)}`;
     case 'facebook':
-      return `https://www.facebook.com/sharer/sharer.php?u=${encodeURIComponent(content)}`;
+      return `https://www.facebook.com/dialog/share?href=${encodeURIComponent('')}&quote=${encodeURIComponent(content)}`;
     default:
       return '#';
   }
@@ -180,7 +180,9 @@ export async function POST(req: NextRequest) {
       
         
         <div class="button-group">
-          <a href="${getShareUrl(post.platform, post.content)}" style="color: #0A0A0A;" target="_blank" class="button-secondary">🔗 Share on ${post.platform}</a>
+          ${post.platform.toLowerCase() !== 'facebook' ? 
+            `<a href="${getShareUrl(post.platform, post.content)}" style="color: #0A0A0A;" target="_blank" class="button-secondary">🔗 Share on ${post.platform}</a>`
+            : ''}
         </div>
       </div>
     `).join('')}
