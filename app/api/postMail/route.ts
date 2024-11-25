@@ -23,7 +23,7 @@ const getShareUrl = (platform: string, content: string) => {
     case 'threads':
       return `https://threads.net/intent/post?text=${encodeURIComponent(content)}`;
     case 'linkedin':
-      return `https://www.linkedin.com/sharing/share-offsite/?url=${encodeURIComponent(content)}`;
+      return `https://www.linkedin.com/shareArticle?mini=true&url=${encodeURIComponent(process.env.NEXTAUTH_URL!)}&text=${encodeURIComponent(content)}`;
     case 'facebook':
       return `https://www.facebook.com/sharer/sharer.php?u=${encodeURIComponent(content)}`;
     default:
@@ -126,7 +126,6 @@ export async function POST(req: NextRequest) {
     }
     .button-group {
       padding: 8px;
-     
       
     }
     .button-primary {
