@@ -47,26 +47,12 @@ const formSchema = z.object({
   platforms: z.array(z.string()).min(1, "Select at least one platform"),
   isRecurring: z.boolean(),
   recurringDays: z.array(z.string()),
-  startDate: z.date({
-    required_error: "Start date is required for recurring schedules",
-  }),
-  date: z.date({
-    required_error: "Date is required",
-  }),
+  startDate: z.date().default(new Date()),
+  date: z.date().default(new Date()),
   time: z.string().min(1, "Time is required"),
   aiInstructions: z.string().optional(),
   useEmojis: z.boolean().default(false),
   threadCount: z.number().min(1).max(10).default(1),
-}).refine((data) => {
-  // If recurring, require startDate; if not recurring, require date
-  if (data.isRecurring) {
-    return data.startDate != null;
-  } else {
-    return data.date != null;
-  }
-}, {
-  message: "Please select a date",
-  path: ["date"], // or ["startDate"] depending on isRecurring
 });
 
 type ContentSchedulerProps = {
