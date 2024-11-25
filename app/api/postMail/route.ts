@@ -23,7 +23,7 @@ const getShareUrl = (platform: string, content: string) => {
     case 'threads':
       return `https://threads.net/intent/post?text=${encodeURIComponent(content)}`;
     case 'linkedin':
-      return `https://www.linkedin.com/shareArticle?mini=true&url=${encodeURIComponent(process.env.NEXTAUTH_URL!)}&text=${encodeURIComponent(content)}`;
+      return `https://www.linkedin.com/shareArticle?mini=true&url=${encodeURIComponent('')}&text=${encodeURIComponent(content)}`;
     case 'facebook':
       return `https://www.facebook.com/sharer/sharer.php?u=${encodeURIComponent(content)}`;
     default:
@@ -120,7 +120,7 @@ export async function POST(req: NextRequest) {
       padding: 16px;
       background-color: #f5f5f5;
       border-radius: 6px;
-      margin-bottom: 16px;
+      margin-bottom: 8px;
       font-size: 14px;
       line-height: 1.6;
     }
@@ -140,7 +140,7 @@ export async function POST(req: NextRequest) {
     }
     .button-secondary {
       display: inline-block;
-      padding: 8px 16px;
+      padding: 16px 24px;
       background-color: #f5f5f5;
       color: #0A0A0A;
       text-decoration: none !important;
