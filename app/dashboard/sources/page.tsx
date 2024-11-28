@@ -69,9 +69,10 @@ export default function SourcesPage() {
   };
 
   return (
-    <div className="space-y-6 sm:p-6">
+    <div className="space-y-4 sm:space-y-6 p-4 sm:p-6">
       <div className="flex justify-between items-center">
         <h1 className="text-2xl sm:text-3xl font-bold text-center sm:text-left w-full">Content Sources</h1>
+        
         <Button onClick={() => setIsAddSourceOpen(true)}>
           <Plus className="h-4 w-4 mr-2" />
           Add Source

@@ -42,12 +42,10 @@ export default function PostsPage() {
   return (
     <div className="space-y-4 sm:space-y-6 p-4 sm:p-6">
       <div className="flex flex-col sm:flex-row justify-between items-center gap-4">
-        <div>
+        
           <h1 className="text-2xl sm:text-3xl font-bold text-center sm:text-left w-full">Generated Posts</h1>
-          <p className="text-muted-foreground mt-2 text-center sm:text-left">
-            View and manage your AI-generated social media posts. Click &apos;Generate New Post&apos; to create engaging content tailored to your brand.
-          </p>
-        </div>
+         
+        
         <Button 
           onClick={() => setIsGenerateOpen(true)} 
           className="w-full sm:w-auto"
@@ -56,6 +54,9 @@ export default function PostsPage() {
           Generate New Post
         </Button>
       </div>
+      <p className="text-muted-foreground mt-2 text-center sm:text-left">
+            View and manage your AI-generated social media posts. Click &apos;Generate New Post&apos; to create engaging content tailored to your brand.
+          </p>
 
       <PostList 
         key={key} 
