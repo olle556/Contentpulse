@@ -15,10 +15,12 @@ import {
 } from "@/components/ui/dropdown-menu";
 import { Avatar, AvatarFallback } from "@/components/ui/avatar";
 import { useSession } from "next-auth/react";
+import { useRouter } from "next/navigation";
 
 export function MobileHeader() {
   const [open, setOpen] = useState(false);
   const { data: session } = useSession();
+  const router = useRouter();
 
   const handleSignOut = async () => {
     await signOut({ redirect: true, callbackUrl: '/' });
@@ -57,6 +59,9 @@ export function MobileHeader() {
             </Button>
           </DropdownMenuTrigger>
           <DropdownMenuContent align="end">
+            <DropdownMenuItem onClick={() => router.push('/dashboard/settings')}>
+              Settings
+            </DropdownMenuItem>
             <DropdownMenuItem onClick={handleSignOut}>Sign out</DropdownMenuItem>
           </DropdownMenuContent>
         </DropdownMenu>
