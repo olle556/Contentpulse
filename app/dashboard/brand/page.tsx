@@ -39,6 +39,13 @@ import {
 import { useOnboarding } from '@/hooks/use-onboarding'
 import { cache } from 'react'
 import * as React from "react"
+import {
+  Tooltip,
+  TooltipContent,
+  TooltipProvider,
+  TooltipTrigger,
+} from "@/components/ui/tooltip"
+import { InfoCircledIcon } from "@radix-ui/react-icons"
 
 // Define custom interfaces for your brand data
 interface BrandInput {
@@ -409,7 +416,19 @@ export default function BrandInformationPage() {
       <div className="container mx-auto space-y-6">
         <Card>
           <CardContent className="p-6">
-            <h2 className="text-2xl font-bold mb-6">Basic Brand Identity</h2>
+            <div className="flex items-center gap-2 mb-6">
+              <h2 className="text-2xl font-bold">Basic Brand Identity</h2>
+              <TooltipProvider>
+                <Tooltip>
+                  <TooltipTrigger asChild>
+                    <InfoCircledIcon className="h-5 w-5 text-muted-foreground cursor-help" />
+                  </TooltipTrigger>
+                  <TooltipContent className="max-w-[300px]">
+                    <p>Enter your brand information here. These details will help us understand your brand identity and create more relevant content for you.</p>
+                  </TooltipContent>
+                </Tooltip>
+              </TooltipProvider>
+            </div>
             <Form {...form}>
               <form onSubmit={form.handleSubmit(onSubmit)} className="space-y-6">
                 {basicFields.map((field) => (
