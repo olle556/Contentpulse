@@ -17,9 +17,9 @@ export default async function SettingsPage() {
   }) : null;
 
   return (
-    <div className="space-y-6">
-      <h1 className="text-3xl font-bold">Settings</h1>
-      <p className="text-muted-foreground">Customize your notification preferences and app settings</p>
+    <div className="space-y-4 sm:space-y-6 p-4 sm:p-6">
+      <h1 className="text-2xl sm:text-3xl font-bold text-center sm:text-left w-full">Settings</h1>
+      <p className="text-muted-foreground mt-2 text-center sm:text-left">Customize your notification preferences and app settings</p>
 
       <Tabs defaultValue="notifications" className="space-y-6">
         <TabsList>
