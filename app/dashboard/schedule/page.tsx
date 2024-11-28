@@ -36,12 +36,12 @@ export default function SchedulePage() {
   };
 
   return (
-    <div className="space-y-6 sm:p-6">
+    <div className="space-y-4 sm:space-y-6 p-4 sm:p-6">
       <div className="flex flex-col sm:flex-row justify-between items-center gap-4">
         <h1 className="text-2xl sm:text-3xl font-bold text-center sm:text-left w-full">
           Scheduled Post Generations
         </h1>
-        <Button 
+        <Button
           onClick={() => setIsScheduleOpen(true)}
           //disabled={contentSources.length === 0}
           className="w-full sm:w-auto"
@@ -51,10 +51,14 @@ export default function SchedulePage() {
         </Button>
       </div>
 
+      <p className="text-muted-foreground mt-2 text-center sm:text-left">
+        Schedule your post generations in advance. Set up recurring or one-time posts to maintain a consistent posting schedule. Your posts will be automatically generated at the specified times using your selected content sources and preferences, ensuring content is always up-to-date by using the latest information from your sources at the time of generation. Additionally, you&apos;ll receive your social media posts directly to your email address, allowing you to get notified when new posts have been generated and seamlessly share them on your social media platforms.
+      </p>
+
       <ScheduledPostList key={refreshTrigger} />
       {!isLoading && (
-        <ContentScheduler 
-          open={isScheduleOpen} 
+        <ContentScheduler
+          open={isScheduleOpen}
           onOpenChange={setIsScheduleOpen}
           contentSources={contentSources || []}
           onScheduleUpdate={handleScheduleUpdate}

@@ -45,10 +45,10 @@ export default function SourcesPage() {
         },
         body: JSON.stringify({ url }),
       });
-      
+
       const data = await response.json();
       setAnalysis(data.analysis);
-      
+
       if (data.source) {
         await refreshSources();
         console.log('Marking sources step as completed after URL analysis');
@@ -72,22 +72,26 @@ export default function SourcesPage() {
     <div className="space-y-4 sm:space-y-6 p-4 sm:p-6">
       <div className="flex justify-between items-center">
         <h1 className="text-2xl sm:text-3xl font-bold text-center sm:text-left w-full">Content Sources</h1>
-        
+
         <Button onClick={() => setIsAddSourceOpen(true)}>
           <Plus className="h-4 w-4 mr-2" />
           Add Source
         </Button>
       </div>
 
+      <p className="text-muted-foreground mt-2 text-center sm:text-left">
+        Add and manage your content sources. You will be able to base your posts on the sources you provide. For every post generation, the latest information on the source URL will be used in the post. Pro tip: Use sources where information changes over time - instead of using a single article about economy, use the URL for the latest news at an economy newspaper.
+      </p>
+
       <div className="mt-6">
-        <ContentSourceList 
-          sources={sources} 
+        <ContentSourceList
+          sources={sources}
           onSourceDeleted={handleRefresh}
         />
       </div>
-      
-      <AddSourceDialog 
-        open={isAddSourceOpen} 
+
+      <AddSourceDialog
+        open={isAddSourceOpen}
         onOpenChange={setIsAddSourceOpen}
         onSuccess={handleSourceAdded}
       />

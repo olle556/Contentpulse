@@ -419,7 +419,7 @@ export default function BrandInformationPage() {
             <div className="flex items-center gap-2 mb-6">
               <h2 className="text-2xl sm:text-3xl font-bold">Basic Brand Identity</h2>
             </div>
-            <p className="text-muted-foreground mb-6">
+            <p className="text-muted-foreground mb-6 text-center sm:text-left">
               Enter your brand information here. These details will help us understand your brand identity and create more relevant content for you.
             </p>
             <Form {...form}>
