@@ -413,22 +413,15 @@ export default function BrandInformationPage() {
 
   return (
     <>
-      <div className="container mx-auto space-y-6">
+      <div className="container mx-auto space-y-4 sm:space-y-6">
         <Card>
           <CardContent className="p-6">
             <div className="flex items-center gap-2 mb-6">
-              <h2 className="text-2xl font-bold">Basic Brand Identity</h2>
-              <TooltipProvider>
-                <Tooltip>
-                  <TooltipTrigger asChild>
-                    <InfoCircledIcon className="h-6 w-6 text-muted-foreground" />
-                  </TooltipTrigger>
-                  <TooltipContent className="max-w-[300px]">
-                    <p>Enter your brand information here. These details will help us understand your brand identity and create more relevant content for you.</p>
-                  </TooltipContent>
-                </Tooltip>
-              </TooltipProvider>
+              <h2 className="text-2xl sm:text-3xl font-bold">Basic Brand Identity</h2>
             </div>
+            <p className="text-muted-foreground mb-6">
+              Enter your brand information here. These details will help us understand your brand identity and create more relevant content for you.
+            </p>
             <Form {...form}>
               <form onSubmit={form.handleSubmit(onSubmit)} className="space-y-6">
                 {basicFields.map((field) => (
