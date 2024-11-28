@@ -421,7 +421,7 @@ export default function BrandInformationPage() {
               <TooltipProvider>
                 <Tooltip>
                   <TooltipTrigger asChild>
-                    <InfoCircledIcon className="h-5 w-5 text-muted-foreground cursor-help" />
+                    <InfoCircledIcon className="h-6 w-6 text-muted-foreground" />
                   </TooltipTrigger>
                   <TooltipContent className="max-w-[300px]">
                     <p>Enter your brand information here. These details will help us understand your brand identity and create more relevant content for you.</p>
