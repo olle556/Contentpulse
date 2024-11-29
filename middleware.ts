@@ -21,7 +21,7 @@ export default withAuth(
 
       // Make API call to check subscription with proper error handling
       try {
-        const response = await fetch(`${process.env.NEXT_PUBLIC_BASE_URL}/api/check-subscription_2`);
+        const response = await fetch(`${process.env.NEXTAUTH_URL}/api/check-subscription_2`);
         if (!response.ok) {
           throw new Error('Failed to check subscription');
         }
