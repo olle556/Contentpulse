@@ -4,8 +4,12 @@ import { getServerSession } from "next-auth/next";
 import { authOptions } from "@/lib/auth-options";
 import { checkSubscription } from '@/lib/subscription';
 
+
 // Check if the user is authorized to access the protected generation paths BY USING the checksuSubscription 
 // skapa en till route för säkerhetsskull. Vill inte ändra i din orginal route. 
+
+export const dynamic = 'force-dynamic'; // Add this line
+export const runtime = 'edge'; // Optional: Add this if you want to use edge runtime
 
 export async function GET() {
   try {
