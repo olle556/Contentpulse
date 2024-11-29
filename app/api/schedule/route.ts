@@ -21,6 +21,11 @@ export async function POST(req: Request) {
       return new NextResponse("User not found", { status: 404 })
     }
 
+    // Validate required fields
+    if (!data.contentSourceId || !data.time || !data.platforms) {
+      return new NextResponse("Missing required fields", { status: 400 });
+    }
+
     const schedule = await prisma.contentSchedule.create({
       data: {
         userId: user.id,

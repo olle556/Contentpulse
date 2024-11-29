@@ -19,12 +19,20 @@ export default withAuth(
 
       //const hasSubscription = await checkSubscription(token.sub); ** använder checksub i routen
 
-      // Make API call to check subscription
-      const response = await fetch(`${process.env.NEXT_PUBLIC_BASE_URL}/api/check-subscription_2`);
-      const data = await response.json();
+      // Make API call to check subscription with proper error handling
+      try {
+        const response = await fetch(`${process.env.NEXT_PUBLIC_BASE_URL}/api/check-subscription_2`);
+        if (!response.ok) {
+          throw new Error('Failed to check subscription');
+        }
+        const data = await response.json();
 
-      if (!data.authorized) {
-        return new NextResponse('Subscription required', { status: 403 });
+        if (!data.authorized) {
+          return new NextResponse('Subscription required', { status: 403 });
+        }
+      } catch (error) {
+        console.error('Error checking subscription:', error);
+        return new NextResponse('Internal Server Error', { status: 500 });
       }
     }
 
