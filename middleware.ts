@@ -23,9 +23,11 @@ export default withAuth(
       try {
         const response = await fetch(`${process.env.NEXTAUTH_URL}/api/check-subscription_2`);
         if (!response.ok) {
+          console.error('Subscription check failed:', await response.text());
           throw new Error('Failed to check subscription');
         }
         const data = await response.json();
+        console.log('Subscription check response:', data);
 
         if (!data.authorized) {
           return new NextResponse('Subscription required', { status: 403 });

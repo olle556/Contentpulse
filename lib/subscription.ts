@@ -11,8 +11,13 @@ export const checkSubscription = async (userId: string) => {
       },
     });
   
+    console.log('User subscription data:', user);
+  
     if (!user) return false;
   
-    return user.subscriptionStatus === 'active' && 
+    const isValid = user.subscriptionStatus === 'active' && 
       (!user.subscriptionEndDate || new Date(user.subscriptionEndDate) > new Date());
-  };
+    
+    console.log('Subscription valid:', isValid);
+    return isValid;
+};

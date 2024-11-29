@@ -10,11 +10,15 @@ import { checkSubscription } from '@/lib/subscription';
 export async function GET() {
   try {
     const session = await getServerSession(authOptions);
+    console.log('Session:', session);
+    
     if (!session?.user?.id) {
+      console.log('No user ID in session');
       return NextResponse.json({ authorized: false });
     }
     
     const hasSubscription = await checkSubscription(session.user.id);
+    console.log('Subscription status:', hasSubscription);
     return NextResponse.json({ authorized: hasSubscription });
   } catch (error) {
     console.error('Error checking subscription:', error);
