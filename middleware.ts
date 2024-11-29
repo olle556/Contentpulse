@@ -27,9 +27,14 @@ export default withAuth(
           throw new Error('Failed to check subscription');
         }
         const data = await response.json();
-        console.log('Subscription check response:', data);
+        console.log('Full middleware check response:', {
+          data,
+          responseOk: response.ok,
+          status: response.status
+        });
 
         if (!data.authorized) {
+          console.log('Authorization failed. Full data:', data);
           return new NextResponse('Subscription required', { status: 403 });
         }
       } catch (error) {
