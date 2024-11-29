@@ -12,14 +12,18 @@ export default withAuth(
     // Check for protected generation paths
     if (protectedGenerationPaths.some(path => request.url.includes(path))) {
       const token = request.nextauth.token;
-      
+
       if (!token?.sub) {
         return new NextResponse('Unauthorized', { status: 401 });
       }
 
-      const hasSubscription = await checkSubscription(token.sub);
-      
-      if (!hasSubscription) {
+      //const hasSubscription = await checkSubscription(token.sub); ** använder checksub i routen
+
+      // Make API call to check subscription
+      const response = await fetch(`${process.env.NEXT_PUBLIC_BASE_URL}/api/check-subscription_2`);
+      const data = await response.json();
+
+      if (!data.authorized) {
         return new NextResponse('Subscription required', { status: 403 });
       }
     }
