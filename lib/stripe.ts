@@ -2,6 +2,8 @@ import Stripe from 'stripe';
 import { loadStripe as loadStripeJs } from '@stripe/stripe-js';
 
 // Server-side Stripe instance
+
+// ändra stripe nyckel till sk_XXXXX
 export const stripe = new Stripe(process.env.STRIPE_SECRET_KEY!, {
   apiVersion: '2024-11-20.acacia', // Use current stable version
   typescript: true,
