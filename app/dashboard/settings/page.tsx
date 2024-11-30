@@ -2,8 +2,11 @@ import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { NotificationSettings } from "@/components/settings/notification-settings";
 import { PaymentForm } from "@/components/settings/payment-form";
+import { SubscriptionSettings } from "@/components/settings/subscription-settings";
 import { getServerSession } from "next-auth/next";
 import { prisma } from "@/lib/prisma";
+
+// ändrade payment form till subscription settings. 
 
 export default async function SettingsPage() {
   // Fetch user subscription data
@@ -12,7 +15,9 @@ export default async function SettingsPage() {
     where: { email: session.user.email },
     select: {
       stripeCustomerId: true,
-      subscriptionStatus: true
+      subscriptionStatus: true,
+      subscriptionEndDate: true,
+      id: true
     }
   }) : null;
 
@@ -24,7 +29,8 @@ export default async function SettingsPage() {
       <Tabs defaultValue="notifications" className="space-y-6">
         <TabsList>
           <TabsTrigger value="notifications">Notifications</TabsTrigger>
-          <TabsTrigger value="payment">Payment</TabsTrigger>
+          <TabsTrigger value="subscription">Subscription</TabsTrigger>
+          <TabsTrigger value="account">Account</TabsTrigger>
         </TabsList>
 
         <TabsContent value="notifications" className="space-y-6">
@@ -38,16 +44,29 @@ export default async function SettingsPage() {
           </Card>
         </TabsContent>
 
-        <TabsContent value="payment" className="space-y-6">
+        <TabsContent value="subscription" className="space-y-6">
           <Card>
             <CardHeader>
-              <CardTitle>Payment Settings</CardTitle>
+              <CardTitle>Subscription & Payment Settings</CardTitle>
             </CardHeader>
             <CardContent>
-              <PaymentForm 
+              <SubscriptionSettings 
                 stripeCustomerId={user?.stripeCustomerId}
                 subscriptionStatus={user?.subscriptionStatus}
+                subscriptionEndDate={user?.subscriptionEndDate}
+                userId={user?.id}
               />
+            </CardContent>
+          </Card>
+        </TabsContent>
+
+        <TabsContent value="account" className="space-y-6">
+          <Card>
+            <CardHeader>
+              <CardTitle>Account settings</CardTitle>
+            </CardHeader>
+            <CardContent>
+              
             </CardContent>
           </Card>
         </TabsContent>
