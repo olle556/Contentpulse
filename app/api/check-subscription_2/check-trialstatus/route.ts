@@ -15,6 +15,7 @@ export async function GET() {
       select: {
         subscriptionStatus: true,
         createdAt: true,
+        subscriptionEndDate: true,
       },
     });
 
@@ -22,14 +23,14 @@ export async function GET() {
       return new NextResponse('User not found', { status: 404 });
     }
 
-    // Calculate if user is within 7-day trial period
-    const trialEndDate = new Date(user.createdAt);
-    trialEndDate.setDate(trialEndDate.getDate() + 7);
-    const isInTrialPeriod = new Date() < trialEndDate && user.subscriptionStatus !== 'active';
+    // Calculate if user is in trial by checking if subscriptionEndDate is within 7 days of createdAt
+    const isInTrialPeriod = user.subscriptionStatus === 'active' && 
+      user.subscriptionEndDate && 
+      ((new Date(user.subscriptionEndDate).getTime() - new Date(user.createdAt).getTime()) / (1000 * 60 * 60 * 24)) <= 7;
 
     return NextResponse.json({
       status: isInTrialPeriod ? 'trial' : user.subscriptionStatus,
-      trialEndDate: isInTrialPeriod ? trialEndDate : null,
+      trialEndDate: isInTrialPeriod ? user.subscriptionEndDate : null,
     });
   } catch (error) {
     console.error('Error checking subscription status:', error);

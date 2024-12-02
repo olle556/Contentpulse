@@ -43,9 +43,27 @@ export function SubscriptionSettings({
   );
   const [showDeleteConfirmation, setShowDeleteConfirmation] = useState(false);
   const [showActiveSubscriptionWarning, setShowActiveSubscriptionWarning] = useState(false);
+  const [trialStatus, setTrialStatus] = useState<string | null>(null);
+  const [trialEndDate, setTrialEndDate] = useState<Date | null>(null);
+
+  useEffect(() => {
+    const checkTrialStatus = async () => {
+      try {
+        const response = await fetch('/api/check-subscription_2/check-trialstatus');
+        const data = await response.json();
+        setTrialStatus(data.status);
+        setTrialEndDate(data.trialEndDate ? new Date(data.trialEndDate) : null);
+      } catch (error) {
+        console.error('Error checking trial status:', error);
+      }
+    };
+    checkTrialStatus();
+  }, []);
 
   const isSubscribed = subscriptionStatus === 'active';
   const isCanceled = subscriptionStatus === 'canceled' || subscriptionStatus === 'active_until_period_end';
+  const isInactive = subscriptionStatus === 'inactive' || (!subscriptionStatus && !trialStatus);
+  const isTrialPeriod = trialStatus === 'trial';
 
   const handlePortalAccess = async () => {
     try {
@@ -127,39 +145,45 @@ export function SubscriptionSettings({
       <div className="space-y-2">
         <h3 className="text-lg font-medium">Subscription Status</h3>
         <p className="text-sm text-muted-foreground">
-          Status: {isCanceled ? 'Cancelled' : subscriptionStatus || 'No active subscription'}
+          Status: {isTrialPeriod ? 'Trial Period' : 
+                  isCanceled ? 'Cancelled' : 
+                  isInactive ? 'Inactive' : 
+                  subscriptionStatus || 'No active subscription'}
         </p>
-        {subscriptionEndDate && (
+        {isTrialPeriod && trialEndDate && (
+          <p className="text-sm text-muted-foreground">
+            Trial ends on: {trialEndDate.toLocaleDateString()}
+          </p>
+        )}
+        {!isTrialPeriod && subscriptionEndDate && (
           <p className="text-sm text-muted-foreground">
             {isSubscribed
-              ? `Next billing date: ${subscriptionEndDate.toLocaleDateString()}`
-              : `Subscription paid until: ${subscriptionEndDate.toLocaleDateString()}`}
+              ? `Subscription paid untill: ${subscriptionEndDate.toLocaleDateString()}`
+              : `Subscription ended: ${subscriptionEndDate.toLocaleDateString()}`}
           </p>
         )}
       </div>
 
       <div className="space-y-4">
-        {stripeCustomerId ? (
-          <>
-            <Button
-              onClick={handlePortalAccess}
-              className="w-full"
-              variant="outline"
-            >
-              <Receipt className="mr-2 h-4 w-4" />
-              Manage Billing
-            </Button>
-          </>
-        ) : (
+        {(isInactive || isTrialPeriod) ? (
           <Button
             onClick={handleSubscriptionChange}
             className="w-full"
             variant="default"
           >
             <CreditCard className="mr-2 h-4 w-4" />
-            Subscribe Now
+            {isTrialPeriod ? 'Upgrade' : 'Subscribe Now'}
           </Button>
-        )}
+        ) : stripeCustomerId ? (
+          <Button
+            onClick={handlePortalAccess}
+            className="w-full"
+            variant="outline"
+          >
+            <Receipt className="mr-2 h-4 w-4" />
+            Manage Billing
+          </Button>
+        ) : null}
       </div>
 
       <div className="space-y-4">

@@ -13,6 +13,7 @@ import {
   CardTitle,
 } from "@/components/ui/card";
 import { FileText, Layers, Clock } from "lucide-react";
+import { PricingSection } from "@/components/landing/pricing-section";
 
 export default function LandingPage() {
   const router = useRouter();
@@ -107,6 +108,9 @@ export default function LandingPage() {
               </Card>
             </div>
           </div>
+        </section>
+        <section id="pricing">
+        <PricingSection onSubscribe={handleGetStarted} />
         </section>
         <section className="w-full border-t border-gray-800 py-12 md:py-24 lg:py-32">
           <div className="container px-4 md:px-6">
