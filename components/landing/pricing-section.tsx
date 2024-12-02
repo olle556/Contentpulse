@@ -10,11 +10,8 @@ export function PricingSection({ onSubscribe }: { onSubscribe: () => void }) {
             <div className="container px-4 md:px-6">
                 <div className="flex flex-col items-center justify-center space-y-4 text-center">
                     <div className="space-y-2">
-                        <div className="inline-block rounded-lg bg-gray-800 px-3 py-1 text-sm">
-                            Pricing
-                        </div>
                         <h2 className="text-2xl font-bold tracking-tighter sm:text-3xl md:text-4xl lg:text-5xl">
-                            Simple, transparent pricing
+                            Simple & Transparent Pricing
                         </h2>
                         <p className="mx-auto max-w-[900px] text-gray-400 md:text-xl/relaxed lg:text-base/relaxed xl:text-xl/relaxed">
                             Choose the perfect plan for your content needs
@@ -47,7 +44,7 @@ export function PricingSection({ onSubscribe }: { onSubscribe: () => void }) {
                         <PricingCard
                             title="Content Pulse Pro"
                             monthlyPrice={40}
-                            yearlyPrice={320}
+                            yearlyPrice={32}
                             features={[
                                 "Unlimited AI content generation",
                                 "Smart content scheduling",

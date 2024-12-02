@@ -6,6 +6,8 @@ import { loadStripe } from '@stripe/stripe-js';
 import { useSession } from 'next-auth/react';
 import { useToast } from "@/hooks/use-toast";
 import { useSearchParams } from 'next/navigation';
+import { Check } from 'lucide-react';
+import { cn } from '@/lib/utils';
 
 interface PricingCardProps {
   title: string;
@@ -45,7 +47,7 @@ const PricingCard: React.FC<PricingCardProps> = ({
         interval: isYearly ? 'year' : 'month'
       };
 
-      const response = await fetch('/api/create-checkout-session', {
+      const response = await fetch('/api/stripe', {
         method: 'POST',
         headers: {
           'Content-Type': 'application/json',
@@ -83,30 +85,42 @@ const PricingCard: React.FC<PricingCardProps> = ({
   const interval = isYearly ? '/year' : '/month';
 
   return (
-    <Card className={`relative flex flex-col h-full w-full text-white pb-6 ${className} bg-gradient-to-r from-purple-800 to-indigo-900`}>
-      <CardHeader className="text-center">
+    <Card className={cn(
+      "relative flex flex-col h-full w-full border border-border bg-card text-card-foreground",
+      className
+    )}>
+      <CardHeader className="text-center pb-8 pt-6">
         <CardTitle className="text-xl font-bold">{title}</CardTitle>
       </CardHeader>
-      <CardContent className="flex-grow flex flex-col justify-between">
-        <div>
-          <div className="text-center mb-6">
-            <span className="text-5xl font-bold">${displayPrice}</span>
-            <span className="text-xl">{interval}</span>
+      <CardContent className="flex-grow flex flex-col justify-between p-6">
+        <div className="space-y-6">
+          <div className="text-center">
+            <div className="flex items-end justify-center">
+              <span className="text-5xl font-bold tracking-tight">
+                ${displayPrice}
+              </span>
+              <span className="text-sm font-medium text-muted-foreground ml-2">
+                {interval}
+              </span>
+            </div>
           </div>
+          
           <Button 
-            className="w-full bg-white text-gray-900 hover:bg-gray-100 mb-6"
+            className="w-full"
             onClick={handleSubscribe}
           >
             {buttonText}
           </Button>
-          <div className="text-xs text-center mb-6">Secured by Stripe</div>
-          <ul className="space-y-3 mb-6 text-sm">
+
+          <div className="text-xs text-center text-muted-foreground">
+            Secured by Stripe
+          </div>
+
+          <ul className="space-y-3">
             {features.map((feature, index) => (
-              <li key={index} className="flex items-center">
-                <svg className="w-4 h-4 mr-2 text-green-500 flex-shrink-0" fill="none" stroke="currentColor" viewBox="0 0 24 24" xmlns="http://www.w3.org/2000/svg">
-                  <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M5 13l4 4L19 7" />
-                </svg>
-                <span>{feature}</span>
+              <li key={index} className="flex items-center text-sm">
+                <Check className="h-4 w-4 mr-2 text-primary flex-shrink-0" />
+                <span className="text-muted-foreground">{feature}</span>
               </li>
             ))}
           </ul>
