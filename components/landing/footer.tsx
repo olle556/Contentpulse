@@ -3,26 +3,26 @@ import { Zap } from "lucide-react";
 
 export function Footer() {
   return (
-    <footer className="w-full bg-gray-900 rounded-t-lg">
+    <footer className="w-full bg-white rounded-t-lg">
       <div className="container px-4 md:px-6 max-w-7xl mx-auto py-12 md:py-16">
         {/* Top Section with Logo and Description */}
-        <div className="flex flex-col md:flex-row md:items-start md:justify-between mb-12">
-          <div className="max-w-sm md:max-w-md lg:max-w-lg">
-            <Link href="/" className="flex items-center gap-2 mb-4">
+        <div className="flex flex-col md:flex-row items-center justify-center mb-12">
+          <div className="max-w-sm md:max-w-md lg:max-w-lg text-center">
+            <Link href="/" className="flex items-center gap-2 mb-4 justify-center">
               <Zap className="h-5 w-5 md:h-6 md:w-6 text-white" />
               <span className="text-2xl md:text-3xl font-bold">Content Pulse</span>
             </Link>
             <p className="text-xs md:text-sm text-gray-400 max-w-[250px] md:max-w-none">
-              Automate your content strategy with powerful AI tools.
+              Automate your content strategy!
             </p>
           </div>
         </div>
 
         {/* Main Grid Section */}
-        <div className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 gap-8 md:gap-12 mb-12">
+        <div className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 gap-8 md:gap-12 mb-12 text-center sm:text-left">
           <div>
-            <h3 className="text-sm font-semibold mb-4 text-white">
-              Made by <a href="https://coove.studio" className="hover:text-primary transition-colors duration-200">Coove Studio</a>
+            <h3 className="text-sm font-semibold mb-4 text-black">
+              Made by <a href="https://coove.studio" className="hover:text-primary hover:font-semibold transition-colors duration-200">Coove Studio</a>
             </h3>
             <p className="text-sm text-gray-500">
               © {new Date().getFullYear()} Content Pulse
@@ -36,12 +36,12 @@ export function Footer() {
               All rights reserved
             </p>
             <p className="text-sm text-gray-500">
-              Flyingbox AB • Gothenburg, Sweden
+              Flyingbox AB
             </p>
           </div>
           {/* Product Column */}
           <div>
-            <h3 className="text-sm font-semibold mb-4 text-white">Product</h3>
+            <h3 className="text-sm font-semibold mb-4 text-black">Product</h3>
             <ul className="space-y-3">
               <li>
                 <Link
@@ -72,7 +72,7 @@ export function Footer() {
 
           {/* Legal Column */}
           <div>
-            <h3 className="text-sm font-semibold mb-4 text-white">Legal</h3>
+            <h3 className="text-sm font-semibold mb-4 text-black">Legal</h3>
             <ul className="space-y-3">
               <li>
                 <Link
@@ -101,8 +101,6 @@ export function Footer() {
             </ul>
           </div>
         </div>
-
-
       </div>
     </footer>
   );

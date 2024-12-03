@@ -43,14 +43,15 @@ export function PricingSection({ onSubscribe }: { onSubscribe: () => void }) {
                     <Suspense fallback={<div>Loading...</div>}>
                         <PricingCard
                             title="Content Pulse Pro"
-                            monthlyPrice={40}
+                            monthlyPrice={4}
                             yearlyPrice={32}
                             features={[
                                 "Unlimited AI content generation",
-                                "Smart content scheduling",
+                                "Tailored content for your brand",
+                                "Smart content generation scheduling",
                                 "Multiple content sources",
-                                "Analytics dashboard",
-                                "Priority support"
+                                "Priority support",
+                                "Receive your content via email"
                             ]}
                             buttonText="Get Started"
                             className="w-full max-w-md"

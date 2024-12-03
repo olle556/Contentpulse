@@ -13,26 +13,27 @@ export function Header({ onLogin }: { onLogin: () => void }) {
   const [isMobileMenuOpen, setIsMobileMenuOpen] = useState(false);
 
   return (
-    <header className="border-b border-gray-800 w-full">
+    <header className=" w-full">
       <div className="container flex h-14 md:h-16 items-center justify-between px-4 md:px-6 max-w-7xl mx-auto">
         <Link className="flex items-center gap-1.5 md:gap-2 font-semibold" href="#">
-          <Zap className="h-4 w-4 md:h-6 md:w-6" />
-          <span className="text-base md:text-lg">Content Pulse</span>
+          <Zap className="h-5 w-5 md:h-6 md:w-6" />
+          <span className="text-base text-2xl md:text-3xl">Content Pulse</span>
         </Link>
+     
         <div className="hidden md:flex items-center gap-4 lg:gap-8">
           {navigation.map((item) => (
             <Link
               key={item.name}
               href={item.href}
-              className="text-sm font-medium hover:text-gray-300 transition-colors"
+              className="text-base lg:text-lg font-medium hover:text-gray-300 transition-colors"
             >
               {item.name}
             </Link>
           ))}
-          <Button onClick={onLogin} size="sm" className="md:text-sm">
+          <Button onClick={onLogin} size="lg" className="text-base lg:text-lg">
             Login
           </Button>
-          <Button className="bg-white text-black hover:bg-gray-200 w-full sm:w-auto">
+          <Button size="lg" className="bg-white text-black hover:bg-gray-200 w-full sm:w-auto text-base lg:text-lg">
             Get Started
           </Button>
         </div>
@@ -54,6 +55,7 @@ export function Header({ onLogin }: { onLogin: () => void }) {
                 variant="ghost"
                 size="sm"
                 onClick={() => setIsMobileMenuOpen(false)}
+                className="text-black"
               >
                 <X className="h-4 w-4" />
               </Button>
@@ -73,11 +75,13 @@ export function Header({ onLogin }: { onLogin: () => void }) {
               <Button
                 onClick={onLogin}
                 size="sm"
-                className="w-full mt-4"
+                className="text-black hover:bg-gray-200 w-full mt-2"
               >
                 Login
               </Button>
-              <Button className="bg-white text-black hover:bg-gray-200 w-full mt-2">
+              <Button
+                size="sm"
+                className="w-full mt-4">
                 Get Started
               </Button>
             </nav>

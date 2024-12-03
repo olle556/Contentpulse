@@ -39,9 +39,9 @@ export default function LandingPage() {
               </p>
             </div>
             <div className="flex flex-col gap-3 w-full sm:w-auto sm:flex-row sm:gap-4">
-              <Button className="bg-white text-black hover:bg-gray-200 w-full sm:w-auto">
+              <Button className="bg-white text-black hover:bg-gray-200 w-full sm:w-auto text-base sm:text-lg md:text-xl">
                 Get Started for Free
-                <ArrowRight className="ml-2 h-4 w-4" />
+                <ArrowRight className="ml-2 h-5 w-5 sm:h-6 sm:w-6 md:h-7 md:w-7" />
               </Button>
             </div>
           </div>
@@ -50,9 +50,7 @@ export default function LandingPage() {
           <div className="container px-4 md:px-6">
             <div className="flex flex-col items-center justify-center space-y-4 text-center">
               <div className="space-y-2">
-                <div className="inline-block rounded-lg bg-gray-800 px-3 py-1 text-sm">
-                  Features
-                </div>
+                
                 <h2 className="text-2xl font-bold tracking-tighter sm:text-3xl md:text-4xl lg:text-5xl">
                   Everything you need to scale
                 </h2>
@@ -71,9 +69,7 @@ export default function LandingPage() {
                   </CardDescription>
                 </CardHeader>
                 <CardContent>
-                  <p className="text-sm text-gray-400">
-                    4 posts generated on average per day
-                  </p>
+                 
                 </CardContent>
               </Card>
               <Card className="bg-gray-900 border-gray-800">
@@ -85,9 +81,7 @@ export default function LandingPage() {
                   </CardDescription>
                 </CardHeader>
                 <CardContent>
-                  <p className="text-sm text-gray-400">
-                    2 active content sources monitored
-                  </p>
+                  
                 </CardContent>
               </Card>
               <Card className="bg-gray-900 border-gray-800">
@@ -99,9 +93,7 @@ export default function LandingPage() {
                   </CardDescription>
                 </CardHeader>
                 <CardContent>
-                  <p className="text-sm text-gray-400">
-                    1 active schedule managing your content
-                  </p>
+                 
                 </CardContent>
               </Card>
             </div>
@@ -131,7 +123,7 @@ export default function LandingPage() {
               <div className="flex flex-col gap-2 min-[400px]:flex-row">
                 <Button className="bg-white text-black hover:bg-gray-200"> 
                   Start a Free Trial
-                  <ArrowRight className="ml-2 h-4 w-4" />
+                  <ArrowRight className="ml-2 h-5 w-5" />
                 </Button>
               </div>
               <div className="text-sm text-gray-400 flex items-center gap-2 mt-2">
