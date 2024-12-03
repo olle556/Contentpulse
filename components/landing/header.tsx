@@ -32,6 +32,9 @@ export function Header({ onLogin }: { onLogin: () => void }) {
           <Button onClick={onLogin} size="sm" className="md:text-sm">
             Login
           </Button>
+          <Button className="bg-white text-black hover:bg-gray-200 w-full sm:w-auto">
+            Get Started
+          </Button>
         </div>
         <Button
           variant="ghost"
@@ -73,6 +76,9 @@ export function Header({ onLogin }: { onLogin: () => void }) {
                 className="w-full mt-4"
               >
                 Login
+              </Button>
+              <Button className="bg-white text-black hover:bg-gray-200 w-full mt-2">
+                Get Started
               </Button>
             </nav>
           </div>

@@ -14,6 +14,7 @@ import {
 } from "@/components/ui/card";
 import { FileText, Layers, Clock } from "lucide-react";
 import { PricingSection } from "@/components/landing/pricing-section";
+import ProcessFlow from "./process-flow";
 
 export default function LandingPage() {
   const router = useRouter();
@@ -39,11 +40,8 @@ export default function LandingPage() {
             </div>
             <div className="flex flex-col gap-3 w-full sm:w-auto sm:flex-row sm:gap-4">
               <Button className="bg-white text-black hover:bg-gray-200 w-full sm:w-auto">
-                Get Started
+                Get Started for Free
                 <ArrowRight className="ml-2 h-4 w-4" />
-              </Button>
-              <Button variant="outline" className="border-gray-800 w-full sm:w-auto">
-                View Demo
               </Button>
             </div>
           </div>
@@ -109,15 +107,21 @@ export default function LandingPage() {
             </div>
           </div>
         </section>
+
         <section id="pricing">
         <PricingSection onSubscribe={handleGetStarted} />
         </section>
-        <section className="w-full border-t border-gray-800 py-12 md:py-24 lg:py-32">
+
+        <section id="about">
+          <ProcessFlow />
+        </section>
+
+        <section className="w-full  py-12 md:py-24 lg:py-32">
           <div className="container px-4 md:px-6">
             <div className="flex flex-col items-center justify-center space-y-4 text-center">
               <div className="space-y-2">
                 <h2 className="text-3xl font-bold tracking-tighter sm:text-4xl md:text-5xl">
-                  Start automating your content today
+                  Start automating your content creation today
                 </h2>
                 <p className="mx-auto max-w-[600px] text-gray-400 md:text-xl/relaxed lg:text-base/relaxed xl:text-xl/relaxed">
                   Join thousands of content creators who trust Content Pulse to
@@ -125,13 +129,17 @@ export default function LandingPage() {
                 </p>
               </div>
               <div className="flex flex-col gap-2 min-[400px]:flex-row">
-                <Button className="bg-white text-black hover:bg-gray-200">
-                  Get Started
+                <Button className="bg-white text-black hover:bg-gray-200"> 
+                  Start a Free Trial
                   <ArrowRight className="ml-2 h-4 w-4" />
                 </Button>
-                <Button variant="outline" className="border-gray-800">
-                  View Pricing
-                </Button>
+              </div>
+              <div className="text-sm text-gray-400 flex items-center gap-2 mt-2">
+                <span>free 7 days trial</span>
+                <span>•</span>
+                <span>no credit card required</span>
+                <span>•</span>
+                <span>cancel anytime</span>
               </div>
             </div>
           </div>

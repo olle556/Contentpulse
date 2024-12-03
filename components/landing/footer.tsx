@@ -3,72 +3,68 @@ import { Zap } from "lucide-react";
 
 export function Footer() {
   return (
-    <footer className="w-full border-t border-gray-800 bg-gray-950">
+    <footer className="w-full bg-gray-900 rounded-t-lg">
       <div className="container px-4 md:px-6 max-w-7xl mx-auto py-12 md:py-16">
         {/* Top Section with Logo and Description */}
         <div className="flex flex-col md:flex-row md:items-start md:justify-between mb-12">
-          <div className="max-w-sm">
+          <div className="max-w-sm md:max-w-md lg:max-w-lg">
             <Link href="/" className="flex items-center gap-2 mb-4">
-              <Zap className="h-6 w-6 text-primary" />
-              <span className="text-xl font-bold">Content Pulse</span>
+              <Zap className="h-5 w-5 md:h-6 md:w-6 text-white" />
+              <span className="text-2xl md:text-3xl font-bold">Content Pulse</span>
             </Link>
-            <p className="text-sm text-gray-400">
+            <p className="text-xs md:text-sm text-gray-400 max-w-[250px] md:max-w-none">
               Automate your content strategy with powerful AI tools.
             </p>
           </div>
         </div>
 
         {/* Main Grid Section */}
-        <div className="grid grid-cols-2 md:grid-cols-4 gap-8 md:gap-12 mb-12">
+        <div className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 gap-8 md:gap-12 mb-12">
+          <div>
+            <h3 className="text-sm font-semibold mb-4 text-white">
+              Made by <a href="https://coove.studio" className="hover:text-primary transition-colors duration-200">Coove Studio</a>
+            </h3>
+            <p className="text-sm text-gray-500">
+              © {new Date().getFullYear()} Content Pulse
+            </p>
+            <p className="text-sm text-gray-500">
+              <a href="mailto:hello@coove.studio" className="hover:text-primary transition-colors duration-200">
+                hello@coove.studio
+              </a>
+            </p>
+            <p className="text-sm text-gray-500">
+              All rights reserved
+            </p>
+            <p className="text-sm text-gray-500">
+              Flyingbox AB • Gothenburg, Sweden
+            </p>
+          </div>
           {/* Product Column */}
           <div>
             <h3 className="text-sm font-semibold mb-4 text-white">Product</h3>
             <ul className="space-y-3">
               <li>
-                <Link 
-                  href="#features" 
+                <Link
+                  href="#features"
                   className="text-sm text-gray-400 hover:text-primary transition-colors duration-200"
                 >
                   Features
                 </Link>
               </li>
               <li>
-                <Link 
-                  href="#pricing" 
+                <Link
+                  href="#pricing"
                   className="text-sm text-gray-400 hover:text-primary transition-colors duration-200"
                 >
                   Pricing
                 </Link>
               </li>
               <li>
-                <Link 
-                  href="#about" 
+                <Link
+                  href="#about"
                   className="text-sm text-gray-400 hover:text-primary transition-colors duration-200"
                 >
                   About
-                </Link>
-              </li>
-            </ul>
-          </div>
-
-          {/* Resources Column */}
-          <div>
-            <h3 className="text-sm font-semibold mb-4 text-white">Socials</h3>
-            <ul className="space-y-3">
-              <li>
-                <Link 
-                  href="#" 
-                  className="text-sm text-gray-400 hover:text-primary transition-colors duration-200 flex items-center gap-2"
-                >
-                  Twitter
-                </Link>
-              </li>
-              <li>
-                <Link 
-                  href="#" 
-                  className="text-sm text-gray-400 hover:text-primary transition-colors duration-200 flex items-center gap-2"
-                >
-                  LinkedIn
                 </Link>
               </li>
             </ul>
@@ -79,24 +75,24 @@ export function Footer() {
             <h3 className="text-sm font-semibold mb-4 text-white">Legal</h3>
             <ul className="space-y-3">
               <li>
-                <Link 
-                  href="/privacy" 
+                <Link
+                  href="/privacy"
                   className="text-sm text-gray-400 hover:text-primary transition-colors duration-200"
                 >
                   Privacy Policy
                 </Link>
               </li>
               <li>
-                <Link 
-                  href="/terms" 
+                <Link
+                  href="/terms"
                   className="text-sm text-gray-400 hover:text-primary transition-colors duration-200"
                 >
                   Terms of Service
                 </Link>
               </li>
               <li>
-                <Link 
-                  href="/cookie" 
+                <Link
+                  href="/cookie"
                   className="text-sm text-gray-400 hover:text-primary transition-colors duration-200"
                 >
                   Cookie Policy
@@ -106,14 +102,7 @@ export function Footer() {
           </div>
         </div>
 
-        {/* Bottom Section */}
-        <div className="pt-8 border-t border-gray-800">
-          <div className="flex flex-col md:flex-row md:items-center">
-            <p className="text-sm text-gray-500">
-              © {new Date().getFullYear()} Content Pulse. All rights reserved.
-            </p>
-          </div>
-        </div>
+
       </div>
     </footer>
   );
