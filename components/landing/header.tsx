@@ -13,7 +13,7 @@ export function Header({ onLogin }: { onLogin: () => void }) {
   const [isMobileMenuOpen, setIsMobileMenuOpen] = useState(false);
 
   return (
-    <header className=" w-full">
+    <header className="w-full pt-4">
       <div className="container flex h-14 md:h-16 items-center justify-between px-2 md:px-4 max-w-full mx-auto">
         <Link className="flex items-center gap-1.5 md:gap-2 font-semibold" href="#">
           <Zap className="h-5 w-5 md:h-6 md:w-6" />
@@ -32,8 +32,8 @@ export function Header({ onLogin }: { onLogin: () => void }) {
           ))}
         </div>
 
-        <div className="flex items-center gap-4 lg:gap-8">
-          <Button onClick={onLogin} size="lg" className="text-base lg:text-lg">
+        <div className="flex items-center gap-2 lg:gap-4">
+          <Button onClick={onLogin} size="lg" className="text-base lg:text-lg font-medium hover:text-gray-300 transition-colors bg-transparent">
             Login
           </Button>
           <Button size="lg" className="bg-white text-black hover:bg-gray-200 w-full sm:w-auto text-base lg:text-lg">
