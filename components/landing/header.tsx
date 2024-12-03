@@ -14,13 +14,13 @@ export function Header({ onLogin }: { onLogin: () => void }) {
 
   return (
     <header className=" w-full">
-      <div className="container flex h-14 md:h-16 items-center justify-between px-4 md:px-6 max-w-7xl mx-auto">
+      <div className="container flex h-14 md:h-16 items-center justify-between px-2 md:px-4 max-w-full mx-auto">
         <Link className="flex items-center gap-1.5 md:gap-2 font-semibold" href="#">
           <Zap className="h-5 w-5 md:h-6 md:w-6" />
           <span className="text-base text-2xl md:text-3xl">Content Pulse</span>
         </Link>
-     
-        <div className="hidden md:flex items-center gap-4 lg:gap-8">
+
+        <div className="flex items-center gap-4 lg:gap-8">
           {navigation.map((item) => (
             <Link
               key={item.name}
@@ -30,6 +30,9 @@ export function Header({ onLogin }: { onLogin: () => void }) {
               {item.name}
             </Link>
           ))}
+        </div>
+
+        <div className="flex items-center gap-4 lg:gap-8">
           <Button onClick={onLogin} size="lg" className="text-base lg:text-lg">
             Login
           </Button>
@@ -37,6 +40,7 @@ export function Header({ onLogin }: { onLogin: () => void }) {
             Get Started
           </Button>
         </div>
+        
         <Button
           variant="ghost"
           size="sm"
