@@ -325,8 +325,10 @@ export function GeneratePostDialog({ open, onOpenChange, onSuccess }: GeneratePo
         body: JSON.stringify(requestBody),
       });
 
-      if (!await handleSubscriptionResponse(response)) {
-        return;
+      // Wait for the subscription check result
+      const isAuthorized = await handleSubscriptionResponse(response);
+      if (!isAuthorized) {
+        return; // Stop here if not authorized - toast will be shown by handleSubscriptionResponse
       }
 
       const data = await response.json();

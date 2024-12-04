@@ -7,7 +7,7 @@ import { Input } from "@/components/ui/input";
 import { isValidUrl, ensureHttps } from "@/lib/utils";
 import { useSession } from "next-auth/react";
 import { toast } from "@/hooks/use-toast";
-import { handleSubscriptionResponse } from '@/lib/handle-subscription-response';
+
 
 interface AddSourceDialogProps {
   open: boolean;
@@ -67,9 +67,7 @@ export function AddSourceDialog({ open, onOpenChange, onSuccess }: AddSourceDial
         credentials: 'include',
       });
 
-      if (!await handleSubscriptionResponse(response)) {
-        return;
-      }
+     
 
       console.log("Response status:", response.status);
       const data = await response.json();

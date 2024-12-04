@@ -41,6 +41,7 @@ import { cn } from "@/lib/utils"
 import { useSession } from "next-auth/react"
 import { ContentSchedule } from "@/types";
 import { handleSubscriptionResponse } from '@/lib/handle-subscription-response';
+import { useToast } from "@/hooks/use-toast"
 
 const formSchema = z.object({
   contentSourceId: z.string().min(1, "Content source is required"),
@@ -85,6 +86,7 @@ const daysOfWeek = ["Mon", "Tue", "Wed", "Thu", "Fri", "Sat", "Sun"]
 export function ContentScheduler({ open, onOpenChange, contentSources, editSchedule, onScheduleUpdate }: ContentSchedulerProps) {
   const { data: session } = useSession()
   const [isRecurring, setIsRecurring] = useState(false)
+  const { toast } = useToast()
 
   const form = useForm<z.infer<typeof formSchema>>({
     resolver: zodResolver(formSchema),
@@ -185,8 +187,10 @@ export function ContentScheduler({ open, onOpenChange, contentSources, editSched
         body: JSON.stringify(dataToSend),
       });
 
-      if (!await handleSubscriptionResponse(response)) {
-        return;
+      // Wait for the subscription check result
+      const isAuthorized = await handleSubscriptionResponse(response);
+      if (!isAuthorized) {
+        return; // Stop here if not authorized - toast will be shown by handleSubscriptionResponse
       }
 
       if (!response.ok) {
@@ -197,6 +201,11 @@ export function ContentScheduler({ open, onOpenChange, contentSources, editSched
       onOpenChange(false);
     } catch (error) {
       console.error('Error scheduling content:', error);
+      toast({
+        title: "Error",
+        description: "Failed to schedule content. Please try again.",
+        variant: "destructive",
+      });
     }
   };
 
