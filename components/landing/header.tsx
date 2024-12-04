@@ -20,7 +20,7 @@ export function Header({ onLogin }: { onLogin: () => void }) {
           <span className="text-base text-2xl md:text-3xl">Content Pulse</span>
         </Link>
 
-        <div className="flex items-center gap-4 lg:gap-8">
+        <div className="hidden md:flex items-center gap-4 lg:gap-8">
           {navigation.map((item) => (
             <Link
               key={item.name}
@@ -32,7 +32,7 @@ export function Header({ onLogin }: { onLogin: () => void }) {
           ))}
         </div>
 
-        <div className="flex items-center gap-2 lg:gap-4">
+        <div className="hidden md:flex items-center gap-2 lg:gap-4">
           <Button onClick={onLogin} size="lg" className="text-base lg:text-lg font-medium hover:text-gray-300 transition-colors bg-transparent">
             Login
           </Button>
@@ -41,19 +41,21 @@ export function Header({ onLogin }: { onLogin: () => void }) {
           </Button>
         </div>
         
-        <Button
-          variant="ghost"
-          size="sm"
-          className="md:hidden p-1.5"
-          onClick={() => setIsMobileMenuOpen(true)}
-        >
-          <Menu className="h-4 w-4" />
-        </Button>
+        <div className="flex md:hidden">
+          <Button
+            variant="ghost"
+            size="sm"
+            className="p-1.5"
+            onClick={() => setIsMobileMenuOpen(true)}
+          >
+            <Menu className="h-4 w-4" />
+          </Button>
+        </div>
       </div>
 
       {isMobileMenuOpen && (
         <div className="fixed inset-0 bg-black bg-opacity-50 z-50 md:hidden">
-          <div className="fixed right-0 top-0 h-full w-64 bg-card">
+          <div className="fixed right-0 top-0 h-full w-64 bg-white">
             <div className="flex justify-end p-4">
               <Button
                 variant="ghost"
