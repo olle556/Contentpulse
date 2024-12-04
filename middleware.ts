@@ -5,7 +5,6 @@ import { checkSubscription } from '@/lib/subscription';
 const protectedGenerationPaths = [
   '/api/generate-post',
   '/api/schedule',
-  '/api/sources'
 ];
 
 // Middleware wrapped with withAuth to maintain authentication for all routes
@@ -78,6 +77,5 @@ export const config = {
     '/dashboard/:path*',
     '/api/generate-post/:path*',
     '/api/schedule/:path*',
-    '/api/sources/:path*'
   ]
 };
