@@ -59,7 +59,7 @@ export default function LandingPage() {
                 </p>
               </div>
             </div>
-            <div className="mx-auto grid max-w-5xl grid-cols-1 gap-6 pt-12 md:grid-cols-2 lg:grid-cols-3">
+            <div className="mx-auto grid max-w-5xl grid-cols-1 gap-6 pt-12 md:grid-cols-3 lg:grid-cols-3">
               <Card className="bg-gray-900 border-gray-800">
                 <CardHeader>
                   <FileText className="h-10 w-10 text-white" />

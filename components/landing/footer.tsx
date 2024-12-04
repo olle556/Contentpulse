@@ -19,7 +19,7 @@ export function Footer() {
         </div>
 
         {/* Main Grid Section */}
-        <div className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 gap-8 md:gap-12 mb-12 text-center sm:text-left">
+        <div className="grid grid-cols-1 sm:grid-cols-3 md:grid-cols-3 gap-8 md:gap-12 mb-12 text-center sm:text-left">
           <div>
             <h3 className="text-sm font-semibold mb-4 text-black">
               Made by <a href="https://coove.studio" className="hover:text-primary hover:font-semibold hover:text-gray-600 transition-colors duration-200">Coove Studio</a>
