@@ -3,23 +3,29 @@ import { NextResponse } from 'next/server';
 import { checkSubscription } from '@/lib/subscription';
 
 const protectedGenerationPaths = [
-  '/api/generate',
-  '/api/schedule'
+  '/api/generate-post',
+  '/api/schedule',
+  '/api/sources'
 ];
 
+// Middleware wrapped with withAuth to maintain authentication for all routes
 export default withAuth(
   async function middleware(request) {
-    // Check for protected generation paths
-    if (protectedGenerationPaths.some(path => request.url.includes(path))) {
-      const token = request.nextauth.token;
 
-      if (!token?.sub) {
-        return new NextResponse('Unauthorized', { status: 401 });
-      }
+              // Check for protected generation paths
+              //if (protectedGenerationPaths.some(path => request.url.includes(path))) {
+              //  const token = request.nextauth.token;
 
-      //const hasSubscription = await checkSubscription(token.sub); ** använder checksub i routen
+              //  if (!token?.sub) {
+              //    return new NextResponse('Unauthorized', { status: 401 });
+              //  }
 
-      // Make API call to check subscription with proper error handling
+                //const hasSubscription = await checkSubscription(token.sub); -> använder checksubscription i shceck-subscription_2 routen istället
+
+                // Make API call to check subscription with proper error handling
+
+    // Only check subscription for API generation paths
+    if (protectedGenerationPaths.some(path => request.nextUrl.pathname.startsWith(path))) {
       try {
         const response = await fetch(`${process.env.NEXT_PUBLIC_BASE_URL}/api/check-subscription_2`, {
           cache: 'no-store',
@@ -40,8 +46,12 @@ export default withAuth(
         });
 
         if (!data.authorized) {
-          console.log('Authorization failed. Full data:', data);
-          return new NextResponse('Subscription required', { status: 403 });
+          return NextResponse.json({ 
+            error: 'Subscription required',
+            redirectUrl: '/dashboard/settings'
+          }, { 
+            status: 403 
+          });
         }
       } catch (error) {
         console.error('Error checking subscription:', error);
@@ -52,18 +62,22 @@ export default withAuth(
     return NextResponse.next();
   },
   {
+    // Keep existing authentication protection for all dashboard routes
+    callbacks: {
+      authorized: ({ token }) => !!token
+    },
     pages: {
       signIn: '/authentication/login',
     },
   }
 );
 
+// Keep protecting all dashboard routes with authentication
 export const config = {
   matcher: [
     '/dashboard/:path*',
-    '/settings/:path*',
-    '/api/sources/:path*',
-    '/api/generate/:path*',
-    '/api/schedule/:path*'
+    '/api/generate-post/:path*',
+    '/api/schedule/:path*',
+    '/api/sources/:path*'
   ]
-}
+};

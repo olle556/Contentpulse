@@ -29,8 +29,7 @@ export default async function SettingsPage() {
       <Tabs defaultValue="notifications" className="space-y-6">
         <TabsList>
           <TabsTrigger value="notifications">Notifications</TabsTrigger>
-          <TabsTrigger value="subscription">Subscription</TabsTrigger>
-          <TabsTrigger value="account">Account</TabsTrigger>
+          <TabsTrigger value="subscription">Account & Subscription</TabsTrigger>
         </TabsList>
 
         <TabsContent value="notifications" className="space-y-6">
@@ -47,7 +46,7 @@ export default async function SettingsPage() {
         <TabsContent value="subscription" className="space-y-6">
           <Card>
             <CardHeader>
-              <CardTitle>Subscription & Payment Settings</CardTitle>
+              <CardTitle>Account & Subscription Settings</CardTitle>
             </CardHeader>
             <CardContent>
               <SubscriptionSettings 
@@ -60,16 +59,6 @@ export default async function SettingsPage() {
           </Card>
         </TabsContent>
 
-        <TabsContent value="account" className="space-y-6">
-          <Card>
-            <CardHeader>
-              <CardTitle>Account settings</CardTitle>
-            </CardHeader>
-            <CardContent>
-              
-            </CardContent>
-          </Card>
-        </TabsContent>
       </Tabs>
     </div>
   );

@@ -12,6 +12,7 @@ import {
 import { Button } from "@/components/ui/button";
 import { Label } from "@/components/ui/label";
 import { Textarea } from "@/components/ui/textarea";
+import { handleSubscriptionResponse } from '@/lib/handle-subscription-response';
 
 interface EditPostDialogProps {
   post: GeneratedPost | null;
@@ -46,6 +47,10 @@ export function EditPostDialog({
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({ content }),
       });
+
+      if (!await handleSubscriptionResponse(response)) {
+        return;
+      }
 
       if (!response.ok) throw new Error('Failed to update post');
 

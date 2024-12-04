@@ -40,6 +40,7 @@ import { Switch } from "@/components/ui/switch"
 import { cn } from "@/lib/utils"
 import { useSession } from "next-auth/react"
 import { ContentSchedule } from "@/types";
+import { handleSubscriptionResponse } from '@/lib/handle-subscription-response';
 
 const formSchema = z.object({
   contentSourceId: z.string().min(1, "Content source is required"),
@@ -183,6 +184,10 @@ export function ContentScheduler({ open, onOpenChange, contentSources, editSched
         },
         body: JSON.stringify(dataToSend),
       });
+
+      if (!await handleSubscriptionResponse(response)) {
+        return;
+      }
 
       if (!response.ok) {
         throw new Error('Failed to schedule content');
