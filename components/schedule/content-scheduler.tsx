@@ -42,6 +42,7 @@ import { useSession } from "next-auth/react"
 import { ContentSchedule } from "@/types";
 import { handleSubscriptionResponse } from '@/lib/handle-subscription-response';
 import { useToast } from "@/hooks/use-toast"
+import { SubscriptionHandler } from "@/components/subscription/subscription-handler"
 
 const formSchema = z.object({
   contentSourceId: z.string().min(1, "Content source is required"),
@@ -187,18 +188,18 @@ export function ContentScheduler({ open, onOpenChange, contentSources, editSched
         body: JSON.stringify(dataToSend),
       });
 
-      // Wait for the subscription check result
-      const isAuthorized = await handleSubscriptionResponse(response);
-      if (!isAuthorized) {
-        return; // Stop here if not authorized - toast will be shown by handleSubscriptionResponse
-      }
+      return (
+        <SubscriptionHandler response={response}>
+          {async () => {
+            if (!response.ok) {
+              throw new Error('Failed to schedule content');
+            }
 
-      if (!response.ok) {
-        throw new Error('Failed to schedule content');
-      }
-
-      onScheduleUpdate?.();
-      onOpenChange(false);
+            onScheduleUpdate?.();
+            onOpenChange(false);
+          }}
+        </SubscriptionHandler>
+      );
     } catch (error) {
       console.error('Error scheduling content:', error);
       toast({
