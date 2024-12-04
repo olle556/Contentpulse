@@ -48,7 +48,7 @@ export function Header({ onLogin }: { onLogin: () => void }) {
             className="p-1.5"
             onClick={() => setIsMobileMenuOpen(true)}
           >
-            <Menu className="h-4 w-4" />
+            <Menu className="h-5 w-5" />
           </Button>
         </div>
       </div>
@@ -61,9 +61,9 @@ export function Header({ onLogin }: { onLogin: () => void }) {
                 variant="ghost"
                 size="sm"
                 onClick={() => setIsMobileMenuOpen(false)}
-                className="text-black"
+                className="text-black hover:bg-gray-100 p-1.5"
               >
-                <X className="h-4 w-4 pt-4" />
+                <X className="h-5 w-5" />
               </Button>
             </div>
             <nav className="flex-1 space-y-1 p-2 md:px-3 md:py-4">
