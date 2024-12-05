@@ -52,7 +52,7 @@ export default function SchedulePage() {
       </div>
 
       <p className="text-muted-foreground mt-2 text-center sm:text-left">
-        Schedule your post generations in advance. Set up recurring or one-time posts to maintain a consistent posting schedule. Your posts will be automatically generated at the specified times using your selected content sources and preferences, ensuring content is always up-to-date by using the latest information from your sources at the time of generation. Additionally, you&apos;ll receive your social media posts directly to your email address, allowing you to get notified when new posts have been generated and seamlessly share them on your social media platforms.
+        Schedule automatic post generations for your social media content. Each generation uses the latest data from your content sources, and the generated posts will be delivered directly to your email for easy sharing.
       </p>
 
       <ScheduledPostList key={refreshTrigger} />

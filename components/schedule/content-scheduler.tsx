@@ -191,17 +191,19 @@ export function ContentScheduler({ open, onOpenChange, contentSources, editSched
         toast({
           title: "Subscription Required",
           description: (
-            <div className="flex flex-col gap-2">
+            <div className="flex flex-col gap-2 items-center text-center">
               <p>Please subscribe to access this feature.</p>
               <Button 
                 variant="outline" 
                 onClick={() => window.location.href = '/dashboard/settings'}
+                className="text-black hover:bg-gray-100"
               >
                 Settings
               </Button>
             </div>
           ),
           variant: "destructive",
+          className: "fixed top-1/2 left-1/2 transform -translate-x-1/2 -translate-y-1/2"
         });
         return;
       }
