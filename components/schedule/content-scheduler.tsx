@@ -40,7 +40,6 @@ import { Switch } from "@/components/ui/switch"
 import { cn } from "@/lib/utils"
 import { useSession } from "next-auth/react"
 import { ContentSchedule } from "@/types";
-import { handleSubscriptionResponse } from '@/lib/handle-subscription-response';
 import { useToast } from "@/hooks/use-toast"
 import { SubscriptionHandler } from "@/components/subscription/subscription-handler"
 
@@ -188,8 +187,24 @@ export function ContentScheduler({ open, onOpenChange, contentSources, editSched
         body: JSON.stringify(dataToSend),
       });
 
-      const isAuthorized = await handleSubscriptionResponse(response);
-      if (!isAuthorized) return;
+      if (response.status === 403) {
+        toast({
+          title: "Subscription Required",
+          description: (
+            <div className="flex flex-col gap-2">
+              <p>Please subscribe to access this feature.</p>
+              <Button 
+                variant="outline" 
+                onClick={() => window.location.href = '/dashboard/settings'}
+              >
+                Settings
+              </Button>
+            </div>
+          ),
+          variant: "destructive",
+        });
+        return;
+      }
 
       if (!response.ok) {
         throw new Error('Failed to schedule content');

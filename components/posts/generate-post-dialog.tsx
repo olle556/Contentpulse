@@ -12,6 +12,7 @@ import { Textarea } from "@/components/ui/textarea";
 import { Label } from "@/components/ui/label";
 import { Checkbox } from "@/components/ui/checkbox";
 import { toast } from "sonner";
+import { useToast } from "@/hooks/use-toast" // Add this import
 import { ContentSource } from "@/types";
 import { Loader2, Check, RefreshCw, Save } from "lucide-react";
 import { useEditor, EditorContent } from "@tiptap/react";
@@ -35,6 +36,7 @@ interface GeneratePostDialogProps {
 }
 
 export function GeneratePostDialog({ open, onOpenChange, onSuccess }: GeneratePostDialogProps) {
+  const { toast: toast_hook } = useToast();
   const [sources, setSources] = useState<ContentSource[]>([]);
   const [selectedSources, setSelectedSources] = useState<string[]>([]);
   const [generatingPost, setGeneratingPost] = useState(false);
@@ -325,10 +327,23 @@ export function GeneratePostDialog({ open, onOpenChange, onSuccess }: GeneratePo
         body: JSON.stringify(requestBody),
       });
 
-      // Wait for the subscription check result
-      const isAuthorized = await handleSubscriptionResponse(response);
-      if (!isAuthorized) {
-        return; // Stop here if not authorized - toast will be shown by handleSubscriptionResponse
+      if (response.status === 403) {
+        toast_hook({
+          title: "Subscription Required",
+          description: (
+            <div className="flex flex-col gap-2">
+              <p>Please subscribe to access this feature.</p>
+              <Button 
+                variant="outline" 
+                onClick={() => window.location.href = '/dashboard/settings'}
+              >
+                Settings
+              </Button>
+            </div>
+          ),
+          variant: "destructive",
+        });
+        return;
       }
 
       const data = await response.json();
