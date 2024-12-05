@@ -1,25 +1,13 @@
-import { useRouter } from 'next/navigation';
-import { useToast } from '@/hooks/use-toast';
-import { Button } from '@/components/ui/button';
-
-// Struntar i denna. GAMMAL!!!
-
-// NOT USING THIS ANYMORE
+import { toast } from "sonner";
 
 export async function handleSubscriptionResponse(response: Response) {
   if (response.status === 403) {
-    const router = useRouter();
-    const { toast } = useToast();
     const data = await response.json();
     
-    toast({
-      title: "Subscription Required",
-      description: "Please subscribe to access this feature.",
-      variant: "destructive",
-    });
+    toast.error("Please subscribe to access this feature.");
     
     if (data.redirectUrl) {
-      router.push(data.redirectUrl);
+      window.location.href = data.redirectUrl;
     }
     return false;
   }

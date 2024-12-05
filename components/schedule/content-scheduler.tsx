@@ -188,18 +188,15 @@ export function ContentScheduler({ open, onOpenChange, contentSources, editSched
         body: JSON.stringify(dataToSend),
       });
 
-      return (
-        <SubscriptionHandler response={response}>
-          {async () => {
-            if (!response.ok) {
-              throw new Error('Failed to schedule content');
-            }
+      const isAuthorized = await handleSubscriptionResponse(response);
+      if (!isAuthorized) return;
 
-            onScheduleUpdate?.();
-            onOpenChange(false);
-          }}
-        </SubscriptionHandler>
-      );
+      if (!response.ok) {
+        throw new Error('Failed to schedule content');
+      }
+
+      onScheduleUpdate?.();
+      onOpenChange(false);
     } catch (error) {
       console.error('Error scheduling content:', error);
       toast({
@@ -219,8 +216,8 @@ export function ContentScheduler({ open, onOpenChange, contentSources, editSched
           </DialogTitle>
         </DialogHeader>
         <Form {...form}>
-          <form 
-            onSubmit={form.handleSubmit(onSubmit)} 
+          <form
+            onSubmit={form.handleSubmit(onSubmit)}
             className="flex flex-col h-full overflow-hidden"
           >
             <div className="flex-1 overflow-y-auto space-y-6 p-2 pb-4">
@@ -326,36 +323,36 @@ export function ContentScheduler({ open, onOpenChange, contentSources, editSched
                 )}
               />
 
-              {form.watch("platforms").some(platform => 
+              {form.watch("platforms").some(platform =>
                 ["X", "X Premium", "Threads"].includes(platform)
               ) && (
-                <FormField
-                  control={form.control}
-                  name="threadCount"
-                  render={({ field }) => (
-                    <FormItem>
-                      <FormLabel>Number of Threads</FormLabel>
-                      <Select
-                        value={field.value.toString()}
-                        onValueChange={(value) => field.onChange(parseInt(value))}
-                      >
-                        <FormControl>
-                          <SelectTrigger>
-                            <SelectValue placeholder="Select number of threads" />
-                          </SelectTrigger>
-                        </FormControl>
-                        <SelectContent>
-                          {Array.from({length: 10}, (_, i) => i + 1).map((num) => (
-                            <SelectItem key={num} value={num.toString()}>
-                              {num} {num === 1 ? 'thread' : 'threads'}
-                            </SelectItem>
-                          ))}
-                        </SelectContent>
-                      </Select>
-                    </FormItem>
-                  )}
-                />
-              )}
+                  <FormField
+                    control={form.control}
+                    name="threadCount"
+                    render={({ field }) => (
+                      <FormItem>
+                        <FormLabel>Number of Threads</FormLabel>
+                        <Select
+                          value={field.value.toString()}
+                          onValueChange={(value) => field.onChange(parseInt(value))}
+                        >
+                          <FormControl>
+                            <SelectTrigger>
+                              <SelectValue placeholder="Select number of threads" />
+                            </SelectTrigger>
+                          </FormControl>
+                          <SelectContent>
+                            {Array.from({ length: 10 }, (_, i) => i + 1).map((num) => (
+                              <SelectItem key={num} value={num.toString()}>
+                                {num} {num === 1 ? 'thread' : 'threads'}
+                              </SelectItem>
+                            ))}
+                          </SelectContent>
+                        </Select>
+                      </FormItem>
+                    )}
+                  />
+                )}
 
               <FormField
                 control={form.control}
@@ -527,7 +524,7 @@ export function ContentScheduler({ open, onOpenChange, contentSources, editSched
                 )}
               />
             </div>
-            
+
             <div className="sticky bottom-0 pt-4 mt-auto bg-background border-t">
               <Button type="submit" className="w-full">
                 {editSchedule ? "Submit Changes" : "Schedule Content Generation"}
