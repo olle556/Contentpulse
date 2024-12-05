@@ -41,7 +41,6 @@ import { cn } from "@/lib/utils"
 import { useSession } from "next-auth/react"
 import { ContentSchedule } from "@/types";
 import { useToast } from "@/hooks/use-toast"
-import { SubscriptionHandler } from "@/components/subscription/subscription-handler"
 
 const formSchema = z.object({
   contentSourceId: z.string().min(1, "Content source is required"),
