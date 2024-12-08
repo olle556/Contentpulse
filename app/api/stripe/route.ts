@@ -60,8 +60,8 @@ export async function POST(req: Request) {
       subscription_data: {
         trial_period_days: 7,
       },
-      success_url: `${process.env.NEXT_PUBLIC_APP_URL}/dashboard/settings?success=true`,
-      cancel_url: `${process.env.NEXT_PUBLIC_APP_URL}/dashboard/settings?canceled=true`,
+      success_url: `${process.env.NEXT_PUBLIC_BASE_URL}/dashboard/settings?success=true`,
+      cancel_url: `${process.env.NEXT_PUBLIC_BASE_URL}/dashboard/settings?canceled=true`,
     });
 
     return NextResponse.json({ sessionId: checkoutSession.id });
