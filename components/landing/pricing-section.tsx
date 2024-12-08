@@ -46,12 +46,14 @@ export function PricingSection({ onSubscribe }: { onSubscribe: () => void }) {
                             monthlyPrice={4}
                             yearlyPrice={32}
                             features={[
+                                "7-day free trial",
                                 "Unlimited AI content generation",
                                 "Tailored content for your brand",
                                 "Smart content generation scheduling",
                                 "Multiple content sources",
+                                "Receive your content via email",
                                 "Priority support",
-                                "Receive your content via email"
+                                "Be part of Content Pulse development"
                             ]}
                             buttonText="Get Started"
                             className="w-full max-w-md"

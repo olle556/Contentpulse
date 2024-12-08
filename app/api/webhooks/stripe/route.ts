@@ -103,6 +103,13 @@ export async function POST(req: Request) {
         }
         break;
       }
+
+      case 'customer.subscription.trial_will_end': {
+        const subscription = event.data.object as Stripe.Subscription;
+        // Send notification to user that trial is ending
+        // You can implement email notifications here
+        break;
+      }
     }
 
     return NextResponse.json({ 

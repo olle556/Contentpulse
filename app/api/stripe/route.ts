@@ -13,6 +13,8 @@ export async function POST(req: Request) {
       );
     }
 
+    const { interval } = await req.json();
+    
     const user = await prisma.user.findUnique({
       where: { email: session.user.email },
     });
@@ -40,6 +42,10 @@ export async function POST(req: Request) {
       });
     }
 
+    const priceId = interval === 'year' ? 
+      process.env.STRIPE_YEARLY_PRICE_ID : 
+      process.env.STRIPE_MONTHLY_PRICE_ID;
+
     // Create Stripe Checkout Session
     const checkoutSession = await stripe.checkout.sessions.create({
       customer: customerId,
@@ -47,10 +53,13 @@ export async function POST(req: Request) {
       payment_method_types: ['card'],
       line_items: [
         {
-          price: 'price_YOUR_PRICE_ID', // Replace with your Stripe price ID
+          price: priceId,
           quantity: 1,
         },
       ],
+      subscription_data: {
+        trial_period_days: 7,
+      },
       success_url: `${process.env.NEXT_PUBLIC_APP_URL}/dashboard/settings?success=true`,
       cancel_url: `${process.env.NEXT_PUBLIC_APP_URL}/dashboard/settings?canceled=true`,
     });
