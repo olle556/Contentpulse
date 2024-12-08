@@ -19,6 +19,7 @@ import {
 } from "@/components/ui/alert-dialog";
 import { signOut } from "next-auth/react";
 import { deleteUser } from "@/lib/deleteUser";
+import { getStripe } from "@/lib/stripe";
 
 interface SubscriptionSettingsProps {
   stripeCustomerId?: string | null;
@@ -46,10 +47,12 @@ export function SubscriptionSettings({
   const [trialStatus, setTrialStatus] = useState<string | null>(null);
   const [trialEndDate, setTrialEndDate] = useState<Date | null>(null);
 
+  const baseUrl = process.env.NEXT_PUBLIC_BASE_URL || '';
+
   useEffect(() => {
     const checkTrialStatus = async () => {
       try {
-        const response = await fetch('/api/check-subscription_2/check-trialstatus');
+        const response = await fetch(`${baseUrl}/api/check-subscription_2/check-trialstatus`);
         const data = await response.json();
         setTrialStatus(data.status);
         setTrialEndDate(data.trialEndDate ? new Date(data.trialEndDate) : null);
@@ -67,7 +70,7 @@ export function SubscriptionSettings({
 
   const handlePortalAccess = async () => {
     try {
-      const response = await fetch('/api/stripe/create-portal', {
+      const response = await fetch(`${baseUrl}/api/stripe/create-portal`, {
         method: 'POST',
       });
       const { url } = await response.json();
@@ -88,8 +91,24 @@ export function SubscriptionSettings({
         // Existing customer - open portal
         await handlePortalAccess();
       } else {
-        // New subscription
-        window.location.href = 'https://buy.stripe.com/test_eVa17CfX90fXdr25kk';
+        // New subscription - create checkout session
+        // // New subscription
+        //window.location.href = 'https://buy.stripe.com/test_eVa17CfX90fXdr25kk'
+        const response = await fetch(`${baseUrl}/api/stripe`, {
+          method: 'POST',
+          headers: {
+            'Content-Type': 'application/json',
+          },
+          body: JSON.stringify({
+            interval: 'month', // or 'year' depending on your pricing strategy
+          }),
+        });
+
+        const { sessionId } = await response.json();
+        
+        // Redirect to Stripe Checkout
+        const stripe = await getStripe();
+        await stripe.redirectToCheckout({ sessionId });
       }
     } catch (error) {
       toast({
