@@ -1,6 +1,6 @@
 'use client';
 
-import { useState, useEffect } from "react";
+import { useState, useEffect, useMemo } from "react";
 import { useRouter } from 'next/navigation';
 import { Button } from "@/components/ui/button";
 import { useToast } from "@/hooks/use-toast";
@@ -47,7 +47,7 @@ export function SubscriptionSettings({
   const [trialStatus, setTrialStatus] = useState<string | null>(null);
   const [trialEndDate, setTrialEndDate] = useState<Date | null>(null);
 
-  const baseUrl = process.env.NEXT_PUBLIC_BASE_URL || '';
+  const baseUrl = useMemo(() => process.env.NEXT_PUBLIC_BASE_URL || '', []);
 
   useEffect(() => {
     const checkTrialStatus = async () => {
@@ -61,7 +61,7 @@ export function SubscriptionSettings({
       }
     };
     checkTrialStatus();
-  }, []);
+  }, [baseUrl]);
 
   const isSubscribed = subscriptionStatus === 'active';
   const isCanceled = subscriptionStatus === 'canceled' || subscriptionStatus === 'active_until_period_end';
