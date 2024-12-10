@@ -4,13 +4,14 @@ import { NotificationSettings } from "@/components/settings/notification-setting
 import { PaymentForm } from "@/components/settings/payment-form";
 import { SubscriptionSettings } from "@/components/settings/subscription-settings";
 import { getServerSession } from "next-auth/next";
+import { authOptions } from "@/lib/auth-options";
 import { prisma } from "@/lib/prisma";
 
 // ändrade payment form till subscription settings. 
 
 export default async function SettingsPage() {
   // Fetch user subscription data
-  const session = await getServerSession();
+  const session = await getServerSession(authOptions);
   const user = session?.user?.email ? await prisma.user.findUnique({
     where: { email: session.user.email },
     select: {
