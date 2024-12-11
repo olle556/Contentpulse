@@ -46,25 +46,47 @@ export async function POST(req: Request) {
       process.env.STRIPE_YEARLY_PRICE_ID : 
       process.env.STRIPE_MONTHLY_PRICE_ID;
 
-    // Create Stripe Checkout Session
-    const checkoutSession = await stripe.checkout.sessions.create({
-      customer: customerId,
-      mode: 'subscription',
-      payment_method_types: ['card'],
-      line_items: [
-        {
-          price: priceId,
-          quantity: 1,
+    if (!priceId) {
+      console.error('Missing Stripe price ID:', { interval, priceId });
+      return NextResponse.json(
+        { 
+          error: 'Subscription configuration error. Please contact support.',
+          details: 'Missing price configuration'
         },
-      ],
-      subscription_data: {
-        trial_period_days: 7,
-      },
-      success_url: `${process.env.NEXT_PUBLIC_BASE_URL}/dashboard/settings?success=true`,
-      cancel_url: `${process.env.NEXT_PUBLIC_BASE_URL}/dashboard/settings?canceled=true`,
-    });
+        { status: 500 }
+      );
+    }
 
-    return NextResponse.json({ sessionId: checkoutSession.id });
+    // Create Stripe Checkout Session
+    try {
+      const checkoutSession = await stripe.checkout.sessions.create({
+        customer: customerId,
+        mode: 'subscription',
+        payment_method_types: ['card'],
+        line_items: [
+          {
+            price: priceId,
+            quantity: 1,
+          },
+        ],
+        subscription_data: {
+          trial_period_days: 7,
+        },
+        success_url: `${process.env.NEXT_PUBLIC_BASE_URL}/dashboard/settings?success=true`,
+        cancel_url: `${process.env.NEXT_PUBLIC_BASE_URL}/dashboard/settings?canceled=true`,
+      });
+
+      return NextResponse.json({ sessionId: checkoutSession.id });
+    } catch (error) {
+      console.error('Stripe checkout session creation error:', error);
+      return NextResponse.json(
+        { 
+          error: 'Failed to create checkout session',
+          details: error instanceof Error ? error.message : 'Unknown error'
+        },
+        { status: 500 }
+      );
+    }
   } catch (error) {
     console.error('Error:', error);
     return NextResponse.json(

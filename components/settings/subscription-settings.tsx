@@ -87,33 +87,18 @@ export function SubscriptionSettings({
   const handleSubscriptionChange = async () => {
     setIsLoading(true);
     try {
-      if (stripeCustomerId) {
-        // Existing customer - open portal
+      if (isSubscribed && stripeCustomerId) {
+        // Only open portal for existing active subscribers
         await handlePortalAccess();
       } else {
-        // New subscription - create checkout session
-        // // New subscription
-        //window.location.href = 'https://buy.stripe.com/test_eVa17CfX90fXdr25kk'
-        const response = await fetch(`${baseUrl}/api/stripe`, {
-          method: 'POST',
-          headers: {
-            'Content-Type': 'application/json',
-          },
-          body: JSON.stringify({
-            interval: 'month', // or 'year' depending on your pricing strategy
-          }),
-        });
-
-        const { sessionId } = await response.json();
-        
-        // Redirect to Stripe Checkout
-        const stripe = await getStripe();
-        await stripe.redirectToCheckout({ sessionId });
+        // New subscription or inactive users - redirect to pricing section
+        window.location.href = '/#pricing';
       }
     } catch (error) {
+      console.error('Subscription error:', error);
       toast({
         title: "Error",
-        description: "Failed to manage subscription. Please try again.",
+        description: error instanceof Error ? error.message : "Failed to manage subscription. Please try again.",
         variant: "destructive",
       });
     } finally {
