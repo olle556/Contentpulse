@@ -9,21 +9,21 @@ export default function SignUp() {
   return (
     <div className="min-h-screen flex items-center justify-center bg-gradient-to-b from-background to-muted p-4">
       <Card className="w-full max-w-md">
-        <CardHeader>
+        <CardHeader className="text-center">
           <CardTitle>Create an account</CardTitle>
           <CardDescription>Get started with Content Pulse</CardDescription>
         </CardHeader>
         <CardContent>
           <Button 
             className="w-full" 
-            onClick={() => signIn('google', { callbackUrl: '/dashboard' })}
+            onClick={() => signIn('google', { callbackUrl: '/checkout' })}
           >
             Sign up with Google
           </Button>
           <div className="mt-4 text-center text-sm">
             <span className="text-muted-foreground">Already have an account? </span>
             <Link href="/authentication/login" className="text-primary hover:underline">
-              Sign in
+              Sign in here
             </Link>
           </div>
         </CardContent>

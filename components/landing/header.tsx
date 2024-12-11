@@ -9,7 +9,7 @@ const navigation = [
   { name: "About", href: "#about", icon: FileText },
 ];
 
-export function Header({ onLogin }: { onLogin: () => void }) {
+export function Header({ onLogin, onGetStarted }: { onLogin: () => void, onGetStarted: () => void }) {
   const [isMobileMenuOpen, setIsMobileMenuOpen] = useState(false);
 
   return (
@@ -36,7 +36,7 @@ export function Header({ onLogin }: { onLogin: () => void }) {
           <Button onClick={onLogin} size="lg" className="text-base lg:text-lg font-medium hover:text-gray-300 transition-colors bg-transparent">
             Login
           </Button>
-          <Button size="lg" className="bg-white text-black hover:bg-gray-200 w-full sm:w-auto text-base lg:text-lg">
+          <Button onClick={onGetStarted} size="lg" className="bg-white text-black hover:bg-gray-200 w-full sm:w-auto text-base lg:text-lg">
             Get Started
           </Button>
         </div>
@@ -86,6 +86,7 @@ export function Header({ onLogin }: { onLogin: () => void }) {
                 Login
               </Button>
               <Button
+                onClick={onGetStarted}
                 size="sm"
                 className="w-full mt-4">
                 Get Started

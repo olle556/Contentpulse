@@ -19,14 +19,19 @@ import ProcessFlow from "./process-flow";
 export default function LandingPage() {
   const router = useRouter();
 
-  const handleGetStarted = () => {
+  const handleLogin = () => {
     toast.success("Redirecting to login...");
     router.push('/authentication/login');
+  }
+
+  const handleGetStarted = () => {
+    toast.success("Redirecting to signup...");
+    router.push('/authentication/signup?trial=true');
   };
 
   return (
     <div className="min-h-screen bg-black text-white flex flex-col items-center">
-      <Header onLogin={handleGetStarted} />
+      <Header onLogin={handleLogin} onGetStarted={handleGetStarted} />
       <main className="flex-1 w-full max-w-7xl">
         <section className="w-full py-6 sm:py-12 md:py-24 lg:py-32">
           <div className="container flex flex-col items-center gap-4 px-4 text-center md:px-6">
@@ -39,7 +44,7 @@ export default function LandingPage() {
               </p>
             </div>
             <div className="flex flex-col gap-3 w-full sm:w-auto sm:flex-row sm:gap-4">
-              <Button className="bg-white text-black hover:bg-gray-200 w-full sm:w-auto text-base sm:text-lg md:text-xl h-12 sm:h-14 md:h-16">
+              <Button onClick={handleGetStarted} className="bg-white text-black hover:bg-gray-200 w-full sm:w-auto text-base sm:text-lg md:text-xl h-12 sm:h-14 md:h-16">
                 Get Started for Free
                 <ArrowRight className="ml-2 h-5 w-5 sm:h-6 sm:w-6 md:h-7 md:w-7" />
               </Button>
@@ -121,7 +126,7 @@ export default function LandingPage() {
                 </p>
               </div>
               <div className="flex flex-col gap-2 min-[400px]:flex-row">
-                <Button className="bg-white text-black hover:bg-gray-200"> 
+                <Button onClick={handleGetStarted} className="bg-white text-black hover:bg-gray-200"> 
                   Start a Free Trial
                   <ArrowRight className="ml-2 h-5 w-5" />
                 </Button>
