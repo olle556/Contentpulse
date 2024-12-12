@@ -81,12 +81,35 @@ const generatePostWithTimeout = async (params: {
     });
 
     if (!response.ok) {
-      const errorText = await response.text();
-      throw new Error(`Failed to generate post: ${errorText}`);
+      const contentType = response.headers.get('content-type');
+      let errorMessage;
+      
+      if (contentType?.includes('application/json')) {
+        const errorData = await response.json();
+        errorMessage = errorData.error || `HTTP error! status: ${response.status}`;
+      } else {
+        const textContent = await response.text();
+        errorMessage = `Non-JSON response received (${response.status}): ${textContent.substring(0, 100)}...`;
+      }
+      
+      throw new Error(errorMessage);
+    }
+
+    // Verify content type before parsing JSON
+    const contentType = response.headers.get('content-type');
+    if (!contentType?.includes('application/json')) {
+      throw new Error(`Expected JSON response but got ${contentType}`);
     }
 
     const result = await response.json();
-    return result; // This now includes the generated content
+    return result;
+  } catch (error) {
+    console.error('Generate post error details:', {
+      error: error instanceof Error ? error.message : 'Unknown error',
+      platform: params.platform,
+      userId: params.userId
+    });
+    throw error;
   } finally {
     clearTimeout(timeoutId);
   }

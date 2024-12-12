@@ -125,8 +125,7 @@ export async function POST(req: NextRequest) {
       line-height: 1.6;
     }
     .button-group {
-      padding: 8px;
-      
+      padding: 0 20px 20px 20px;
     }
     .button-primary {
       display: inline-block;
