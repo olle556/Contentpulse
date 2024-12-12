@@ -10,18 +10,23 @@ const protectedGenerationPaths = [
 // Middleware wrapped with withAuth to maintain authentication for all routes
 export default withAuth(
   async function middleware(request) {
+    // Add this check at the beginning
+    const isCronRequest = request.headers.get('authorization') === `Bearer ${process.env.CRON_SECRET}`;
+    if (isCronRequest) {
+      return NextResponse.next();
+    }
 
-              // Check for protected generation paths
-              //if (protectedGenerationPaths.some(path => request.url.includes(path))) {
-              //  const token = request.nextauth.token;
+    // Check for protected generation paths
+    //if (protectedGenerationPaths.some(path => request.url.includes(path))) {
+    //  const token = request.nextauth.token;
 
-              //  if (!token?.sub) {
-              //    return new NextResponse('Unauthorized', { status: 401 });
-              //  }
+    //  if (!token?.sub) {
+    //    return new NextResponse('Unauthorized', { status: 401 });
+    //  }
 
-                //const hasSubscription = await checkSubscription(token.sub); -> använder checksubscription i shceck-subscription_2 routen istället
+      //const hasSubscription = await checkSubscription(token.sub); -> använder checksubscription i shceck-subscription_2 routen istället
 
-                // Make API call to check subscription with proper error handling
+      // Make API call to check subscription with proper error handling
 
     // Only check subscription for API generation paths
     if (protectedGenerationPaths.some(path => request.nextUrl.pathname.startsWith(path))) {
