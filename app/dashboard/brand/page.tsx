@@ -224,6 +224,7 @@ export default function BrandInformationPage() {
   const { data: session } = useSession()
   const router = useRouter()
   const [showSaveToast, setShowSaveToast] = useState(false)
+  const [isFormModified, setIsFormModified] = useState(false)
   
   const form = useForm<z.infer<typeof formSchema>>({
     resolver: zodResolver(formSchema),
@@ -306,10 +307,12 @@ export default function BrandInformationPage() {
       })
 
       if (response.ok) {
-        setShowSaveToast(true)
-        setTimeout(() => {
-          setShowSaveToast(false)
-        }, 2000)
+        if (isFormModified) {
+          setShowSaveToast(true)
+          setTimeout(() => {
+            setShowSaveToast(false)
+          }, 2000)
+        }
 
         const data = await response.json()
         
@@ -338,12 +341,18 @@ export default function BrandInformationPage() {
   // Watch form changes and trigger both saves
   useEffect(() => {
     const subscription = form.watch((value, { name, type }) => {
-      console.log('Form changed:', name, value) // Debug log
+      if (!isFormModified) {
+        setIsFormModified(true)
+      }
       
       const formValues = form.getValues()
       
-      // Only save if we have the minimum required fields
-      if (formValues.brandName && formValues.brandType && formValues.industry && formValues.brandVoice) {
+      // Only save if we have the minimum required fields AND the form has been modified
+      if (isFormModified && 
+          formValues.brandName && 
+          formValues.brandType && 
+          formValues.industry && 
+          formValues.brandVoice) {
         autoSaveToStorage(formValues)
         autoSaveToDb(formValues)
       }
@@ -354,7 +363,7 @@ export default function BrandInformationPage() {
       autoSaveToStorage.cancel()
       autoSaveToDb.cancel()
     }
-  }, [form, session?.user?.id])
+  }, [form, session?.user?.id, isFormModified])
 
   // Final submit handler
   const onSubmit = async (values: z.infer<typeof formSchema>) => {
@@ -396,6 +405,7 @@ export default function BrandInformationPage() {
       // Redirect to brands page
       router.push('/dashboard/brands')
       
+      setIsFormModified(false)
     } catch (error) {
       console.error('Failed to create brand:', error)
     }

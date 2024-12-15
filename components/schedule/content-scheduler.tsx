@@ -78,7 +78,7 @@ const tonalities = [
   "Neutral",
 ];
 
-const platforms = ["X", "X Premium", "LinkedIn", "Threads", "Facebook"]
+const platforms = ["X", "X Premium", "LinkedIn", "Threads", "Facebook", "Bluesky"]
 
 const daysOfWeek = ["Mon", "Tue", "Wed", "Thu", "Fri", "Sat", "Sun"]
 
