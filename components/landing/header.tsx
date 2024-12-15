@@ -13,7 +13,7 @@ export function Header({ onLogin, onGetStarted }: { onLogin: () => void, onGetSt
   const [isMobileMenuOpen, setIsMobileMenuOpen] = useState(false);
 
   return (
-    <header className="w-full pt-4">
+    <header className="w-full pt-2">
       <div className="container flex h-14 md:h-16 items-center justify-between px-2 md:px-4 max-w-full mx-auto">
         <Link className="flex items-center gap-1.5 md:gap-2 font-semibold" href="#">
           <Zap className="h-5 w-5 md:h-6 md:w-6" />
@@ -33,7 +33,12 @@ export function Header({ onLogin, onGetStarted }: { onLogin: () => void, onGetSt
         </div>
 
         <div className="hidden md:flex items-center gap-2 lg:gap-4">
-          <Button onClick={onLogin} size="lg" className="text-base lg:text-lg font-medium hover:text-gray-300 transition-colors bg-transparent">
+          <Button 
+            onClick={onLogin} 
+            size="lg" 
+            variant="outline"
+            className="text-base font-medium bg-white/10 text-white hover:bg-white/20 transition-all duration-200 px-6 h-11"
+            >
             Login
           </Button>
           <Button onClick={onGetStarted} size="lg" className="bg-white text-black hover:bg-gray-200 w-full sm:w-auto text-base lg:text-lg">
@@ -48,7 +53,7 @@ export function Header({ onLogin, onGetStarted }: { onLogin: () => void, onGetSt
             className="p-1.5"
             onClick={() => setIsMobileMenuOpen(true)}
           >
-            <Menu className="h-5 w-5" />
+            <Menu className="h-5 w-" />
           </Button>
         </div>
       </div>
@@ -81,7 +86,7 @@ export function Header({ onLogin, onGetStarted }: { onLogin: () => void, onGetSt
               <Button
                 onClick={onLogin}
                 size="sm"
-                className="text-black hover:bg-gray-200 bg-white w-full mt-2"
+                className="w-full mt-2 bg-transparent hover:bg-white hover:text-black transition-colors border-2 border-white"
               >
                 Login
               </Button>
