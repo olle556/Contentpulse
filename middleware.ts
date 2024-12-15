@@ -15,8 +15,8 @@ export default withAuth(
     const isCronRequest = authHeader === `Bearer ${process.env.CRON_SECRET}`;
 
     // If it's a CRON request with valid secret, allow it through immediately
-    if (isCronRequest) {
-      console.log('Valid CRON request detected, bypassing middleware checks');
+    if (isCronRequest && request.nextUrl.pathname.startsWith('/api/generate-post')) {
+      console.log('Valid CRON request detected for generate-post, bypassing checks');
       return NextResponse.next();
     }
 
@@ -72,7 +72,11 @@ export default withAuth(
   {
     // Keep existing authentication protection for all dashboard routes
     callbacks: {
-      authorized: ({ token }) => !!token
+      authorized: ({ token, req }) => {
+        const authHeader = req.headers.get('authorization');
+        const isCronRequest = authHeader === `Bearer ${process.env.CRON_SECRET}`;
+        return !!token || isCronRequest;
+      }
     },
     pages: {
       signIn: '/authentication/login',
