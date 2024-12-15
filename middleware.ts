@@ -1,38 +1,48 @@
 import { withAuth } from "next-auth/middleware";
 import { NextResponse } from 'next/server';
+import type { NextRequest } from 'next/server';
 import { checkSubscription } from '@/lib/subscription';
+
+const allowedOrigins = [
+  'https://www.contentpulse.app',
+  'https://contentpulse.app',
+  'http://localhost:3000'
+];
+
+function handleCORS(request: NextRequest, response: NextResponse) {
+  const origin = request.headers.get('origin');
+  
+  if (origin && allowedOrigins.includes(origin)) {
+    response.headers.set('Access-Control-Allow-Origin', origin);
+    response.headers.set('Access-Control-Allow-Credentials', 'true');
+    response.headers.set('Access-Control-Allow-Methods', 'GET, POST, PUT, DELETE, OPTIONS');
+    response.headers.set('Access-Control-Allow-Headers', 'Content-Type, Authorization, Cookie');
+  }
+  
+  return response;
+}
 
 const protectedGenerationPaths = [
   '/api/generate-post',
   '/api/schedule',
 ];
 
-// Middleware wrapped with withAuth to maintain authentication for all routes
 export default withAuth(
-  async function middleware(request) {
-    // Improved CRON request detection
+  async function middleware(request: NextRequest) {
+    if (request.method === 'OPTIONS') {
+      const response = new NextResponse(null, { status: 200 });
+      return handleCORS(request, response);
+    }
+
     const authHeader = request.headers.get('authorization');
     const isCronRequest = authHeader === `Bearer ${process.env.CRON_SECRET}`;
 
-    // If it's a CRON request with valid secret, allow it through immediately
     if (isCronRequest && request.nextUrl.pathname.startsWith('/api/generate-post')) {
       console.log('Valid CRON request detected for generate-post, bypassing checks');
-      return NextResponse.next();
+      const response = NextResponse.next();
+      return handleCORS(request, response);
     }
 
-    // Check for protected generation paths
-    //if (protectedGenerationPaths.some(path => request.url.includes(path))) {
-    //  const token = request.nextauth.token;
-
-    //  if (!token?.sub) {
-    //    return new NextResponse('Unauthorized', { status: 401 });
-    //  }
-
-      //const hasSubscription = await checkSubscription(token.sub); -> använder checksubscription i shceck-subscription_2 routen istället
-
-      // Make API call to check subscription with proper error handling
-
-    // Only check subscription for API generation paths
     if (protectedGenerationPaths.some(path => request.nextUrl.pathname.startsWith(path))) {
       try {
         const response = await fetch(`${process.env.NEXT_PUBLIC_BASE_URL}/api/check-subscription_2`, {
@@ -42,10 +52,16 @@ export default withAuth(
             cookie: request.headers.get('cookie') || '',
           }
         });
+        
         if (!response.ok) {
           console.error('Subscription check failed:', await response.text());
-          throw new Error('Failed to check subscription');
+          const errorResponse = NextResponse.json(
+            { error: 'Failed to check subscription' }, 
+            { status: 500 }
+          );
+          return handleCORS(request, errorResponse);
         }
+        
         const data = await response.json();
         console.log('Full middleware check response:', {
           data,
@@ -54,7 +70,7 @@ export default withAuth(
         });
 
         if (!data.authorized) {
-          return NextResponse.json({ 
+          const errorResponse = NextResponse.json({ 
             error: 'Subscription required',
             type: data.status === 'trial_ended' ? 'TRIAL_ENDED' : 'NO_SUBSCRIPTION',
             action: 'COMPLETE_SUBSCRIPTION',
@@ -62,17 +78,22 @@ export default withAuth(
           }, { 
             status: 403 
           });
+          return handleCORS(request, errorResponse);
         }
       } catch (error) {
         console.error('Error checking subscription:', error);
-        return new NextResponse('Internal Server Error', { status: 500 });
+        const errorResponse = NextResponse.json(
+          { error: 'Internal Server Error' }, 
+          { status: 500 }
+        );
+        return handleCORS(request, errorResponse);
       }
     }
 
-    return NextResponse.next();
+    const response = NextResponse.next();
+    return handleCORS(request, response);
   },
   {
-    // Keep existing authentication protection for all dashboard routes
     callbacks: {
       authorized: ({ token, req }) => {
         const authHeader = req.headers.get('authorization');
@@ -86,12 +107,12 @@ export default withAuth(
   }
 );
 
-// Keep protecting all dashboard routes with authentication
 export const config = {
   matcher: [
     '/dashboard/:path*',
     '/api/generate-post/:path*',
     '/api/schedule/:path*',
-    //'/((?!api/cron|api/firecrawl).*)',
+    '/api/check-subscription_2/:path*',
+    '/api/stripe/:path*',
   ]
 };
