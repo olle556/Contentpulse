@@ -90,6 +90,12 @@ export function GeneratePostDialog({ open, onOpenChange, onSuccess }: GeneratePo
       supportsThreads: true
     },
     { 
+      value: "bluesky", 
+      label: "Bluesky",
+      maxLength: 300,
+      supportsThreads: false
+    },
+    { 
       value: "linkedin", 
       label: "LinkedIn",
       maxLength: 3000,
