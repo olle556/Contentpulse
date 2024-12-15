@@ -44,7 +44,7 @@ import { useToast } from "@/hooks/use-toast"
 
 const formSchema = z.object({
   contentSourceId: z.string().min(1, "Content source is required"),
-  tonality: z.string(),
+  tonality: z.string().min(1, "Tonality is required"),
   platforms: z.array(z.string()).min(1, "Select at least one platform"),
   isRecurring: z.boolean(),
   recurringDays: z.array(z.string()),

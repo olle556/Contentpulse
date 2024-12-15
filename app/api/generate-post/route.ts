@@ -130,6 +130,7 @@ Each individual post in the thread must respect the platform's character limit! 
 
     const prompt =
 `You are a social media content creator. Your task is to create an engaging ${displayPlatform} ${isThreadEnabled ? 'thread' : 'post'} using a ${tone} tone based on the following brand context, scraped content, instructions, and guidance.
+Generate ONLY the ${isThreadEnabled ? 'thread' : 'post'} content - do not include any explanatory text, introductions, or meta-references.
 
 Brand Context:
 ${brandInfo}
@@ -145,6 +146,10 @@ ${aiInstructions}
 ${threadInstructions}
 
 Instructions for each individual post:
+1. Write ONLY the post content - no introductions, explanations, or meta-text
+2. Do not include phrases like "Here's a post" or reference the brand/person
+3. Do not include the source URL or any references to these instructions
+4. Start directly with the post content
 1. Create an engaging post for ${displayPlatform} (limit: ${platformLimits[displayPlatform as keyof typeof platformLimits]})
 2. Maintain the brand voice and ${tone} tone throughout
 3. Include key information that aligns with the brand's mission and USP
@@ -155,7 +160,6 @@ Instructions for each individual post:
 8. For Threads, create concise, discussion-worthy content that reflects brand values
 ${useEmojis ? '9. Include relevant emojis throughout the post to enhance engagement and readability' : '9. Do not use any emojis in the post'}
 10. Use the language stated in the brand context.
-11. In your answer, exclude any explanation of your task to generate the post, any answer that is not related to the post, the name of the source URL, and any meta-reference about the brand information.
 
 Additional tone guidance for "${tone}":
 ${tone === 'professional' ? '- Use industry-appropriate terminology\n- Maintain business etiquette\n- Focus on value and insights' :
@@ -174,7 +178,9 @@ ${tone === 'professional' ? '- Use industry-appropriate terminology\n- Maintain 
 ${useEmojis ? '\n\n#### Emoji usage:\n- Use emojis naturally and strategically\n- Don\'t overuse emojis\n- Ensure emojis complement the message' : ''}
 
 
-Please generate the ${isThreadEnabled ? 'thread' : 'post'} now:`;
+IMPORTANT: Generate ONLY the post content starting immediately on the next line. Do not include any introductory text, explanations, or meta-references.
+
+Please generate the ${isThreadEnabled ? 'thread' : 'post'} content now:`;
 
     // 3. Generate post using Claude
     const message = await anthropic.messages.create({
