@@ -27,23 +27,13 @@ export default async function SettingsPage() {
       <h1 className="text-2xl sm:text-3xl font-bold text-center sm:text-left w-full">Settings</h1>
       <p className="text-muted-foreground mt-2 text-center sm:text-left">Customize your notification preferences and app settings</p>
 
-      <Tabs defaultValue="notifications" className="space-y-6">
+      <Tabs defaultValue="subscription" className="space-y-6">
         <TabsList>
-          <TabsTrigger value="notifications">Notifications</TabsTrigger>
           <TabsTrigger value="subscription">Account & Subscription</TabsTrigger>
+          <TabsTrigger value="notifications">Notifications</TabsTrigger>
         </TabsList>
 
-        <TabsContent value="notifications" className="space-y-6">
-          <Card>
-            <CardHeader>
-              <CardTitle>Notification Preferences</CardTitle>
-            </CardHeader>
-            <CardContent>
-              <NotificationSettings />
-            </CardContent>
-          </Card>
-        </TabsContent>
-
+        
         <TabsContent value="subscription" className="space-y-6">
           <Card>
             <CardHeader>
@@ -59,6 +49,18 @@ export default async function SettingsPage() {
             </CardContent>
           </Card>
         </TabsContent>
+        
+        <TabsContent value="notifications" className="space-y-6">
+          <Card>
+            <CardHeader>
+              <CardTitle>Notification Preferences</CardTitle>
+            </CardHeader>
+            <CardContent>
+              <NotificationSettings />
+            </CardContent>
+          </Card>
+        </TabsContent>
+
 
       </Tabs>
     </div>

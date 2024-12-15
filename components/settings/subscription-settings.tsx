@@ -63,6 +63,34 @@ export function SubscriptionSettings({
     checkTrialStatus();
   }, [baseUrl]);
 
+  useEffect(() => {
+    const params = new URLSearchParams(window.location.search);
+    const success = params.get('success');
+    const subscription = params.get('subscription');
+
+    if (success === 'true' && subscription === 'active') {
+      // Update subscription status to reflect the new trial/subscription
+      setSubscriptionStatus('active');
+      
+      // Set trial status if it's a trial subscription
+      setTrialStatus('trial');
+      
+      // Set trial end date to 7 days from now (since that's your trial period)
+      const trialEnd = new Date();
+      trialEnd.setDate(trialEnd.getDate() + 7);
+      setTrialEndDate(trialEnd);
+
+      // Clear the URL parameters
+      window.history.replaceState({}, '', '/dashboard/settings');
+      
+      // Show a success toast (optional)
+      toast({
+        title: "Success!",
+        description: "Your subscription has been activated.",
+      });
+    }
+  }, [toast]);
+
   const isSubscribed = subscriptionStatus === 'active';
   const isCanceled = subscriptionStatus === 'canceled' || subscriptionStatus === 'active_until_period_end';
   const isInactive = subscriptionStatus === 'inactive' || (!subscriptionStatus && !trialStatus);
@@ -171,7 +199,11 @@ export function SubscriptionSettings({
         {(subscriptionEndDate || isTrialPeriod) && (
           <p className="text-sm text-muted-foreground">
             {isTrialPeriod ? "Trial ends" : "Subscription ends"}: {
-              new Date(subscriptionEndDate!).toLocaleDateString()
+              subscriptionEndDate?.toLocaleDateString('en-GB', {
+                year: 'numeric',
+                month: 'numeric',
+                day: 'numeric'
+              })
             }
           </p>
         )}
