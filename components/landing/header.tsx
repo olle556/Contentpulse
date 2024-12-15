@@ -17,7 +17,7 @@ export function Header({ onLogin, onGetStarted }: { onLogin: () => void, onGetSt
       <div className="container flex h-14 md:h-16 items-center justify-between px-2 md:px-4 max-w-full mx-auto">
         <Link className="flex items-center gap-1.5 md:gap-2 font-semibold" href="#">
           <Zap className="h-5 w-5 md:h-6 md:w-6" />
-          <span className="text-base text-2xl md:text-3xl">Content Pulse</span>
+          <span className="text-2xl md:text-3xl">Content Pulse</span>
         </Link>
 
         <div className="hidden md:flex items-center gap-4 lg:gap-8">

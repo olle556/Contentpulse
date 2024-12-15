@@ -2,7 +2,7 @@
 
 import { useState } from "react";
 import { useQuery } from "@tanstack/react-query";
-import { Plus } from "lucide-react";
+import { Plus, ChevronDown, ChevronUp } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { ContentSourceList } from "@/components/sources/content-source-list";
 import { AddSourceDialog } from "@/components/sources/add-source-dialog";
@@ -15,6 +15,10 @@ export default function SourcesPage() {
   const [url, setUrl] = useState("");
   const [analysis, setAnalysis] = useState("");
   const [isLoading, setIsLoading] = useState(false);
+  const [isTextExpanded, setIsTextExpanded] = useState(false);
+
+  const shortText = "Manage your content sources to base posts on up-to-date information.";
+  const fullText = "Manage your content sources to base posts on up-to-date information. Posts will pull the latest data from your provided URLs. Pro tip: Use dynamic sources, like an economy news homepage, instead of static articles.";
 
   const { data: sources = [], refetch: refreshSources } = useQuery({
     queryKey: ['sources'],
@@ -26,11 +30,10 @@ export default function SourcesPage() {
       }
       return [];
     },
-    staleTime: 1000 * 60 * 5, // Consider data fresh for 5 minutes
-    gcTime: 1000 * 60 * 30, // Keep unused data in cache for 30 minutes
+    staleTime: 1000 * 60 * 5,
+    gcTime: 1000 * 60 * 30,
   });
 
-  // Create a wrapper function that returns void
   const handleRefresh = async () => {
     await refreshSources();
   };
@@ -61,7 +64,6 @@ export default function SourcesPage() {
     }
   };
 
-  // Create a wrapper function that handles both refresh and completion
   const handleSourceAdded = async () => {
     await refreshSources();
     console.log('Marking sources step as completed after adding source');
@@ -69,9 +71,9 @@ export default function SourcesPage() {
   };
 
   return (
-    <div className="space-y-4 sm:space-y-6 p-4 sm:p-6">
-      <div className="flex justify-between items-center">
-        <h1 className="text-2xl sm:text-3xl font-bold text-center sm:text-left w-full">Content Sources</h1>
+    <div className="space-y-4 p-4 md:p-6">
+      <div className="flex flex-col md:flex-row md:justify-between md:items-center gap-4">
+        <h1 className="text-2xl md:text-3xl font-bold text-left">Content Sources</h1>
 
         <Button onClick={() => setIsAddSourceOpen(true)}>
           <Plus className="h-4 w-4 mr-2" />
@@ -79,9 +81,30 @@ export default function SourcesPage() {
         </Button>
       </div>
 
-      <p className="text-muted-foreground mt-2 text-center sm:text-left">
-        Add and manage your content sources. You will be able to base your posts on the sources you provide. For every post generation, the latest information on the source URL will be used in the post. Pro tip: Use sources where information changes over time - instead of using a single article about economy, use the URL for the latest news at an economy newspaper.
-      </p>
+      <div className="text-muted-foreground text-left">
+        <p className="hidden md:block">
+          {fullText}
+        </p>
+
+        <div className="md:hidden">
+          <p>{isTextExpanded ? fullText : shortText}</p>
+          <Button 
+            variant="ghost" 
+            className="mt-2 h-8 px-2 text-xs"
+            onClick={() => setIsTextExpanded(!isTextExpanded)}
+          >
+            {isTextExpanded ? (
+              <div className="flex items-center">
+                Show Less <ChevronUp className="ml-1 h-4 w-4" />
+              </div>
+            ) : (
+              <div className="flex items-center">
+                Show More <ChevronDown className="ml-1 h-4 w-4" />
+              </div>
+            )}
+          </Button>
+        </div>
+      </div>
 
       <div className="mt-6">
         <ContentSourceList
