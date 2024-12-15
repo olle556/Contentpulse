@@ -2,6 +2,7 @@ import { AuthOptions } from "next-auth";
 import GoogleProvider from "next-auth/providers/google";
 import { PrismaClient } from "@prisma/client";
 import { Adapter, AdapterUser, AdapterAccount, AdapterSession } from "next-auth/adapters";
+import { prisma } from "./prisma";
 
 interface CreateUserData {
   email: string;
@@ -201,7 +202,25 @@ export const authOptions: AuthOptions = {
         token.sub = user.id;
       }
       return token;
-    }
+    },
+    signIn: async ({ user }) => {
+      try {
+        const existingUser = await prisma.user.findUnique({
+          where: { email: user.email! },
+          select: { stripeCustomerId: true }
+        });
+
+        // Store this information in the user's session instead of redirecting
+        if (!existingUser?.stripeCustomerId) {
+          return true; // Allow sign in, we'll handle redirect in the dashboard
+        }
+
+        return true;
+      } catch (error) {
+        console.error('Error in signIn callback:', error);
+        return false;
+      }
+    },
   },
   pages: {
     signIn: "/authentication/login",

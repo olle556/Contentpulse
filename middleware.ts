@@ -56,7 +56,9 @@ export default withAuth(
         if (!data.authorized) {
           return NextResponse.json({ 
             error: 'Subscription required',
-            redirectUrl: '/dashboard/settings'
+            type: data.status === 'trial_ended' ? 'TRIAL_ENDED' : 'NO_SUBSCRIPTION',
+            action: 'COMPLETE_SUBSCRIPTION',
+            portalUrl: '/api/stripe/create-portal'
           }, { 
             status: 403 
           });

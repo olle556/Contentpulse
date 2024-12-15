@@ -29,46 +29,33 @@ export default function CheckoutPage() {
                     headers: {
                         'Content-Type': 'application/json',
                     },
-                    body: JSON.stringify({ interval: 'month' }), // Default to monthly plan
                 });
 
                 const { sessionId } = await response.json();
 
                 if (!response.ok) {
-                    throw new Error(sessionId.error || 'Failed to create checkout session');
+                    throw new Error('Failed to create checkout session');
                 }
 
                 const stripe = await loadStripe(process.env.NEXT_PUBLIC_STRIPE_PUBLISHABLE_KEY!);
-
+                
                 if (!stripe) {
                     throw new Error('Stripe failed to initialize');
                 }
 
-                const result = await stripe.redirectToCheckout({ sessionId });
-
-                if (result.error) {
-                    throw new Error(result.error.message);
-                }
+                await stripe.redirectToCheckout({ sessionId });
             } catch (error) {
                 toast({
                     title: "Error",
-                    description: error instanceof Error ? error.message : "Failed to initiate checkout. Please try again.",
+                    description: error instanceof Error ? error.message : "Failed to initiate checkout",
                     variant: "destructive",
                 });
-                console.error('Checkout error:', error);
-                router.push('/settings');
+                router.push('/dashboard/settings');
             }
         };
 
         initiateCheckout();
     }, [session, router, toast]);
 
-    return (
-        <div className="min-h-screen flex items-center justify-center">
-            <div className="text-center">
-                <h2 className="text-xl font-semibold">Setting up your trial...</h2>
-                <p className="text-muted-foreground mt-2">Please wait while we redirect you to checkout.</p>
-            </div>
-        </div>
-    );
+    return null; // No UI needed as we're redirecting to Stripe
 }

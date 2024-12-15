@@ -68,6 +68,8 @@ export function SubscriptionSettings({
   const isInactive = subscriptionStatus === 'inactive' || (!subscriptionStatus && !trialStatus);
   const isTrialPeriod = trialStatus === 'trial';
 
+  const hasActiveSubscriptionOrTrial = isSubscribed || isTrialPeriod;
+
   const handlePortalAccess = async () => {
     try {
       const response = await fetch(`${baseUrl}/api/stripe/create-portal`, {
@@ -87,11 +89,9 @@ export function SubscriptionSettings({
   const handleSubscriptionChange = async () => {
     setIsLoading(true);
     try {
-      if (isSubscribed && stripeCustomerId) {
-        // Only open portal for existing active subscribers
+      if (stripeCustomerId && hasActiveSubscriptionOrTrial) {
         await handlePortalAccess();
       } else {
-        // New subscription or inactive users - redirect to pricing section
         window.location.href = '/#pricing';
       }
     } catch (error) {
@@ -163,52 +163,34 @@ export function SubscriptionSettings({
       <div className="space-y-2">
         <h3 className="text-lg font-medium">Subscription Status</h3>
         <p className="text-sm text-muted-foreground">
-          Status: {isTrialPeriod ? 'Trial Period' : 
-                  isCanceled ? 'Cancelled' : 
-                  isInactive ? 'Inactive' : 
-                  subscriptionStatus || 'No active subscription'}
+          {isTrialPeriod && "You're currently on a trial period"}
+          {isSubscribed && !isTrialPeriod && "You have an active subscription"}
+          {isCanceled && "Your subscription has been canceled"}
+          {isInactive && !isTrialPeriod && "You don't have an active subscription"}
         </p>
-        {isTrialPeriod && trialEndDate && (
+        {(subscriptionEndDate || isTrialPeriod) && (
           <p className="text-sm text-muted-foreground">
-            Trial ends on: {trialEndDate.toLocaleDateString()}
-          </p>
-        )}
-        {!isTrialPeriod && subscriptionEndDate && (
-          <p className="text-sm text-muted-foreground">
-            {isSubscribed
-              ? `Subscription paid untill: ${subscriptionEndDate.toLocaleDateString()}`
-              : `Subscription ended: ${subscriptionEndDate.toLocaleDateString()}`}
+            {isTrialPeriod ? "Trial ends" : "Subscription ends"}: {
+              new Date(subscriptionEndDate!).toLocaleDateString()
+            }
           </p>
         )}
       </div>
 
       <div className="space-y-4">
-        {(isInactive || isTrialPeriod) ? (
-          <Button
-            onClick={handleSubscriptionChange}
-            className="w-full"
-            variant="default"
-          >
-            <CreditCard className="mr-2 h-4 w-4" />
-            {isTrialPeriod ? 'Upgrade' : 'Subscribe Now'}
-          </Button>
-        ) : stripeCustomerId ? (
-          <Button
-            onClick={handlePortalAccess}
-            className="w-full"
-            variant="outline"
-          >
-            <Receipt className="mr-2 h-4 w-4" />
-            Manage Billing
-          </Button>
-        ) : null}
+        <Button
+          onClick={handleSubscriptionChange}
+          disabled={isLoading}
+        >
+          {isLoading ? "Loading..." : 
+            (hasActiveSubscriptionOrTrial ? "Manage Billing" : "View Plans")}
+        </Button>
       </div>
 
       <div className="space-y-4">
         <h3 className="text-lg font-medium">Account Management</h3>
         <Button 
           variant="destructive" 
-          className="w-full"
           onClick={() => setShowDeleteConfirmation(true)}
         >
           <Trash2 className="mr-2 h-4 w-4" />

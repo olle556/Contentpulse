@@ -2,6 +2,7 @@ import { NextResponse } from 'next/server';
 import { stripe } from '@/lib/stripe';
 import { getServerSession } from 'next-auth/next';
 import { prisma } from '@/lib/prisma';
+import type Stripe from 'stripe';
 
 export async function POST(req: Request) {
   try {
@@ -19,23 +20,38 @@ export async function POST(req: Request) {
       where: { email: session.user.email },
     });
 
-    if (!user) {
+    if (!user || !user.email) {
       return NextResponse.json(
         { error: 'User not found' },
         { status: 404 }
       );
     }
 
-    // Create or retrieve Stripe customer
+    // First check if user already has a Stripe customer ID
     let customerId = user.stripeCustomerId;
+    
     if (!customerId) {
-      const customer = await stripe.customers.create({
-        email: user.email!,
-        metadata: {
-          userId: user.id,
-        },
-      });
-      customerId = customer.id;
+      // If no customer ID exists, check if customer exists in Stripe by email
+      const existingCustomers = await stripe.customers.list({
+        email: user.email,
+        limit: 1,
+      } as Stripe.CustomerListParams);
+
+      if (existingCustomers.data.length > 0) {
+        // Use existing customer if found
+        customerId = existingCustomers.data[0].id;
+      } else {
+        // Create new customer only if one doesn't exist
+        const customer = await stripe.customers.create({
+          email: user.email,
+          metadata: {
+            userId: user.id,
+          },
+        });
+        customerId = customer.id;
+      }
+
+      // Update user with Stripe customer ID
       await prisma.user.update({
         where: { id: user.id },
         data: { stripeCustomerId: customerId },
@@ -71,7 +87,14 @@ export async function POST(req: Request) {
         ],
         subscription_data: {
           trial_period_days: 7,
+          trial_settings: {
+            end_behavior: {
+              missing_payment_method: 'cancel'
+            }
+          }
         },
+        payment_method_collection: 'if_required',
+        allow_promotion_codes: true,
         success_url: `${process.env.NEXT_PUBLIC_BASE_URL}/dashboard/settings?success=true`,
         cancel_url: `${process.env.NEXT_PUBLIC_BASE_URL}/dashboard/settings?canceled=true`,
       });
