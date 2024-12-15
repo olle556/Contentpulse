@@ -128,15 +128,22 @@ async function rescheduleFailedSchedule(schedule: any) {
     // Format the new time as HH:mm
     const rescheduledTime = `${newTime.getUTCHours().toString().padStart(2, '0')}:${newTime.getUTCMinutes().toString().padStart(2, '0')}`;
 
+    // For one-time schedules, also update the date if needed
+    const updateData: any = {
+      time: rescheduledTime,
+    };
+
+    if (!schedule.isRecurring && newTime.getDate() !== currentTime.getDate()) {
+      updateData.date = newTime;
+    }
+
     // Update the schedule in the database
     await prisma.contentSchedule.update({
       where: { id: schedule.id },
-      data: {
-        time: rescheduledTime,
-      }
+      data: updateData,
     });
 
-    console.log(`Rescheduled failed schedule ${schedule.id} to ${rescheduledTime}`);
+    console.log(`Rescheduled failed schedule ${schedule.id} to ${rescheduledTime}${!schedule.isRecurring ? ` on ${newTime.toISOString().split('T')[0]}` : ''}`);
     return true;
   } catch (error) {
     console.error('Failed to reschedule:', error);
@@ -321,6 +328,7 @@ export async function GET(req: NextRequest) {
 
         } catch (error) {
           console.error(`Failed to process schedule ${schedule.id}:`, error);
+          await rescheduleFailedSchedule(schedule);
           // Error occurred, schedule won't be deleted
         } finally {
           clearTimeout(timeoutId);
