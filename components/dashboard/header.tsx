@@ -37,7 +37,19 @@ export function Header() {
   }, [session]);
 
   const handleSignOut = async () => {
-    await signOut({ redirect: true, callbackUrl: '/' });
+    try {
+      // First navigate to home page
+      router.push('/');
+      
+      // Then sign out without redirect
+      await signOut({ 
+        redirect: false
+      });
+    } catch (error) {
+      console.error('Sign out error:', error);
+      // Fallback if the above fails
+      window.location.href = '/';
+    }
   };
 
   return (

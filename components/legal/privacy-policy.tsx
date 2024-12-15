@@ -8,7 +8,7 @@ export function PrivacyPolicy() {
         <p className="mb-4">Last updated: {new Date().toLocaleDateString()}</p>
         
         <p className="mb-6">
-          Welcome to AIPostCrawler's Privacy Policy. This policy outlines how we collect, use, 
+          Welcome to Contentpulse's Privacy Policy. This policy outlines how we collect, use, 
           and protect the information you provide while using our service.
         </p>
 
