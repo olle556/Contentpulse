@@ -15,6 +15,7 @@ import { DeletePostDialog } from "./delete-post-dialog";
 import { EditPostDialog } from "./edit-post-dialog";
 import { GeneratePostDialog } from "./generate-post-dialog";
 import { toast } from "react-toastify";
+import { ShareButton } from "./ShareButton";
 //import { useQuery } from "@tanstack/react-query";
 
 interface PostListProps {
@@ -66,7 +67,7 @@ export function PostList({ posts, onRefresh }: PostListProps): JSX.Element {
           <Card key={post.id} className="flex flex-col h-[400px]">
             <CardHeader className="flex flex-row items-center justify-between space-y-0 flex-shrink-0">
               <div className="space-y-1">
-               
+
                 <p className="text-sm text-muted-foreground">
                   {format(new Date(post.createdAt), "PPP")}
                 </p>
@@ -97,24 +98,29 @@ export function PostList({ posts, onRefresh }: PostListProps): JSX.Element {
               <div className="flex gap-2">
                 <Badge variant="outline">{post.platform}</Badge>
               </div>
-              <Button 
-                size="sm" 
-                variant="default" 
-                onClick={() => copyToClipboard(post.content, post.id)}
-                className="relative min-w-[70px] transition-all duration-200"
-                disabled={copyingStates[post.id]}
-              >
-                <span className={`${copyingStates[post.id] ? 'opacity-0' : 'opacity-100'} transition-opacity duration-200`}>
-                  Copy
-                </span>
-                <span 
-                  className={`absolute left-1/2 -translate-x-1/2 
+              <div className="flex gap-2">
+                <Button
+                  size="sm"
+                  variant="default"
+                  onClick={() => copyToClipboard(post.content, post.id)}
+                  className="relative min-w-[70px] transition-all duration-200"
+                  disabled={copyingStates[post.id]}
+                >
+                  <span className={`${copyingStates[post.id] ? 'opacity-0' : 'opacity-100'} transition-opacity duration-200`}>
+                    Copy
+                  </span>
+                  <span
+                    className={`absolute left-1/2 -translate-x-1/2 
                     ${copyingStates[post.id] ? 'opacity-100' : 'opacity-0'} 
                     transition-opacity duration-200`}
-                >
-                  Copied!
-                </span>
-              </Button>
+                  >
+                    Copied!
+                  </span>
+                </Button>
+                {post.platform.toLowerCase() !== 'facebook' && (
+                  <ShareButton platform={post.platform} content={post.content} />
+                )}
+              </div>
             </div>
           </Card>
         ))}
@@ -139,7 +145,7 @@ export function PostList({ posts, onRefresh }: PostListProps): JSX.Element {
         onOpenChange={setIsGenerateOpen}
         onSuccess={onRefresh}
       />
-      
+
 
     </>
   );
