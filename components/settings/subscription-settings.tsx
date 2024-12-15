@@ -117,7 +117,7 @@ export function SubscriptionSettings({
   const handleSubscriptionChange = async () => {
     setIsLoading(true);
     try {
-      if (stripeCustomerId && hasActiveSubscriptionOrTrial) {
+      if (stripeCustomerId) {
         await handlePortalAccess();
       } else {
         window.location.href = '/#pricing';
@@ -189,34 +189,103 @@ export function SubscriptionSettings({
   return (
     <div className="space-y-6">
       <div className="space-y-2">
-        <h3 className="text-lg font-medium">Subscription Status</h3>
-        <p className="text-sm text-muted-foreground">
-          {isTrialPeriod && "You're currently on a trial period"}
-          {isSubscribed && !isTrialPeriod && "You have an active subscription"}
-          {isCanceled && "Your subscription has been canceled"}
-          {isInactive && !isTrialPeriod && "You don't have an active subscription"}
-        </p>
-        {(subscriptionEndDate || isTrialPeriod) && (
-          <p className="text-sm text-muted-foreground">
-            {isTrialPeriod ? "Trial ends" : "Subscription ends"}: {
-              subscriptionEndDate?.toLocaleDateString('en-GB', {
-                year: 'numeric',
-                month: 'numeric',
-                day: 'numeric'
-              })
-            }
-          </p>
+        <div className="flex items-center gap-2">
+          <h3 className="text-lg font-medium">Subscription Status</h3>
+          {(isTrialPeriod || isSubscribed) && (
+            <span className="inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-medium bg-purple-100 text-purple-800 dark:bg-purple-900 dark:text-purple-200">
+              Active
+            </span>
+          )}
+          {isCanceled && (
+            <span className="inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-medium bg-yellow-100 text-yellow-800 dark:bg-yellow-900 dark:text-yellow-200">
+              Paused
+            </span>
+          )}
+        </div>
+        
+        {/* Active Subscription Message */}
+        {isSubscribed && !isTrialPeriod && subscriptionEndDate && (
+          <div className="p-4 rounded-lg border border-purple-200 bg-purple-50 dark:border-purple-900 dark:bg-purple-900/50">
+            <div className="flex flex-col space-y-2">
+              <p className="text-sm text-purple-800 dark:text-purple-200">
+                Your subscription is active. Next billing date:{' '}
+                <span className="font-medium">
+                  {subscriptionEndDate.toLocaleDateString('en-GB', {
+                    year: 'numeric',
+                    month: 'long',
+                    day: 'numeric'
+                  })}
+                </span>
+              </p>
+            </div>
+          </div>
         )}
-      </div>
 
-      <div className="space-y-4">
-        <Button
-          onClick={handleSubscriptionChange}
-          disabled={isLoading}
-        >
-          {isLoading ? "Loading..." : 
-            (hasActiveSubscriptionOrTrial ? "Manage Billing" : "View Plans")}
-        </Button>
+        {/* Active Trial Message */}
+        {isTrialPeriod && trialEndDate && !isCanceled && (
+          <div className="space-y-3">
+            <div className="p-4 rounded-lg border border-purple-200 bg-purple-50 dark:border-purple-900 dark:bg-purple-900/50">
+              <div className="flex flex-col space-y-2">
+                <p className="text-sm text-purple-800 dark:text-purple-200">
+                  You're currently on a trial period with {' '}
+                  <span className="font-medium">
+                    {Math.ceil((trialEndDate.getTime() - new Date().getTime()) / (1000 * 60 * 60 * 24))} days
+                  </span>{' '}
+                  remaining.
+                </p>
+              </div>
+            </div>
+            
+            {/* Payment Method Reminder */}
+            <div className="p-4 rounded-lg border border-blue-200 bg-blue-50 dark:border-blue-900 dark:bg-blue-900/50">
+              <div className="flex items-start space-x-3">
+                <CreditCard className="h-5 w-5 text-blue-600 dark:text-blue-400 mt-0.5" />
+                <div className="flex flex-col space-y-1">
+                  <p className="text-sm font-medium text-blue-800 dark:text-blue-200">
+                    Add a payment method
+                  </p>
+                  <p className="text-sm text-blue-700 dark:text-blue-300">
+                    To continue using the app after your trial ends, please add a payment method. Your card won't be charged until your trial expires.
+                  </p>
+                </div>
+              </div>
+            </div>
+          </div>
+        )}
+
+        {/* Paused Trial Message */}
+        {isCanceled && subscriptionEndDate && (
+          <div className="p-4 rounded-lg border border-yellow-200 bg-yellow-50 dark:border-yellow-900 dark:bg-yellow-900/50">
+            <div className="flex flex-col space-y-2">
+              <p className="text-sm text-yellow-800 dark:text-yellow-200">
+                Your trial is currently paused. You have until{' '}
+                <span className="font-medium">
+                  {subscriptionEndDate.toLocaleDateString('en-GB', {
+                    year: 'numeric',
+                    month: 'long',
+                    day: 'numeric'
+                  })}
+                </span>{' '}
+                to reactivate your trial.
+              </p>
+              <p className="text-sm text-yellow-800 dark:text-yellow-200">
+                After this date, you'll need to start a new subscription to access premium features.
+              </p>
+            </div>
+          </div>
+        )}
+
+        <div className="space-y-4 mt-4">
+          <Button
+            onClick={handleSubscriptionChange}
+            disabled={isLoading}
+            variant={isCanceled ? "default" : "outline"}
+            className={isCanceled ? "bg-yellow-600 hover:bg-yellow-700 text-white" : ""}
+          >
+            {isLoading ? "Loading..." : 
+              (isCanceled ? "Reactivate Trial" : "Manage Billing")}
+          </Button>
+        </div>
       </div>
 
       <div className="space-y-4">

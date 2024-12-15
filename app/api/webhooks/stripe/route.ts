@@ -61,16 +61,22 @@ export async function POST(req: Request) {
 
           console.log('Subscription data:', subscription);
 
+          // Check if this is a trial subscription
+          const isTrialSubscription = subscription?.status === 'trialing';
+          const trialEnd = subscription?.trial_end 
+            ? new Date(subscription.trial_end * 1000)
+            : null;
+
           // Update user record
           const updatedUser = await prisma.user.update({
             where: {
               stripeCustomerId: customerId,
             },
             data: {
-              subscriptionStatus: 'active',
-              subscriptionEndDate: subscription 
+              subscriptionStatus: isTrialSubscription ? 'active' : subscription?.status || 'inactive',
+              subscriptionEndDate: trialEnd || (subscription 
                 ? new Date(subscription.current_period_end * 1000)
-                : null,
+                : null),
             },
           });
 
@@ -87,13 +93,22 @@ export async function POST(req: Request) {
         console.log('Subscription event data:', subscription);
 
         try {
+          // Check if this is a trial subscription
+          const isTrialSubscription = subscription.status === 'trialing';
+          const isCanceled = subscription.status === 'canceled' || 
+                            subscription.cancel_at_period_end;
+          const trialEnd = subscription.trial_end 
+            ? new Date(subscription.trial_end * 1000)
+            : null;
+
           const updatedUser = await prisma.user.update({
             where: {
               stripeCustomerId: subscription.customer as string,
             },
             data: {
-              subscriptionStatus: subscription.status === 'active' ? 'active' : 'inactive',
-              subscriptionEndDate: new Date(subscription.current_period_end * 1000),
+              subscriptionStatus: isCanceled ? 'canceled' : 
+                (isTrialSubscription ? 'active' : subscription.status),
+              subscriptionEndDate: trialEnd || new Date(subscription.current_period_end * 1000),
             },
           });
 
@@ -106,8 +121,8 @@ export async function POST(req: Request) {
 
       case 'customer.subscription.trial_will_end': {
         const subscription = event.data.object as Stripe.Subscription;
-        // Send notification to user that trial is ending
-        // You can implement email notifications here
+        console.log('Trial ending soon:', subscription);
+        // You can implement email notifications here if needed
         break;
       }
     }

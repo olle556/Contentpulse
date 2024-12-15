@@ -16,7 +16,7 @@ export default function SignUp() {
         <CardContent>
           <Button 
             className="w-full" 
-            onClick={() => signIn('google', { callbackUrl: '/checkout' })}
+            onClick={() => signIn('google', { callbackUrl: '/dashboard' })}
           >
             Sign up with Google
           </Button>

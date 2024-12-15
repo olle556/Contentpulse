@@ -14,8 +14,24 @@ export async function POST(req: Request) {
       );
     }
 
-    const { interval } = await req.json();
-    
+    let interval;
+    try {
+      const body = await req.json();
+      interval = body.interval;
+      
+      if (!interval || !['month', 'year'].includes(interval)) {
+        return NextResponse.json(
+          { error: 'Invalid interval. Must be "month" or "year"' },
+          { status: 400 }
+        );
+      }
+    } catch (error) {
+      return NextResponse.json(
+        { error: 'Invalid request body. Expected JSON with interval parameter.' },
+        { status: 400 }
+      );
+    }
+
     const user = await prisma.user.findUnique({
       where: { email: session.user.email },
     });
