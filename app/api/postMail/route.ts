@@ -181,24 +181,17 @@ export async function POST(req: NextRequest) {
         <div class="button-group">
           ${post.platform.toLowerCase() !== 'facebook' ? 
             `<a href="${getShareUrl(post.platform, post.content)}" style="color: #0A0A0A;" target="_blank" class="button-secondary">🔗 Share on ${post.platform}</a>`
-            : ''}
+            : `<a href="${process.env.NEXTAUTH_URL}/dashboard/posts" style="color: #0A0A0A;" target="_blank" class="button-secondary">📋 View in Dashboard</a>`
+          }
         </div>
       </div>
     `).join('')}
 
-    <p class="footer">
+    <p class="subtitle">
       You can view, edit and copy your ${generatedPosts.length > 1 ? 'posts' : 'post'} in your 
       <a href="${process.env.NEXTAUTH_URL}/dashboard/posts" style="color: #0A0A0A; text-decoration: underline;">Content Pulse dashboard</a>
     </p>
   </div>
-  <script>
-    function copyContent(index) {
-      const posts = ${JSON.stringify(generatedPosts.map((p: GeneratedPost) => p.content))};
-      navigator.clipboard.writeText(posts[index])
-        .then(() => alert('Content copied to clipboard!'))
-        .catch(err => alert('Failed to copy content'));
-    }
-  </script>
 </body>
 </html>`;
 
