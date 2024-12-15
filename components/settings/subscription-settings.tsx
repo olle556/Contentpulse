@@ -116,22 +116,34 @@ export function SubscriptionSettings({
       return;
     }
 
-    // Check if user has active subscription
-    if (isSubscribed && subscriptionStatus && 
-        !['canceled', 'active_until_period_end'].includes(subscriptionStatus)) {
-      setShowActiveSubscriptionWarning(true);
-      return;
-    }
-
-    // Proceed with account deletion
     try {
+      setIsLoading(true);
+
+      // Check for active subscription
+      if (isSubscribed && subscriptionStatus && 
+          !['canceled', 'active_until_period_end'].includes(subscriptionStatus)) {
+        setShowActiveSubscriptionWarning(true);
+        return;
+      }
+
+      // Close the confirmation dialog
+      setShowDeleteConfirmation(false);
+
+      // Delete the account
       const result = await deleteUser(userId);
+      
       if (result.success) {
         toast({
           title: "Account Deleted",
           description: "Your account has been successfully deleted.",
         });
-        signOut({ callbackUrl: '/' });
+        
+        // Sign out and redirect directly to home page
+        // Use replace: true to prevent back navigation
+        await signOut({ 
+          redirect: true,
+          callbackUrl: '/' 
+        });
       } else {
         throw new Error(result.error || 'Failed to delete account');
       }
@@ -141,6 +153,8 @@ export function SubscriptionSettings({
         description: "Failed to delete account. Please try again later.",
         variant: "destructive",
       });
+    } finally {
+      setIsLoading(false);
     }
   };
 
@@ -228,8 +242,14 @@ export function SubscriptionSettings({
             </AlertDialogDescription>
           </AlertDialogHeader>
           <AlertDialogFooter>
-            <AlertDialogCancel>Cancel</AlertDialogCancel>
-            <AlertDialogAction onClick={handleDeleteAccount}>Delete Account</AlertDialogAction>
+            <AlertDialogCancel disabled={isLoading}>Cancel</AlertDialogCancel>
+            <AlertDialogAction
+              onClick={handleDeleteAccount}
+              disabled={isLoading}
+              className={isLoading ? 'opacity-50 cursor-not-allowed' : ''}
+            >
+              {isLoading ? 'Deleting...' : 'Delete Account'}
+            </AlertDialogAction>
           </AlertDialogFooter>
         </AlertDialogContent>
       </AlertDialog>
