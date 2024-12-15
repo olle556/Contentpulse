@@ -13,13 +13,6 @@ export default withAuth(
     // Improved CRON request detection
     const authHeader = request.headers.get('authorization');
     const isCronRequest = authHeader === `Bearer ${process.env.CRON_SECRET}`;
-    
-    console.log('Middleware request details:', {
-      path: request.nextUrl.pathname,
-      authHeader,
-      isCronRequest,
-      cronSecret: process.env.CRON_SECRET ? 'Set' : 'Not Set'
-    });
 
     // If it's a CRON request with valid secret, allow it through immediately
     if (isCronRequest) {
@@ -74,25 +67,12 @@ export default withAuth(
       }
     }
 
-    console.log('Middleware hit:', {
-      path: request.nextUrl.pathname,
-      authHeader: request.headers.get('authorization'),
-      isCronRequest: request.headers.get('authorization') === `Bearer ${process.env.CRON_SECRET}`,
-    });
-
     return NextResponse.next();
   },
   {
     // Keep existing authentication protection for all dashboard routes
     callbacks: {
-      authorized: ({ token, req }) => {
-        // Allow CRON requests to bypass auth
-        const authHeader = req?.headers.get('authorization');
-        if (authHeader === `Bearer ${process.env.CRON_SECRET}`) {
-          return true;
-        }
-        return !!token;
-      }
+      authorized: ({ token }) => !!token
     },
     pages: {
       signIn: '/authentication/login',
@@ -106,6 +86,6 @@ export const config = {
     '/dashboard/:path*',
     '/api/generate-post/:path*',
     '/api/schedule/:path*',
-    '/((?!api/cron|api/check-subscription_2/check-trialstatus).*)',
+    '/((?!api/cron|api/firecrawl).*)',
   ]
 };
