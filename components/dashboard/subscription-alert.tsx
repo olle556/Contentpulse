@@ -29,24 +29,31 @@ export function SubscriptionAlert({
 
   return (
     <Dialog open={isOpen} onOpenChange={onClose}>
-      <DialogContent>
+      <DialogContent className="bg-white dark:bg-gray-800">
         <DialogHeader>
-          <DialogTitle>
+          <DialogTitle className="text-gray-900 dark:text-white">
             {type === 'TRIAL_ENDED' 
               ? 'Trial Period Ended' 
               : 'Subscription Required'}
           </DialogTitle>
-          <DialogDescription>
+          <DialogDescription className="text-gray-500 dark:text-gray-400">
             {type === 'TRIAL_ENDED'
               ? 'Your trial period has ended. Please complete your subscription to continue using all features.'
               : 'This feature requires an active subscription.'}
           </DialogDescription>
         </DialogHeader>
         <div className="flex justify-end space-x-2">
-          <Button variant="outline" onClick={onClose}>
+          <Button 
+            variant="outline" 
+            onClick={onClose}
+            className="dark:bg-gray-700 dark:hover:bg-gray-600 dark:text-white"
+          >
             Cancel
           </Button>
-          <Button onClick={handlePortalAccess}>
+          <Button 
+            onClick={handlePortalAccess}
+            className="dark:bg-primary dark:hover:bg-primary/90 dark:text-white"
+          >
             Complete Subscription
           </Button>
         </div>

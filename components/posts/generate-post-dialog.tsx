@@ -331,11 +331,11 @@ export function GeneratePostDialog({ open, onOpenChange, onSuccess }: GeneratePo
           title: "Subscription Required",
           description: (
             <div className="flex flex-col gap-2 items-center text-center">
-              <p>Please subscribe to access this feature.</p>
+              <p className="text-white dark:text-white">Please subscribe to access this feature.</p>
               <Button 
                 variant="outline" 
                 onClick={() => window.location.href = '/dashboard/settings'}
-                className="text-black hover:bg-gray-100"
+                className="bg-transparent text-white hover:bg-white/10 border-white/20"
               >
                 Settings
               </Button>

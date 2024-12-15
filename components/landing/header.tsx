@@ -88,7 +88,7 @@ export function Header({ onLogin, onGetStarted }: { onLogin: () => void, onGetSt
               <Button
                 onClick={onGetStarted}
                 size="sm"
-                className="w-full mt-4">
+                className="w-full mt-4 bg-black text-white hover:bg-gray-800">
                 Get Started
               </Button>
             </nav>
