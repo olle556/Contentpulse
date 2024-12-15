@@ -3,7 +3,31 @@ import { NextResponse } from 'next/server';
 import { stripe } from '@/lib/stripe';
 import { prisma } from '@/lib/prisma';
 
-export async function POST() {
+const allowedOrigins = [
+  'https://www.contentpulse.app',
+  'https://contentpulse.app',
+  'http://localhost:3000'
+];
+
+function addCorsHeaders(response: NextResponse, origin: string | null) {
+  if (origin && allowedOrigins.includes(origin)) {
+    response.headers.set('Access-Control-Allow-Origin', origin);
+    response.headers.set('Access-Control-Allow-Credentials', 'true');
+    response.headers.set('Access-Control-Allow-Methods', 'GET, POST, OPTIONS');
+    response.headers.set('Access-Control-Allow-Headers', 'Content-Type, Authorization');
+  }
+  return response;
+}
+
+export async function OPTIONS(request: Request) {
+  const origin = request.headers.get('origin');
+  const response = new NextResponse(null, { status: 200 });
+  return addCorsHeaders(response, origin);
+}
+
+export async function POST(request: Request) {
+  const origin = request.headers.get('origin');
+  
   try {
     const session = await getServerSession();
     
@@ -24,12 +48,14 @@ export async function POST() {
       return_url: `${process.env.NEXT_PUBLIC_APP_URL}/dashboard/settings`,
     });
 
-    return NextResponse.json({ url: portalSession.url });
+    const response = NextResponse.json({ url: portalSession.url });
+    return addCorsHeaders(response, origin);
   } catch (error) {
     console.error('Error creating portal session:', error);
-    return new NextResponse(
-      JSON.stringify({ error: 'Failed to create portal session' }), 
+    const response = NextResponse.json(
+      { error: 'Failed to create portal session' }, 
       { status: 500 }
     );
+    return addCorsHeaders(response, origin);
   }
 }
