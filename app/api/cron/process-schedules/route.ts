@@ -115,6 +115,36 @@ const generatePostWithTimeout = async (params: {
   }
 };
 
+// Add this helper function at the top of the file
+async function rescheduleFailedSchedule(schedule: any) {
+  try {
+    const currentTime = new Date();
+    const [hours, minutes] = schedule.time.split(':').map(Number);
+    
+    // Create a new time 10 minutes later
+    const newTime = new Date();
+    newTime.setUTCHours(hours, minutes + 10, 0, 0);
+    
+    // Format the new time as HH:mm
+    const rescheduledTime = `${newTime.getUTCHours().toString().padStart(2, '0')}:${newTime.getUTCMinutes().toString().padStart(2, '0')}`;
+
+    // Update the schedule in the database
+    await prisma.contentSchedule.update({
+      where: { id: schedule.id },
+      data: {
+        time: rescheduledTime,
+      }
+    });
+
+    console.log(`Rescheduled failed schedule ${schedule.id} to ${rescheduledTime}`);
+    return true;
+  } catch (error) {
+    console.error('Failed to reschedule:', error);
+    return false;
+  }
+}
+
+
 export async function GET(req: NextRequest) {
   // Verify the request is from Vercel Cron
   const authHeader = req.headers.get('authorization');
@@ -301,6 +331,7 @@ export async function GET(req: NextRequest) {
 
       } catch (error) {
         console.error(`Failed to process schedule ${schedule.id}:`, error);
+        await rescheduleFailedSchedule(schedule);
       }
     }
 
