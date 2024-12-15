@@ -40,7 +40,7 @@ export function ShareButton({ platform, content }: ShareButtonProps) {
             onClick={handleShare}
             className="relative min-w-[70px] transition-all duration-200"
         >
-            <Share className="h-4 w-4 mr-2" />
+            
             Share
         </Button>
     );
