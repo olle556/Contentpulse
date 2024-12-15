@@ -8,7 +8,7 @@ export function TermsOfService() {
         <p className="mb-4">Last updated: {new Date().toLocaleDateString()}</p>
         
         <p className="mb-6">
-          Welcome to AIPostCrawler! These Terms of Service outline the rules and regulations 
+          Welcome to Contentpulse! These Terms of Service outline the rules and regulations 
           for the use of our social media management service. By using our service, you agree 
           to these terms and conditions.
         </p>
