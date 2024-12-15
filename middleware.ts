@@ -90,6 +90,6 @@ export const config = {
     '/dashboard/:path*',
     '/api/generate-post/:path*',
     '/api/schedule/:path*',
-    '/((?!api/cron|api/firecrawl).*)',
+    //'/((?!api/cron|api/firecrawl).*)',
   ]
 };
