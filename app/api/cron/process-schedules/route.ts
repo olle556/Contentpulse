@@ -2,7 +2,7 @@ import { NextRequest } from 'next/server';
 import { prisma } from '@/lib/prisma';
 import { format, subMinutes } from 'date-fns';
 
-export const maxDuration = 300; // Set to 5 minutes (300 seconds) for Pro plan?
+export const maxDuration = 300; // Set to 5 minutes. 
 export const dynamic = 'force-dynamic';
 export const revalidate = 0;
 

@@ -26,6 +26,8 @@ const getShareUrl = (platform: string, content: string) => {
       return `https://www.linkedin.com/shareArticle?mini=true&url=${encodeURIComponent('')}&text=${encodeURIComponent(content)}`;
     case 'facebook':
       return `https://www.facebook.com/dialog/share?href=${encodeURIComponent('')}&quote=${encodeURIComponent(content)}`;
+    case 'bluesky':
+      return `https://bsky.app/intent/compose?text=${encodeURIComponent(content)}`;
     default:
       return '#';
   }
