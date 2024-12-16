@@ -2,34 +2,12 @@ import { getServerSession } from 'next-auth/next';
 import { NextResponse } from 'next/server';
 import { prisma } from '@/lib/prisma';
 
-// Add OPTIONS handler for CORS preflight requests
-export async function OPTIONS(request: Request) {
-  const origin = request.headers.get('origin');
-  
-  // Return response with CORS headers
-  return new NextResponse(null, {
-    status: 200,
-    headers: {
-      'Access-Control-Allow-Origin': origin || '',
-      'Access-Control-Allow-Methods': 'GET, OPTIONS',
-      'Access-Control-Allow-Headers': 'Content-Type, Authorization',
-      'Access-Control-Allow-Credentials': 'true',
-    },
-  });
-}
-
-export async function GET(request: Request) {
+export async function GET() {
   try {
     const session = await getServerSession();
-    const origin = request.headers.get('origin');
     
     if (!session?.user?.email) {
-      const response = new NextResponse('Unauthorized', { status: 401 });
-      if (origin) {
-        response.headers.set('Access-Control-Allow-Origin', origin);
-        response.headers.set('Access-Control-Allow-Credentials', 'true');
-      }
-      return response;
+      return new NextResponse('Unauthorized', { status: 401 });
     }
 
     const user = await prisma.user.findUnique({
@@ -42,12 +20,7 @@ export async function GET(request: Request) {
     });
 
     if (!user) {
-      const response = new NextResponse('User not found', { status: 404 });
-      if (origin) {
-        response.headers.set('Access-Control-Allow-Origin', origin);
-        response.headers.set('Access-Control-Allow-Credentials', 'true');
-      }
-      return response;
+      return new NextResponse('User not found', { status: 404 });
     }
 
     // Check if within trial period (7 days) and end date is in the future
@@ -68,30 +41,12 @@ export async function GET(request: Request) {
       effectiveTrialStatus
     });
 
-    // Create response with data
-    const response = NextResponse.json({
+    return NextResponse.json({
       status: effectiveTrialStatus ? 'trial' : user.subscriptionStatus,
       trialEndDate: effectiveTrialStatus ? user.subscriptionEndDate : null,
     });
-
-    // Add CORS headers to successful response
-    if (origin) {
-      response.headers.set('Access-Control-Allow-Origin', origin);
-      response.headers.set('Access-Control-Allow-Credentials', 'true');
-    }
-
-    return response;
-
   } catch (error) {
     console.error('Error checking subscription status:', error);
-    const response = new NextResponse('Internal server error', { status: 500 });
-    
-    const origin = request.headers.get('origin');
-    if (origin) {
-      response.headers.set('Access-Control-Allow-Origin', origin);
-      response.headers.set('Access-Control-Allow-Credentials', 'true');
-    }
-    
-    return response;
+    return new NextResponse('Internal server error', { status: 500 });
   }
 }
