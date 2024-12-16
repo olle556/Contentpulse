@@ -2,37 +2,34 @@ import { getServerSession } from 'next-auth/next';
 import { NextResponse } from 'next/server';
 import { prisma } from '@/lib/prisma';
 
-const allowedOrigins = [
-  'https://www.contentpulse.app',
-  'https://contentpulse.app',
-  'http://localhost:3000'
-];
-
-function addCorsHeaders(response: NextResponse, origin: string | null) {
-  if (origin && allowedOrigins.includes(origin)) {
-    response.headers.set('Access-Control-Allow-Origin', origin);
-    response.headers.set('Access-Control-Allow-Credentials', 'true');
-    response.headers.set('Access-Control-Allow-Methods', 'GET, POST, OPTIONS');
-    response.headers.set('Access-Control-Allow-Headers', 'Content-Type, Authorization');
-  }
-  return response;
-}
-
+// Add OPTIONS handler for CORS preflight requests
 export async function OPTIONS(request: Request) {
   const origin = request.headers.get('origin');
-  const response = new NextResponse(null, { status: 200 });
-  return addCorsHeaders(response, origin);
+  
+  // Return response with CORS headers
+  return new NextResponse(null, {
+    status: 200,
+    headers: {
+      'Access-Control-Allow-Origin': origin || '',
+      'Access-Control-Allow-Methods': 'GET, OPTIONS',
+      'Access-Control-Allow-Headers': 'Content-Type, Authorization',
+      'Access-Control-Allow-Credentials': 'true',
+    },
+  });
 }
 
 export async function GET(request: Request) {
-  const origin = request.headers.get('origin');
-  
   try {
     const session = await getServerSession();
+    const origin = request.headers.get('origin');
     
     if (!session?.user?.email) {
       const response = new NextResponse('Unauthorized', { status: 401 });
-      return addCorsHeaders(response, origin);
+      if (origin) {
+        response.headers.set('Access-Control-Allow-Origin', origin);
+        response.headers.set('Access-Control-Allow-Credentials', 'true');
+      }
+      return response;
     }
 
     const user = await prisma.user.findUnique({
@@ -46,7 +43,11 @@ export async function GET(request: Request) {
 
     if (!user) {
       const response = new NextResponse('User not found', { status: 404 });
-      return addCorsHeaders(response, origin);
+      if (origin) {
+        response.headers.set('Access-Control-Allow-Origin', origin);
+        response.headers.set('Access-Control-Allow-Credentials', 'true');
+      }
+      return response;
     }
 
     // Check if within trial period (7 days) and end date is in the future
@@ -73,11 +74,24 @@ export async function GET(request: Request) {
       trialEndDate: effectiveTrialStatus ? user.subscriptionEndDate : null,
     });
 
-    return addCorsHeaders(response, origin);
+    // Add CORS headers to successful response
+    if (origin) {
+      response.headers.set('Access-Control-Allow-Origin', origin);
+      response.headers.set('Access-Control-Allow-Credentials', 'true');
+    }
+
+    return response;
 
   } catch (error) {
     console.error('Error checking subscription status:', error);
     const response = new NextResponse('Internal server error', { status: 500 });
-    return addCorsHeaders(response, origin);
+    
+    const origin = request.headers.get('origin');
+    if (origin) {
+      response.headers.set('Access-Control-Allow-Origin', origin);
+      response.headers.set('Access-Control-Allow-Credentials', 'true');
+    }
+    
+    return response;
   }
 }
