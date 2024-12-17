@@ -44,7 +44,7 @@ export default function LandingPage() {
               </p>
             </div>
             <div className="flex flex-col gap-3 w-full sm:w-auto sm:flex-row sm:gap-4">
-              <Button onClick={handleGetStarted} className="bg-white text-black hover:bg-gray-200 w-full sm:w-auto text-base sm:text-lg md:text-xl h-12 sm:h-14 md:h-16">
+              <Button onClick={handleGetStarted} className="bg-white text-black hover:bg-gray-200 w-full sm:w-auto text-base sm:text-lg md:text-xl h-12 sm:h-12 md:h-14">
                 Get Started for Free
                 <ArrowRight className="ml-2 h-5 w-5 sm:h-6 sm:w-6 md:h-7 md:w-7" />
               </Button>
