@@ -14,6 +14,9 @@ const inter = Inter({ subsets: ['latin'] });
 export const metadata: Metadata = {
   title: 'Content Pulse - Social Media Content Generator',
   description: 'AI-powered social media content generation and management',
+  icons: {
+    icon: '/zap.svg',
+  },
 };
 
 export default async function RootLayout({
