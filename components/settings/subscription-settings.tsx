@@ -227,7 +227,7 @@ export function SubscriptionSettings({
             <div className="p-4 rounded-lg border border-purple-200 bg-purple-50 dark:border-purple-900 dark:bg-purple-900/50">
               <div className="flex flex-col space-y-2">
                 <p className="text-sm text-purple-800 dark:text-purple-200">
-                  You're currently on a trial period with {' '}
+                  You&apos;re currently on a trial period with {' '}
                   <span className="font-medium">
                     {Math.ceil((trialEndDate.getTime() - new Date().getTime()) / (1000 * 60 * 60 * 24))} days
                   </span>{' '}
@@ -245,7 +245,7 @@ export function SubscriptionSettings({
                     Add a payment method
                   </p>
                   <p className="text-sm text-blue-700 dark:text-blue-300">
-                    To continue using the app after your trial ends, please add a payment method. Your card won't be charged until your trial expires.
+                    To continue using the app after your trial ends, please add a payment method. Your card won&apos;t be charged until your trial expires.
                   </p>
                 </div>
               </div>
@@ -269,7 +269,7 @@ export function SubscriptionSettings({
                 to reactivate your trial.
               </p>
               <p className="text-sm text-yellow-800 dark:text-yellow-200">
-                After this date, you'll need to start a new subscription to access premium features.
+                After this date, you&apos;ll need to start a new subscription to access premium features.
               </p>
             </div>
           </div>

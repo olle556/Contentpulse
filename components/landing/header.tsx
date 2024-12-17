@@ -37,7 +37,7 @@ export function Header({ onLogin, onGetStarted }: { onLogin: () => void, onGetSt
             onClick={onLogin} 
             size="lg" 
             variant="outline"
-            className="text-base font-medium bg-white/10 text-white hover:bg-white/20 transition-all duration-200 px-6 h-11"
+            className="text-base font-medium bg-white/10 text-white hover:text-white dark:hover:text-white hover:bg-white/20 transition-all duration-200 px-6 h-11"
             >
             Login
           </Button>
