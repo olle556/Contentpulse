@@ -5,7 +5,7 @@ import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { loadStripe } from '@stripe/stripe-js';
 import { useSession } from 'next-auth/react';
 import { useToast } from "@/hooks/use-toast";
-import { useSearchParams } from 'next/navigation';
+import { useSearchParams, useRouter } from 'next/navigation';
 import { Check } from 'lucide-react';
 import { cn } from '@/lib/utils';
 
@@ -31,14 +31,11 @@ const PricingCard: React.FC<PricingCardProps> = ({
   const { data: session } = useSession();
   const { toast } = useToast();
   const searchParams = useSearchParams();
+  const router = useRouter();
 
   const handleSubscribe = async () => {
     if (!session) {
-      toast({
-        title: "Authentication required",
-        description: "Please sign in to subscribe.",
-        variant: "destructive",
-      });
+      router.push('/authentication/signup');
       return;
     }
 
