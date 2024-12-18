@@ -13,15 +13,24 @@ export async function POST() {
 
     const user = await prisma.user.findUnique({
       where: { email: session.user.email },
+      select: {
+        stripeCustomerId: true,
+        stripeSubscriptionId: true,
+        subscriptionStatus: true,
+        trialEndDate: true
+      }
     });
 
-    if (!user?.stripeCustomerId) {
-      return new NextResponse('No Stripe customer ID', { status: 400 });
+    if (!user?.stripeCustomerId || !user?.stripeSubscriptionId) {
+      return new NextResponse(
+        JSON.stringify({ error: 'No active subscription found', redirectTo: '/#pricing' }), 
+        { status: 403 }
+      );
     }
 
     const portalSession = await stripe.billingPortal.sessions.create({
       customer: user.stripeCustomerId,
-      return_url: `${process.env.NEXT_PUBLIC_APP_URL}/dashboard/settings`,
+      return_url: `${process.env.NEXT_PUBLIC_BASE_URL}/dashboard/settings`,
     });
 
     return NextResponse.json({ url: portalSession.url });

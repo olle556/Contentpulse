@@ -117,7 +117,7 @@ export function SubscriptionSettings({
   const handleSubscriptionChange = async () => {
     setIsLoading(true);
     try {
-      // First, check if user has any subscription history
+      // First check if user has any subscription history
       const response = await fetch(`${baseUrl}/api/check-subscription_2/check-trialstatus`);
       const data = await response.json();
       
@@ -127,11 +127,15 @@ export function SubscriptionSettings({
         return;
       }
       
-      // If user has stripeCustomerId or previous subscription history, 
-      // redirect to portal
+      // If they have subscription history, proceed to portal
       const portalResponse = await fetch(`${baseUrl}/api/stripe/create-portal`, {
         method: 'POST',
       });
+
+      if (!portalResponse.ok) {
+        throw new Error('Failed to access billing portal');
+      }
+
       const { url } = await portalResponse.json();
       window.location.href = url;
       
