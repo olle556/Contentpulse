@@ -112,10 +112,14 @@ export async function POST(req: Request) {
         billing_address_collection: 'required',
         payment_method_collection: 'if_required',
         allow_promotion_codes: true,
-        automatic_tax: { enabled: true },
+        automatic_tax: { 
+          enabled: true,
+          liability: { type: 'self' }
+        },
         tax_id_collection: { enabled: true },
         customer_update: {
           address: 'auto',
+          name: 'auto',
           shipping: 'auto'
         },
         success_url: `${process.env.NEXT_PUBLIC_BASE_URL}/dashboard/settings?success=true`,
