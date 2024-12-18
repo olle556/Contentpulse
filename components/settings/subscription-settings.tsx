@@ -117,11 +117,24 @@ export function SubscriptionSettings({
   const handleSubscriptionChange = async () => {
     setIsLoading(true);
     try {
-      if (stripeCustomerId) {
-        await handlePortalAccess();
-      } else {
+      // First, check if user has any subscription history
+      const response = await fetch(`${baseUrl}/api/check-subscription_2/check-trialstatus`);
+      const data = await response.json();
+      
+      // If user has never had a subscription or trial, redirect to pricing
+      if (!stripeCustomerId && !data.hasSubscriptionHistory) {
         window.location.href = '/#pricing';
+        return;
       }
+      
+      // If user has stripeCustomerId or previous subscription history, 
+      // redirect to portal
+      const portalResponse = await fetch(`${baseUrl}/api/stripe/create-portal`, {
+        method: 'POST',
+      });
+      const { url } = await portalResponse.json();
+      window.location.href = url;
+      
     } catch (error) {
       console.error('Subscription error:', error);
       toast({

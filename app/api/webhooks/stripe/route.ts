@@ -125,6 +125,72 @@ export async function POST(req: Request) {
         // You can implement email notifications here if needed
         break;
       }
+
+      case 'customer.subscription.created': {
+        const subscription = event.data.object as Stripe.Subscription;
+        try {
+          const isTrialSubscription = subscription.status === 'trialing';
+          const trialEnd = subscription.trial_end 
+            ? new Date(subscription.trial_end * 1000)
+            : null;
+
+          await prisma.user.update({
+            where: {
+              stripeCustomerId: subscription.customer as string,
+            },
+            data: {
+              subscriptionStatus: isTrialSubscription ? 'active' : subscription.status,
+              subscriptionEndDate: trialEnd || new Date(subscription.current_period_end * 1000),
+              stripeSubscriptionId: subscription.id,
+              trialStartDate: isTrialSubscription ? new Date() : null,
+              trialEndDate: trialEnd,
+            },
+          });
+        } catch (error) {
+          console.error('Error processing subscription.created:', error);
+        }
+        break;
+      }
+
+      case 'invoice.paid': {
+        const invoice = event.data.object as Stripe.Invoice;
+        try {
+          if (invoice.subscription) {
+            await prisma.user.update({
+              where: {
+                stripeCustomerId: invoice.customer as string,
+              },
+              data: {
+                subscriptionStatus: 'active',
+                subscriptionEndDate: new Date(invoice.period_end * 1000),
+              },
+            });
+          }
+        } catch (error) {
+          console.error('Error processing invoice.paid:', error);
+        }
+        break;
+      }
+
+      case 'invoice.payment_failed': {
+        const invoice = event.data.object as Stripe.Invoice;
+        try {
+          if (invoice.subscription) {
+            await prisma.user.update({
+              where: {
+                stripeCustomerId: invoice.customer as string,
+              },
+              data: {
+                subscriptionStatus: 'past_due',
+              },
+            });
+            // You might want to send an email to the user here
+          }
+        } catch (error) {
+          console.error('Error processing invoice.payment_failed:', error);
+        }
+        break;
+      }
     }
 
     return NextResponse.json({ 

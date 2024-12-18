@@ -62,9 +62,12 @@ model User {
   brands           Brand[]
   contentSchedules ContentSchedule[]
   onboardingProgress OnboardingProgress?
-  stripeCustomerId String?   @unique
-  subscriptionStatus String?   @default("inactive")
+  stripeCustomerId String?           @unique
+  subscriptionStatus String?         @default("inactive")
   subscriptionEndDate DateTime?
+  stripeSubscriptionId String?
+  trialStartDate       DateTime?
+  trialEndDate         DateTime?
 
   @@index([email])
 }
