@@ -191,7 +191,7 @@ export async function POST(req: NextRequest) {
 
     <p class="subtitle">
       You can view, edit and copy your ${generatedPosts.length > 1 ? 'posts' : 'post'} in your 
-      <a href="${process.env.NEXTAUTH_URL}/dashboard/posts" style="color: #0A0A0A; text-decoration: underline;">Content Pulse dashboard</a>
+      <a href="https://contentpulse.app/dashboard/posts" style="color: #0A0A0A; text-decoration: underline;">Content Pulse dashboard</a>
     </p>
   </div>
 </body>
