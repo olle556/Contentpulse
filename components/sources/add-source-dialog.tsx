@@ -1,7 +1,7 @@
 "use client";
 
 import { useState } from "react";
-import { Dialog, DialogContent, DialogHeader, DialogTitle } from "@/components/ui/dialog";
+import { Dialog, DialogContent, DialogDescription, DialogHeader, DialogTitle } from "@/components/ui/dialog";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { isValidUrl, ensureHttps } from "@/lib/utils";
@@ -102,6 +102,9 @@ export function AddSourceDialog({ open, onOpenChange, onSuccess }: AddSourceDial
       <DialogContent>
         <DialogHeader>
           <DialogTitle>Add New Content Source</DialogTitle>
+          <DialogDescription>
+            We currently don't support social media sources.
+          </DialogDescription>
         </DialogHeader>
         <form onSubmit={handleSubmit} className="space-y-4">
           <div className="space-y-2">
