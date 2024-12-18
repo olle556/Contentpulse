@@ -27,10 +27,16 @@ export async function GET() {
     const now = new Date();
     const trialEndDate = user.trialEndDate;
     const isInTrial = trialEndDate ? now < trialEndDate : false;
+    
+    // Calculate remaining days
+    const remainingDays = trialEndDate 
+      ? Math.max(0, Math.ceil((trialEndDate.getTime() - now.getTime()) / (1000 * 60 * 60 * 24)))
+      : 0;
 
     return NextResponse.json({
       status: isInTrial ? "trial" : "inactive",
       trialEndDate: user.trialEndDate,
+      remainingDays,
       hasSubscriptionHistory: !!(user.stripeSubscriptionId || user.stripeCustomerId),
     });
 

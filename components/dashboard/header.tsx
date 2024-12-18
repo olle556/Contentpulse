@@ -12,29 +12,11 @@ import {
 } from "@/components/ui/dropdown-menu";
 import { Avatar, AvatarFallback } from "@/components/ui/avatar";
 import { useEffect, useState } from "react";
+import { TrialStatus } from "@/components/dashboard/Trialdays";
 
 export function Header() {
   const router = useRouter();
   const { data: session } = useSession();
-  const [showUpgradeButton, setShowUpgradeButton] = useState(false);
-
-  useEffect(() => {
-    const checkTrialStatus = async () => {
-      if (session?.user?.email) {
-        try {
-          const response = await fetch('/api/check-subscription_2/check-trialstatus');
-          const data = await response.json();
-          
-          // Show upgrade button if user is in trial period
-          setShowUpgradeButton(data.status === 'trial');
-        } catch (error) {
-          console.error('Error checking trial status:', error);
-        }
-      }
-    };
-
-    checkTrialStatus();
-  }, [session]);
 
   const handleSignOut = async () => {
     try {
@@ -58,15 +40,7 @@ export function Header() {
         <h1 className="text-lg font-medium">Dashboard</h1>
       </div>
       <div className="flex items-center space-x-4">
-        {showUpgradeButton && (
-          <Button
-            variant="default"
-            className="bg-gradient-to-r from-purple-500 to-blue-500 hover:from-purple-600 hover:to-blue-600 text-white"
-            onClick={() => router.push('/dashboard/settings')}
-          >
-            Upgrade Now
-          </Button>
-        )}
+      <TrialStatus />
         <ModeToggle />
         <DropdownMenu>
           <DropdownMenuTrigger asChild>
