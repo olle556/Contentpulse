@@ -291,9 +291,13 @@ export default function BrandInformationPage() {
   // Auto-save to DB
   const autoSaveToDb = debounce(async (values: z.infer<typeof formSchema>) => {
     try {
-      if (!session?.user?.id) return
+      if (!session?.user?.id) {
+        console.log('No session, skipping save') // Debug log
+        return
+      }
 
       const brandId = localStorage.getItem('brandId')
+      console.log('Attempting to save with brandId:', brandId) // Debug log
       
       const response = await fetch('/api/brand/save', {
         method: 'POST',
@@ -307,6 +311,14 @@ export default function BrandInformationPage() {
       })
 
       if (response.ok) {
+        const data = await response.json()
+        console.log('Save successful:', data) // Debug log
+        
+        if (data.id) {
+          localStorage.setItem('brandId', data.id.toString())
+        }
+
+        // Only show toast if form was actually modified
         if (isFormModified) {
           setShowSaveToast(true)
           setTimeout(() => {
@@ -314,49 +326,44 @@ export default function BrandInformationPage() {
           }, 2000)
         }
 
-        const data = await response.json()
-        
-        if (data.id) {
-          localStorage.setItem('brandId', data.id.toString())
-          
-          // If we have the minimum required fields, mark the step as completed
-          if (values.brandName && values.brandType && values.industry && values.brandVoice) {
-            console.log('Marking brand step as completed after successful save');
-            await markStepCompleted('brand');
-          }
-        }
-
         // Revalidate the cache after successful save
         await fetch('/api/revalidate?tag=brand')
       } else {
-        console.error('Save failed:', await response.json())
+        console.error('Save failed:', await response.text()) // Changed from response.json()
       }
 
     } catch (error) {
       console.error('Failed to auto-save:', error)
       setShowSaveToast(false)
     }
-  }, 1000) // Reduced from 2000ms
+  }, 1000)
+
+  // Add a ref to track if this is the initial mount
+  const isInitialMount = React.useRef(true);
 
   // Watch form changes and trigger both saves
   useEffect(() => {
     const subscription = form.watch((value, { name, type }) => {
-      // Set form as modified whenever any change occurs
-      if (!isFormModified) {
-        setIsFormModified(true)
+      // Skip the initial mount
+      if (isInitialMount.current) {
+        isInitialMount.current = false;
+        return;
       }
+
+      console.log('Form changed:', name, value) // Debug log
+      
+      // Set form as modified whenever any change occurs
+      setIsFormModified(true)
       
       const formValues = form.getValues()
+      console.log('Current form values:', formValues) // Debug log
       
-      // Save on any change, not just when all required fields are filled
-      if (isFormModified) {
-        // Save to localStorage immediately
-        autoSaveToStorage(formValues)
-        
-        // For DB saves, still ensure we have at least one field with content
-        if (Object.values(formValues).some(value => value && value.length > 0)) {
-          autoSaveToDb(formValues)
-        }
+      // Save to localStorage immediately
+      autoSaveToStorage(formValues)
+      
+      // For DB saves, ensure we have at least one required field
+      if (formValues.brandName || formValues.brandType || formValues.industry || formValues.brandVoice) {
+        autoSaveToDb(formValues)
       }
     })
     
@@ -365,7 +372,7 @@ export default function BrandInformationPage() {
       autoSaveToStorage.cancel()
       autoSaveToDb.cancel()
     }
-  }, [form, session?.user?.id, isFormModified, autoSaveToDb, autoSaveToStorage])
+  }, [form, session?.user?.id, isFormModified])
 
   // Final submit handler
   const onSubmit = async (values: z.infer<typeof formSchema>) => {
