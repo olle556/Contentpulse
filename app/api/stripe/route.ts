@@ -114,6 +114,10 @@ export async function POST(req: Request) {
         allow_promotion_codes: true,
         automatic_tax: { enabled: true },
         tax_id_collection: { enabled: true },
+        customer_update: {
+          address: 'auto',
+          shipping: 'auto'
+        },
         success_url: `${process.env.NEXT_PUBLIC_BASE_URL}/dashboard/settings?success=true`,
         cancel_url: `${process.env.NEXT_PUBLIC_BASE_URL}/dashboard/settings?canceled=true`,
       });
