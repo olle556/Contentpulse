@@ -109,6 +109,7 @@ export async function POST(req: Request) {
             }
           }
         },
+        billing_address_collection: 'required',
         payment_method_collection: 'if_required',
         allow_promotion_codes: true,
         success_url: `${process.env.NEXT_PUBLIC_BASE_URL}/dashboard/settings?success=true`,
