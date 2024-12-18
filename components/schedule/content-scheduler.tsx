@@ -86,6 +86,13 @@ export function ContentScheduler({ open, onOpenChange, contentSources, editSched
   const { data: session } = useSession()
   const [isRecurring, setIsRecurring] = useState(false)
   const { toast } = useToast()
+  const [isLoading, setIsLoading] = useState(true)
+
+  useEffect(() => {
+    if (contentSources) {
+      setIsLoading(false)
+    }
+  }, [contentSources])
 
   const form = useForm<z.infer<typeof formSchema>>({
     resolver: zodResolver(formSchema),
@@ -242,10 +249,14 @@ export function ContentScheduler({ open, onOpenChange, contentSources, editSched
                 render={({ field }) => (
                   <FormItem>
                     <FormLabel>Content Source</FormLabel>
-                    <Select onValueChange={field.onChange} defaultValue={field.value}>
+                    <Select 
+                      onValueChange={field.onChange} 
+                      defaultValue={field.value}
+                      disabled={isLoading}
+                    >
                       <FormControl>
                         <SelectTrigger>
-                          <SelectValue placeholder="Select a content source" />
+                          <SelectValue placeholder={isLoading ? "Loading sources..." : "Select a content source"} />
                         </SelectTrigger>
                       </FormControl>
                       <SelectContent>

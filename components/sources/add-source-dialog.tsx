@@ -103,7 +103,7 @@ export function AddSourceDialog({ open, onOpenChange, onSuccess }: AddSourceDial
         <DialogHeader>
           <DialogTitle>Add New Content Source</DialogTitle>
           <DialogDescription>
-            We currently don't support social media sources.
+            We currently don&apos;t support social media sources.
           </DialogDescription>
         </DialogHeader>
         <form onSubmit={handleSubmit} className="space-y-4">

@@ -27,7 +27,7 @@ export default function SchedulePage() {
   const { data: contentSources, error, isLoading } = useSWR('/api/sources', fetcher, {
     revalidateOnFocus: false,
     revalidateOnReconnect: false,
-    dedupingInterval: 60000,
+    dedupingInterval: 2000,
     refreshInterval: 0,
     keepPreviousData: true,
   });
