@@ -117,27 +117,26 @@ export function SubscriptionSettings({
   const handleSubscriptionChange = async () => {
     setIsLoading(true);
     try {
-      // First check if user has any subscription history
-      const response = await fetch(`${baseUrl}/api/check-subscription_2/check-trialstatus`);
+      const response = await fetch(`${baseUrl}/api/stripe/create-portal`, {
+        method: 'POST',
+      });
       const data = await response.json();
-      
-      // If user has never had a subscription or trial, redirect to pricing
-      if (!stripeCustomerId && !data.hasSubscriptionHistory) {
+
+      // If we get a 403, redirect to pricing
+      if (response.status === 403) {
         window.location.href = '/#pricing';
         return;
       }
-      
-      // If they have subscription history, proceed to portal
-      const portalResponse = await fetch(`${baseUrl}/api/stripe/create-portal`, {
-        method: 'POST',
-      });
 
-      if (!portalResponse.ok) {
-        throw new Error('Failed to access billing portal');
+      // If response is not ok and not 403, throw error
+      if (!response.ok) {
+        throw new Error(data.error || 'Failed to access billing portal');
       }
 
-      const { url } = await portalResponse.json();
-      window.location.href = url;
+      // If we have a valid portal URL, redirect to it
+      if (data.url) {
+        window.location.href = data.url;
+      }
       
     } catch (error) {
       console.error('Subscription error:', error);
