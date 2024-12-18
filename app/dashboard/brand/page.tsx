@@ -276,7 +276,7 @@ export default function BrandInformationPage() {
     if (session?.user?.id) {
       fetchBrand()
     }
-  }, [session?.user?.id])
+  }, [session?.user?.id, form])
 
   // Auto-save to localStorage
   const autoSaveToStorage = debounce((values: z.infer<typeof formSchema>) => {
@@ -286,7 +286,7 @@ export default function BrandInformationPage() {
     } catch (error) {
       console.error('Failed to save to localStorage:', error)
     }
-  }, 1000)
+  }, 500) // Reduced from 1000ms
 
   // Auto-save to DB
   const autoSaveToDb = debounce(async (values: z.infer<typeof formSchema>) => {
@@ -336,25 +336,27 @@ export default function BrandInformationPage() {
       console.error('Failed to auto-save:', error)
       setShowSaveToast(false)
     }
-  }, 2000)
+  }, 1000) // Reduced from 2000ms
 
   // Watch form changes and trigger both saves
   useEffect(() => {
     const subscription = form.watch((value, { name, type }) => {
+      // Set form as modified whenever any change occurs
       if (!isFormModified) {
         setIsFormModified(true)
       }
       
       const formValues = form.getValues()
       
-      // Only save if we have the minimum required fields AND the form has been modified
-      if (isFormModified && 
-          formValues.brandName && 
-          formValues.brandType && 
-          formValues.industry && 
-          formValues.brandVoice) {
+      // Save on any change, not just when all required fields are filled
+      if (isFormModified) {
+        // Save to localStorage immediately
         autoSaveToStorage(formValues)
-        autoSaveToDb(formValues)
+        
+        // For DB saves, still ensure we have at least one field with content
+        if (Object.values(formValues).some(value => value && value.length > 0)) {
+          autoSaveToDb(formValues)
+        }
       }
     })
     
@@ -363,7 +365,7 @@ export default function BrandInformationPage() {
       autoSaveToStorage.cancel()
       autoSaveToDb.cancel()
     }
-  }, [form, session?.user?.id, isFormModified])
+  }, [form, session?.user?.id, isFormModified, autoSaveToDb, autoSaveToStorage])
 
   // Final submit handler
   const onSubmit = async (values: z.infer<typeof formSchema>) => {

@@ -35,7 +35,7 @@ export default async function RootLayout({
           <Providers session={session}>{children}</Providers>
         <Toaster />
 
-        <Analytics/>
+        <Analytics mode="production"/>
         <CookieBanner />
       </body>
     </html>
