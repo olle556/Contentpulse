@@ -92,9 +92,10 @@ export function SubscriptionSettings({
   }, [toast]);
 
   const isSubscribed = subscriptionStatus === 'active';
-  const isCanceled = subscriptionStatus === 'canceled' || subscriptionStatus === 'active_until_period_end';
-  const isInactive = subscriptionStatus === 'inactive' || (!subscriptionStatus && !trialStatus);
+  const isInGracePeriod = subscriptionStatus === 'canceled' && subscriptionEndDate && new Date() < new Date(subscriptionEndDate);
   const isTrialPeriod = trialStatus === 'trial';
+  const isTrialPaused = trialStatus === 'trial_paused';
+  const isTrialEnded = trialStatus === 'trial_ended';
 
   const hasActiveSubscriptionOrTrial = isSubscribed || isTrialPeriod;
 
@@ -212,21 +213,26 @@ export function SubscriptionSettings({
               Active
             </span>
           )}
-          {isCanceled && (
+          {isInGracePeriod && (
             <span className="inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-medium bg-yellow-100 text-yellow-800 dark:bg-yellow-900 dark:text-yellow-200">
-              Paused
+              Canceling Soon
+            </span>
+          )}
+          {isTrialPaused && (
+            <span className="inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-medium bg-orange-100 text-orange-800 dark:bg-orange-900 dark:text-orange-200">
+              Trial Paused
             </span>
           )}
         </div>
         
-        {/* Active Subscription Message */}
+        {/* Active Paid Subscription Message */}
         {isSubscribed && !isTrialPeriod && subscriptionEndDate && (
           <div className="p-4 rounded-lg border border-purple-200 bg-purple-50 dark:border-purple-900 dark:bg-purple-900/50">
             <div className="flex flex-col space-y-2">
               <p className="text-sm text-purple-800 dark:text-purple-200">
                 Your subscription is active. Next billing date:{' '}
                 <span className="font-medium">
-                  {subscriptionEndDate.toLocaleDateString('en-GB', {
+                  {new Date(subscriptionEndDate).toLocaleDateString('en-GB', {
                     year: 'numeric',
                     month: 'long',
                     day: 'numeric'
@@ -237,15 +243,36 @@ export function SubscriptionSettings({
           </div>
         )}
 
+        {/* Grace Period Message */}
+        {isInGracePeriod && subscriptionEndDate && (
+          <div className="p-4 rounded-lg border border-yellow-200 bg-yellow-50 dark:border-yellow-900 dark:bg-yellow-900/50">
+            <div className="flex flex-col space-y-2">
+              <p className="text-sm text-yellow-800 dark:text-yellow-200">
+                Your subscription has been canceled but remains active until{' '}
+                <span className="font-medium">
+                  {new Date(subscriptionEndDate).toLocaleDateString('en-GB', {
+                    year: 'numeric',
+                    month: 'long',
+                    day: 'numeric'
+                  })}
+                </span>
+              </p>
+              <p className="text-sm text-yellow-800 dark:text-yellow-200">
+                You can reactivate your subscription before this date to maintain uninterrupted access.
+              </p>
+            </div>
+          </div>
+        )}
+
         {/* Active Trial Message */}
-        {isTrialPeriod && trialEndDate && !isCanceled && (
+        {isTrialPeriod && trialEndDate && (
           <div className="space-y-3">
             <div className="p-4 rounded-lg border border-purple-200 bg-purple-50 dark:border-purple-900 dark:bg-purple-900/50">
               <div className="flex flex-col space-y-2">
                 <p className="text-sm text-purple-800 dark:text-purple-200">
-                  You&apos;re currently on a trial period with {' '}
+                  You&apos;re currently on a trial period with{' '}
                   <span className="font-medium">
-                    {Math.ceil((trialEndDate.getTime() - new Date().getTime()) / (1000 * 60 * 60 * 24))} days
+                    {Math.ceil((new Date(trialEndDate).getTime() - new Date().getTime()) / (1000 * 60 * 60 * 24))} days
                   </span>{' '}
                   remaining.
                 </p>
@@ -270,13 +297,13 @@ export function SubscriptionSettings({
         )}
 
         {/* Paused Trial Message */}
-        {isCanceled && subscriptionEndDate && (
-          <div className="p-4 rounded-lg border border-yellow-200 bg-yellow-50 dark:border-yellow-900 dark:bg-yellow-900/50">
+        {isTrialPaused && trialEndDate && (
+          <div className="p-4 rounded-lg border border-orange-200 bg-orange-50 dark:border-orange-900 dark:bg-orange-900/50">
             <div className="flex flex-col space-y-2">
-              <p className="text-sm text-yellow-800 dark:text-yellow-200">
+              <p className="text-sm text-orange-800 dark:text-orange-200">
                 Your trial is currently paused. You have until{' '}
                 <span className="font-medium">
-                  {subscriptionEndDate.toLocaleDateString('en-GB', {
+                  {new Date(trialEndDate).toLocaleDateString('en-GB', {
                     year: 'numeric',
                     month: 'long',
                     day: 'numeric'
@@ -284,8 +311,21 @@ export function SubscriptionSettings({
                 </span>{' '}
                 to reactivate your trial.
               </p>
-              <p className="text-sm text-yellow-800 dark:text-yellow-200">
+              <p className="text-sm text-orange-800 dark:text-orange-200">
                 After this date, you&apos;ll need to start a new subscription to access premium features.
+              </p>
+            </div>
+          </div>
+        )}
+
+        {/* Trial Ended or Inactive Message */}
+        {(isTrialEnded || (!isSubscribed && !isInGracePeriod && !isTrialPeriod && !isTrialPaused)) && (
+          <div className="p-4 rounded-lg border border-red-200 bg-red-50 dark:border-red-900 dark:bg-red-900/50">
+            <div className="flex flex-col space-y-2">
+              <p className="text-sm text-red-800 dark:text-red-200">
+                {isTrialEnded 
+                  ? "Your trial period has ended. Please subscribe to continue using premium features."
+                  : "You don't have an active subscription. Subscribe to access premium features."}
               </p>
             </div>
           </div>
@@ -295,11 +335,13 @@ export function SubscriptionSettings({
           <Button
             onClick={handleSubscriptionChange}
             disabled={isLoading}
-            variant={isCanceled ? "default" : "outline"}
-            className={isCanceled ? "bg-yellow-600 hover:bg-yellow-700 text-white" : ""}
+            variant={isTrialPaused ? "default" : "outline"}
+            className={isTrialPaused ? "bg-yellow-600 hover:bg-yellow-700 text-white" : ""}
           >
             {isLoading ? "Loading..." : 
-              (isCanceled ? "Reactivate Trial" : "Manage Billing")}
+              (isTrialPaused ? "Reactivate Trial" : 
+               isInGracePeriod ? "Reactivate Subscription" :
+               "Manage Subscription")}
           </Button>
         </div>
       </div>

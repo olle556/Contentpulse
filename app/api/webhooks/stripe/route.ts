@@ -93,22 +93,36 @@ export async function POST(req: Request) {
         console.log('Subscription event data:', subscription);
 
         try {
-          // Check if this is a trial subscription
-          const isTrialSubscription = subscription.status === 'trialing';
-          const isCanceled = subscription.status === 'canceled' || 
-                            subscription.cancel_at_period_end;
-          const trialEnd = subscription.trial_end 
-            ? new Date(subscription.trial_end * 1000)
-            : null;
+          // Determine the correct subscription status
+          let subscriptionStatus;
+          if (subscription.status === 'trialing') {
+            subscriptionStatus = 'trialing';
+          } else if (subscription.status === 'active') {
+            subscriptionStatus = 'active';
+          } else if (subscription.cancel_at_period_end) {
+            // Subscription is active but will be canceled at period end
+            subscriptionStatus = 'canceled';
+          } else if (subscription.status === 'canceled') {
+            // Check if it was a trial
+            if (subscription.trial_end) {
+              subscriptionStatus = 'paused';
+            } else {
+              subscriptionStatus = 'inactive';
+            }
+          } else {
+            subscriptionStatus = subscription.status;
+          }
 
           const updatedUser = await prisma.user.update({
             where: {
               stripeCustomerId: subscription.customer as string,
             },
             data: {
-              subscriptionStatus: isCanceled ? 'canceled' : 
-                (isTrialSubscription ? 'active' : subscription.status),
-              subscriptionEndDate: trialEnd || new Date(subscription.current_period_end * 1000),
+              subscriptionStatus: subscriptionStatus,
+              subscriptionEndDate: new Date(subscription.current_period_end * 1000),
+              trialEndDate: subscription.trial_end 
+                ? new Date(subscription.trial_end * 1000)
+                : null,
             },
           });
 
@@ -139,8 +153,8 @@ export async function POST(req: Request) {
               stripeCustomerId: subscription.customer as string,
             },
             data: {
-              subscriptionStatus: isTrialSubscription ? 'active' : subscription.status,
-              subscriptionEndDate: trialEnd || new Date(subscription.current_period_end * 1000),
+              subscriptionStatus: isTrialSubscription ? 'trialing' : subscription.status,
+              subscriptionEndDate: new Date(subscription.current_period_end * 1000),
               stripeSubscriptionId: subscription.id,
               trialStartDate: isTrialSubscription ? new Date() : null,
               trialEndDate: trialEnd,

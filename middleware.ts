@@ -56,9 +56,12 @@ export default withAuth(
         if (!data.authorized) {
           return NextResponse.json({ 
             error: 'Subscription required',
-            type: data.status === 'trial_ended' ? 'TRIAL_ENDED' : 'NO_SUBSCRIPTION',
-            action: 'COMPLETE_SUBSCRIPTION',
-            portalUrl: '/api/stripe/create-portal'
+            type: data.status === 'trial_paused' ? 'TRIAL_PAUSED' :
+                  data.status === 'trial_ended' ? 'TRIAL_ENDED' : 
+                  'NO_SUBSCRIPTION',
+            action: data.status === 'trial_paused' ? 'REACTIVATE_TRIAL' : 'COMPLETE_SUBSCRIPTION',
+            portalUrl: '/api/stripe/create-portal',
+            remainingDays: data.remainingDays
           }, { 
             status: 403 
           });
