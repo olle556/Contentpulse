@@ -98,8 +98,6 @@ export function SubscriptionSettings({
   const isTrialEnded = trialStatus === 'trial_ended';
   const needsPaymentMethod = isTrialPeriod && !stripeCustomerId;
 
-  const hasActiveSubscriptionOrTrial = isSubscribed || isTrialPeriod;
-
   const handlePortalAccess = async () => {
     try {
       const response = await fetch(`${baseUrl}/api/stripe/create-portal`, {
@@ -214,14 +212,9 @@ export function SubscriptionSettings({
               Trial
             </span>
           )}
-          {isSubscribed && (
+          {isSubscribed && !isTrialPeriod && (
             <span className="inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-medium bg-purple-100 text-purple-800 dark:bg-purple-900 dark:text-purple-200">
               Active
-            </span>
-          )}
-          {isInGracePeriod && (
-            <span className="inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-medium bg-yellow-100 text-yellow-800 dark:bg-yellow-900 dark:text-yellow-200">
-              Canceling Soon
             </span>
           )}
           {isTrialPaused && (
@@ -233,123 +226,46 @@ export function SubscriptionSettings({
         
         {/* Trial Period Message */}
         {isTrialPeriod && trialEndDate && (
-          <div className="space-y-3">
-            <div className="p-4 rounded-lg border border-blue-200 bg-blue-50 dark:border-blue-900 dark:bg-blue-900/50">
-              <div className="flex flex-col space-y-2">
-                <p className="text-sm text-blue-800 dark:text-blue-200">
-                  Trial Period Active
-                </p>
-                <p className="text-sm text-blue-700 dark:text-blue-300">
-                  Your trial ends on{' '}
-                  <span className="font-medium">
-                    {new Date(trialEndDate).toLocaleDateString('en-GB', {
-                      year: 'numeric',
-                      month: 'long',
-                      day: 'numeric'
-                    })}
-                  </span>
-                  {' '}({Math.ceil((new Date(trialEndDate).getTime() - new Date().getTime()) / (1000 * 60 * 60 * 24))} days remaining)
-                </p>
-              </div>
-            </div>
-            
-            {/* Payment Method Warning for Trial Users */}
-            {needsPaymentMethod && (
-              <div className="p-4 rounded-lg border border-yellow-200 bg-yellow-50 dark:border-yellow-900 dark:bg-yellow-900/50">
-                <div className="flex items-start space-x-3">
-                  <CreditCard className="h-5 w-5 text-yellow-600 dark:text-yellow-400 mt-0.5" />
-                  <div className="flex flex-col space-y-1">
-                    <p className="text-sm font-medium text-yellow-800 dark:text-yellow-200">
-                      Action Required: Add Payment Method
-                    </p>
-                    <p className="text-sm text-yellow-700 dark:text-yellow-300">
-                      To ensure uninterrupted access after your trial, please add a payment method. Your card won't be charged until your trial expires on {new Date(trialEndDate).toLocaleDateString('en-GB', {
-                        year: 'numeric',
-                        month: 'long',
-                        day: 'numeric'
-                      })}.
-                    </p>
-                    <Button
-                      onClick={handleSubscriptionChange}
-                      variant="outline"
-                      size="sm"
-                      className="mt-2 w-fit"
-                    >
-                      Add Payment Method
-                    </Button>
-                  </div>
-                </div>
-              </div>
-            )}
-          </div>
-        )}
-
-        {/* Active Paid Subscription Message */}
-        {isSubscribed && !isTrialPeriod && subscriptionEndDate && (
-          <div className="p-4 rounded-lg border border-purple-200 bg-purple-50 dark:border-purple-900 dark:bg-purple-900/50">
+          <div className="p-4 rounded-lg border border-blue-200 bg-blue-50 dark:border-blue-900 dark:bg-blue-900/50">
             <div className="flex flex-col space-y-2">
-              <p className="text-sm text-purple-800 dark:text-purple-200">
-                Your subscription is active. Next billing date:{' '}
+              <p className="text-sm text-blue-800 dark:text-blue-200">
+                Trial Period Active
+              </p>
+              <p className="text-sm text-blue-700 dark:text-blue-300">
+                Your trial ends on{' '}
                 <span className="font-medium">
-                  {new Date(subscriptionEndDate).toLocaleDateString('en-GB', {
+                  {new Date(trialEndDate).toLocaleDateString('en-GB', {
                     year: 'numeric',
                     month: 'long',
                     day: 'numeric'
                   })}
                 </span>
+                {' '}({Math.ceil((new Date(trialEndDate).getTime() - new Date().getTime()) / (1000 * 60 * 60 * 24))} days remaining)
               </p>
             </div>
           </div>
         )}
 
-        {/* Grace Period Message */}
-        {isInGracePeriod && subscriptionEndDate && (
+        {/* Payment Method Warning for Trial Users */}
+        {needsPaymentMethod && (
           <div className="p-4 rounded-lg border border-yellow-200 bg-yellow-50 dark:border-yellow-900 dark:bg-yellow-900/50">
-            <div className="flex flex-col space-y-2">
-              <p className="text-sm text-yellow-800 dark:text-yellow-200">
-                Your subscription has been canceled but remains active until{' '}
-                <span className="font-medium">
-                  {new Date(subscriptionEndDate).toLocaleDateString('en-GB', {
-                    year: 'numeric',
-                    month: 'long',
-                    day: 'numeric'
-                  })}
-                </span>
-              </p>
-              <p className="text-sm text-yellow-800 dark:text-yellow-200">
-                You can reactivate your subscription before this date to maintain uninterrupted access.
-              </p>
-            </div>
-          </div>
-        )}
-
-        {/* Active Trial Message */}
-        {isTrialPeriod && trialEndDate && (
-          <div className="space-y-3">
-            <div className="p-4 rounded-lg border border-purple-200 bg-purple-50 dark:border-purple-900 dark:bg-purple-900/50">
-              <div className="flex flex-col space-y-2">
-                <p className="text-sm text-purple-800 dark:text-purple-200">
-                  You&apos;re currently on a trial period with{' '}
-                  <span className="font-medium">
-                    {Math.ceil((new Date(trialEndDate).getTime() - new Date().getTime()) / (1000 * 60 * 60 * 24))} days
-                  </span>{' '}
-                  remaining.
+            <div className="flex items-start space-x-3">
+              <CreditCard className="h-5 w-5 text-yellow-600 dark:text-yellow-400 mt-0.5" />
+              <div className="flex flex-col space-y-1">
+                <p className="text-sm font-medium text-yellow-800 dark:text-yellow-200">
+                  Action Required: Add Payment Method
                 </p>
-              </div>
-            </div>
-            
-            {/* Payment Method Reminder */}
-            <div className="p-4 rounded-lg border border-blue-200 bg-blue-50 dark:border-blue-900 dark:bg-blue-900/50">
-              <div className="flex items-start space-x-3">
-                <CreditCard className="h-5 w-5 text-blue-600 dark:text-blue-400 mt-0.5" />
-                <div className="flex flex-col space-y-1">
-                  <p className="text-sm font-medium text-blue-800 dark:text-blue-200">
-                    Add a payment method
-                  </p>
-                  <p className="text-sm text-blue-700 dark:text-blue-300">
-                    To continue using the app after your trial ends, please add a payment method. Your card won&apos;t be charged until your trial expires.
-                  </p>
-                </div>
+                <p className="text-sm text-yellow-700 dark:text-yellow-300">
+                  To continue using the app after your trial ends, please add a payment method. Your card won't be charged until your trial expires.
+                </p>
+                <Button
+                  onClick={handleSubscriptionChange}
+                  variant="outline"
+                  size="sm"
+                  className="mt-2 w-fit"
+                >
+                  Add Payment Method
+                </Button>
               </div>
             </div>
           </div>
@@ -371,20 +287,18 @@ export function SubscriptionSettings({
                 to reactivate your trial.
               </p>
               <p className="text-sm text-orange-800 dark:text-orange-200">
-                After this date, you&apos;ll need to start a new subscription to access premium features.
+                After this date, you'll need to start a new subscription to access premium features.
               </p>
             </div>
           </div>
         )}
 
-        {/* Trial Ended or Inactive Message */}
-        {(isTrialEnded || (!isSubscribed && !isInGracePeriod && !isTrialPeriod && !isTrialPaused)) && (
+        {/* Trial Ended Message */}
+        {isTrialEnded && (
           <div className="p-4 rounded-lg border border-red-200 bg-red-50 dark:border-red-900 dark:bg-red-900/50">
             <div className="flex flex-col space-y-2">
               <p className="text-sm text-red-800 dark:text-red-200">
-                {isTrialEnded 
-                  ? "Your trial period has ended. Please subscribe to continue using premium features."
-                  : "You don't have an active subscription. Subscribe to access premium features."}
+                Your trial period has ended. Please subscribe to continue using premium features.
               </p>
             </div>
           </div>

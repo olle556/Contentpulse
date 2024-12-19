@@ -39,7 +39,7 @@ export default function LandingPage() {
               <h1 className="text-3xl font-bold tracking-tighter sm:text-4xl md:text-5xl lg:text-6xl">
                 Automate Your Content Strategy
               </h1>
-              <p className="mx-auto max-w-[700px] text-gray-400 text-sm sm:text-base md:text-xl/relaxed lg:text-base/relaxed xl:text-xl/relaxed">
+              <p className="max-w-[700px] text-gray-400 text-sm sm:text-base md:text-xl/relaxed lg:text-base/relaxed xl:text-xl/relaxed text-left sm:text-center">
                 Generate, schedule, and manage your content with powerful automation tools. Save time and boost your productivity.
               </p>
             </div>
@@ -49,6 +49,7 @@ export default function LandingPage() {
                 <ArrowRight className="ml-2 h-5 w-5 sm:h-6 sm:w-6 md:h-7 md:w-7" />
               </Button>
             </div>
+              <p className="text-sm text-gray-400">No credit card required - 7 days trial</p>
           </div>
         </section>
         <section className="w-full py-6 sm:py-12 md:py-24 lg:py-32" id="features">
