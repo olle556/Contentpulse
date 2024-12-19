@@ -1,6 +1,6 @@
 import { withAuth } from "next-auth/middleware";
 import { NextResponse } from 'next/server';
-import { checkSubscription } from '@/lib/subscription';
+import { checkSubscriptionAccess } from '@/lib/subscription';
 
 const protectedGenerationPaths = [
   '/api/generate-post',
@@ -20,48 +20,24 @@ export default withAuth(
       return NextResponse.next();
     }
 
-    // Check for protected generation paths
-    //if (protectedGenerationPaths.some(path => request.url.includes(path))) {
-    //  const token = request.nextauth.token;
-
-    //  if (!token?.sub) {
-    //    return new NextResponse('Unauthorized', { status: 401 });
-    //  }
-
-      //const hasSubscription = await checkSubscription(token.sub); -> använder checksubscription i shceck-subscription_2 routen istället
-
-      // Make API call to check subscription with proper error handling
-
-    // Only check subscription for API generation paths
+    // Only check subscription for protected paths
     if (protectedGenerationPaths.some(path => request.nextUrl.pathname.startsWith(path))) {
       try {
-        const response = await fetch(`${process.env.NEXT_PUBLIC_BASE_URL}/api/check-subscription_2`, {
-          cache: 'no-store',
-          credentials: 'include',
-          headers: {
-            cookie: request.headers.get('cookie') || '',
-          }
-        });
-        if (!response.ok) {
-          console.error('Subscription check failed:', await response.text());
-          throw new Error('Failed to check subscription');
+        const token = request.nextauth.token;
+        
+        if (!token?.sub) {
+          return new NextResponse('Unauthorized', { status: 401 });
         }
-        const data = await response.json();
-        console.log('Full middleware check response:', {
-          data,
-          responseOk: response.ok,
-          status: response.status
-        });
 
-        if (!data.authorized) {
+        // Use the updated subscription check
+        const hasAccess = await checkSubscriptionAccess(token.sub);
+        
+        if (!hasAccess) {
           return NextResponse.json({ 
             error: 'Subscription required',
-            type: data.status === 'trial_paused' ? 'TRIAL_PAUSED' :
-                  data.status === 'trial_ended' ? 'TRIAL_ENDED' : 
-                  'NO_SUBSCRIPTION',
-            action: data.status === 'trial_paused' ? 'REACTIVATE_TRIAL' : 'COMPLETE_SUBSCRIPTION',
-            portalUrl: '/api/stripe/create-portal',
-            remainingDays: data.remainingDays
+            type: 'SUBSCRIPTION_REQUIRED',
+            action: 'COMPLETE_SUBSCRIPTION',
+            redirectTo: '/dashboard/settings'
           }, { 
             status: 403 
           });
@@ -95,6 +71,5 @@ export const config = {
     '/dashboard/:path*',
     '/api/generate-post/:path*',
     '/api/schedule/:path*',
-    //'/((?!api/cron|api/firecrawl).*)',
   ]
 };
