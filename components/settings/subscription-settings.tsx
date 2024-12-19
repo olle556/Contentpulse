@@ -217,6 +217,11 @@ export function SubscriptionSettings({
               Active
             </span>
           )}
+          {isInGracePeriod && (
+            <span className="inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-medium bg-yellow-100 text-yellow-800 dark:bg-yellow-900 dark:text-yellow-200">
+              Canceling Soon
+            </span>
+          )}
           {isTrialPaused && (
             <span className="inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-medium bg-orange-100 text-orange-800 dark:bg-orange-900 dark:text-orange-200">
               Trial Paused
@@ -304,23 +309,78 @@ export function SubscriptionSettings({
           </div>
         )}
 
-        <div className="space-y-4 mt-4">
-          <Button
-            onClick={handleSubscriptionChange}
-            disabled={isLoading}
-            variant={isTrialPaused ? "default" : "outline"}
-            className={`
-              ${isTrialPaused ? "bg-yellow-600 hover:bg-yellow-700 text-white" : ""}
-              ${needsPaymentMethod ? "bg-blue-600 hover:bg-blue-700 text-white" : ""}
-            `}
-          >
-            {isLoading ? "Loading..." : 
-              (isTrialPaused ? "Reactivate Trial" : 
-               needsPaymentMethod ? "Add Payment Method" :
-               isInGracePeriod ? "Reactivate Subscription" :
-               "Manage Subscription")}
-          </Button>
-        </div>
+        {/* Grace Period Message (Canceled but still active) */}
+        {isInGracePeriod && subscriptionEndDate && (
+          <div className="p-4 rounded-lg border border-yellow-200 bg-yellow-50 dark:border-yellow-900 dark:bg-yellow-900/50">
+            <div className="flex items-start space-x-3">
+              <Receipt className="h-5 w-5 text-yellow-600 dark:text-yellow-400 mt-0.5" />
+              <div className="flex flex-col space-y-2">
+                <p className="text-sm font-medium text-yellow-800 dark:text-yellow-200">
+                  Subscription Canceled
+                </p>
+                <p className="text-sm text-yellow-700 dark:text-yellow-300">
+                  You'll have full access to all features until{' '}
+                  <span className="font-medium">
+                    {new Date(subscriptionEndDate).toLocaleDateString('en-GB', {
+                      year: 'numeric',
+                      month: 'long',
+                      day: 'numeric'
+                    })}
+                  </span>
+                </p>
+                <p className="text-sm text-yellow-700 dark:text-yellow-300">
+                  Want to keep your access? You can reactivate your subscription before it expires.
+                </p>
+                <Button
+                  onClick={handleSubscriptionChange}
+                  variant="outline"
+                  size="sm"
+                  className="mt-2 w-fit bg-yellow-600 hover:bg-yellow-700 text-white border-yellow-600"
+                >
+                  Reactivate Subscription
+                </Button>
+              </div>
+            </div>
+          </div>
+        )}
+
+        {/* Active Subscription Message */}
+        {isSubscribed && !isTrialPeriod && !isInGracePeriod && subscriptionEndDate && (
+          <div className="p-4 rounded-lg border border-purple-200 bg-purple-50 dark:border-purple-900 dark:bg-purple-900/50">
+            <div className="flex flex-col space-y-2">
+              <p className="text-sm text-purple-800 dark:text-purple-200">
+                Your subscription is active. Next billing date:{' '}
+                <span className="font-medium">
+                  {new Date(subscriptionEndDate).toLocaleDateString('en-GB', {
+                    year: 'numeric',
+                    month: 'long',
+                    day: 'numeric'
+                  })}
+                </span>
+              </p>
+            </div>
+          </div>
+        )}
+
+        {/* Only show the manage subscription button if not in grace period (since we have a dedicated reactivate button there) */}
+        {!isInGracePeriod && (
+          <div className="space-y-4 mt-4">
+            <Button
+              onClick={handleSubscriptionChange}
+              disabled={isLoading}
+              variant={isTrialPaused ? "default" : "outline"}
+              className={`
+                ${isTrialPaused ? "bg-yellow-600 hover:bg-yellow-700 text-white" : ""}
+                ${needsPaymentMethod ? "bg-blue-600 hover:bg-blue-700 text-white" : ""}
+              `}
+            >
+              {isLoading ? "Loading..." : 
+                (isTrialPaused ? "Reactivate Trial" : 
+                 needsPaymentMethod ? "Add Payment Method" :
+                 "Manage Subscription")}
+            </Button>
+          </div>
+        )}
       </div>
 
       <div className="space-y-4">
