@@ -12,7 +12,7 @@ import {
   CardHeader,
   CardTitle,
 } from "@/components/ui/card";
-import { FileText, Layers, Clock } from "lucide-react";
+import { FileText, Layers, Clock, Palette } from "lucide-react";
 import { PricingSection } from "@/components/landing/pricing-section";
 import ProcessFlow from "./process-flow";
 
@@ -65,13 +65,13 @@ export default function LandingPage() {
                 </p>
               </div>
             </div>
-            <div className="mx-auto grid max-w-5xl grid-cols-1 gap-6 pt-12 md:grid-cols-3 lg:grid-cols-3">
+            <div className="mx-auto grid max-w-5xl grid-cols-1 gap-6 pt-12 md:grid-cols-2 lg:grid-cols-4">
               <Card className="bg-gray-900 border-gray-800">
                 <CardHeader>
                   <FileText className="h-10 w-10 text-white" />
                   <CardTitle className="text-white">Content Generation</CardTitle>
                   <CardDescription className="text-gray-400">
-                  Craft engaging, platform-specific posts in seconds with AI tailored to your brand voice                  </CardDescription>
+                  Craft engaging, platform-specific posts in seconds with AI tailored to your brand identity                  </CardDescription>
                 </CardHeader>
                 <CardContent>
                  
@@ -82,18 +82,32 @@ export default function LandingPage() {
                   <Layers className="h-10 w-10 text-white" />
                   <CardTitle className="text-white">Content Sources</CardTitle>
                   <CardDescription className="text-gray-400">
-                  Stay inspired by curating ideas from the platforms you love                  </CardDescription>
+                  Monitor and integrate content from your favorite sources                 </CardDescription>
                 </CardHeader>
                 <CardContent>
                   
                 </CardContent>
               </Card>
+
+              <Card className="bg-gray-900 border-gray-800">
+                <CardHeader>
+                  <Palette className="h-10 w-10 text-white" />
+                  <CardTitle className="text-white">Brand Identity</CardTitle>
+                  <CardDescription className="text-gray-400">
+                    Integrate your unique brand identity into your content generation
+                  </CardDescription>
+                </CardHeader>
+                <CardContent>
+
+                </CardContent>
+              </Card>
+
               <Card className="bg-gray-900 border-gray-800">
                 <CardHeader>
                   <Clock className="h-10 w-10 text-white" />
                   <CardTitle className="text-white">Smart Scheduling</CardTitle>
                   <CardDescription className="text-gray-400">
-                  Maximize reach with AI-optimized post scheduling for peak engagement.                  </CardDescription>
+                  Schedule your content generation and receive your content to your mail                 </CardDescription>
                 </CardHeader>
                 <CardContent>
                  
