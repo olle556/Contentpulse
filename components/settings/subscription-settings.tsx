@@ -96,6 +96,7 @@ export function SubscriptionSettings({
   const isTrialPeriod = trialStatus === 'trial';
   const isTrialPaused = trialStatus === 'trial_paused';
   const isTrialEnded = trialStatus === 'trial_ended';
+  const needsPaymentMethod = isTrialPeriod && !stripeCustomerId;
 
   const hasActiveSubscriptionOrTrial = isSubscribed || isTrialPeriod;
 
@@ -208,7 +209,12 @@ export function SubscriptionSettings({
       <div className="space-y-2">
         <div className="flex items-center gap-2">
           <h3 className="text-lg font-medium">Subscription Status</h3>
-          {(isTrialPeriod || isSubscribed) && (
+          {isTrialPeriod && (
+            <span className="inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-medium bg-blue-100 text-blue-800 dark:bg-blue-900 dark:text-blue-200">
+              Trial
+            </span>
+          )}
+          {isSubscribed && (
             <span className="inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-medium bg-purple-100 text-purple-800 dark:bg-purple-900 dark:text-purple-200">
               Active
             </span>
@@ -225,6 +231,59 @@ export function SubscriptionSettings({
           )}
         </div>
         
+        {/* Trial Period Message */}
+        {isTrialPeriod && trialEndDate && (
+          <div className="space-y-3">
+            <div className="p-4 rounded-lg border border-blue-200 bg-blue-50 dark:border-blue-900 dark:bg-blue-900/50">
+              <div className="flex flex-col space-y-2">
+                <p className="text-sm text-blue-800 dark:text-blue-200">
+                  Trial Period Active
+                </p>
+                <p className="text-sm text-blue-700 dark:text-blue-300">
+                  Your trial ends on{' '}
+                  <span className="font-medium">
+                    {new Date(trialEndDate).toLocaleDateString('en-GB', {
+                      year: 'numeric',
+                      month: 'long',
+                      day: 'numeric'
+                    })}
+                  </span>
+                  {' '}({Math.ceil((new Date(trialEndDate).getTime() - new Date().getTime()) / (1000 * 60 * 60 * 24))} days remaining)
+                </p>
+              </div>
+            </div>
+            
+            {/* Payment Method Warning for Trial Users */}
+            {needsPaymentMethod && (
+              <div className="p-4 rounded-lg border border-yellow-200 bg-yellow-50 dark:border-yellow-900 dark:bg-yellow-900/50">
+                <div className="flex items-start space-x-3">
+                  <CreditCard className="h-5 w-5 text-yellow-600 dark:text-yellow-400 mt-0.5" />
+                  <div className="flex flex-col space-y-1">
+                    <p className="text-sm font-medium text-yellow-800 dark:text-yellow-200">
+                      Action Required: Add Payment Method
+                    </p>
+                    <p className="text-sm text-yellow-700 dark:text-yellow-300">
+                      To ensure uninterrupted access after your trial, please add a payment method. Your card won't be charged until your trial expires on {new Date(trialEndDate).toLocaleDateString('en-GB', {
+                        year: 'numeric',
+                        month: 'long',
+                        day: 'numeric'
+                      })}.
+                    </p>
+                    <Button
+                      onClick={handleSubscriptionChange}
+                      variant="outline"
+                      size="sm"
+                      className="mt-2 w-fit"
+                    >
+                      Add Payment Method
+                    </Button>
+                  </div>
+                </div>
+              </div>
+            )}
+          </div>
+        )}
+
         {/* Active Paid Subscription Message */}
         {isSubscribed && !isTrialPeriod && subscriptionEndDate && (
           <div className="p-4 rounded-lg border border-purple-200 bg-purple-50 dark:border-purple-900 dark:bg-purple-900/50">
@@ -336,10 +395,14 @@ export function SubscriptionSettings({
             onClick={handleSubscriptionChange}
             disabled={isLoading}
             variant={isTrialPaused ? "default" : "outline"}
-            className={isTrialPaused ? "bg-yellow-600 hover:bg-yellow-700 text-white" : ""}
+            className={`
+              ${isTrialPaused ? "bg-yellow-600 hover:bg-yellow-700 text-white" : ""}
+              ${needsPaymentMethod ? "bg-blue-600 hover:bg-blue-700 text-white" : ""}
+            `}
           >
             {isLoading ? "Loading..." : 
               (isTrialPaused ? "Reactivate Trial" : 
+               needsPaymentMethod ? "Add Payment Method" :
                isInGracePeriod ? "Reactivate Subscription" :
                "Manage Subscription")}
           </Button>
