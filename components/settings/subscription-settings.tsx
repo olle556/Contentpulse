@@ -93,6 +93,7 @@ export function SubscriptionSettings({
 
   const isSubscribed = subscriptionStatus === 'active';
   const isInGracePeriod = subscriptionStatus === 'canceled' && subscriptionEndDate && new Date() < new Date(subscriptionEndDate);
+  const isSubscriptionExpired = subscriptionStatus === 'canceled' && subscriptionEndDate && new Date() >= new Date(subscriptionEndDate);
   const isTrialPeriod = trialStatus === 'trial';
   const isTrialPaused = trialStatus === 'trial_paused';
   const isTrialEnded = trialStatus === 'trial_ended';
@@ -225,6 +226,11 @@ export function SubscriptionSettings({
           {isTrialPaused && (
             <span className="inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-medium bg-orange-100 text-orange-800 dark:bg-orange-900 dark:text-orange-200">
               Trial Paused
+            </span>
+          )}
+          {isSubscriptionExpired && (
+            <span className="inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-medium bg-red-100 text-red-800 dark:bg-red-900 dark:text-red-200">
+              Expired
             </span>
           )}
         </div>
@@ -362,8 +368,41 @@ export function SubscriptionSettings({
           </div>
         )}
 
-        {/* Only show the manage subscription button if not in grace period (since we have a dedicated reactivate button there) */}
-        {!isInGracePeriod && (
+        {/* Expired Subscription Message */}
+        {isSubscriptionExpired && (
+          <div className="p-4 rounded-lg border border-red-200 bg-red-50 dark:border-red-900 dark:bg-red-900/50">
+            <div className="flex items-start space-x-3">
+              <Receipt className="h-5 w-5 text-red-600 dark:text-red-400 mt-0.5" />
+              <div className="flex flex-col space-y-2">
+                <p className="text-sm font-medium text-red-800 dark:text-red-200">
+                  Subscription Expired
+                </p>
+                <p className="text-sm text-red-700 dark:text-red-300">
+                  Your subscription ended on{' '}
+                  <span className="font-medium">
+                    {new Date(subscriptionEndDate!).toLocaleDateString('en-GB', {
+                      year: 'numeric',
+                      month: 'long',
+                      day: 'numeric'
+                    })}
+                  </span>
+                  . To regain access to premium features, please start a new subscription.
+                </p>
+                <Button
+                  onClick={handleSubscriptionChange}
+                  variant="outline"
+                  size="sm"
+                  className="mt-2 w-fit bg-red-600 hover:bg-red-700 text-white border-red-600"
+                >
+                  Renew Subscription
+                </Button>
+              </div>
+            </div>
+          </div>
+        )}
+
+        {/* Update button visibility logic */}
+        {!isInGracePeriod && !isSubscriptionExpired && (
           <div className="space-y-4 mt-4">
             <Button
               onClick={handleSubscriptionChange}

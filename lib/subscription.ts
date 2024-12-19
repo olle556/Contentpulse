@@ -1,31 +1,35 @@
-import { prisma } from './prisma';
+import { prisma } from '@/lib/prisma';
 
-export const checkSubscription = async (userId: string) => {
-    const user = await prisma.user.findUnique({
-      where: {
-        id: userId,
-      },
-      select: {
-        subscriptionStatus: true,
-        subscriptionEndDate: true,
-      },
-    });
-  
-    console.log('Full user subscription data:', JSON.stringify(user, null, 2));
-    
-    if (!user) {
-      console.log('No user found with ID:', userId);
-      return false;
-    }
-  
-    const isValid = user.subscriptionStatus === 'active' && 
-      (!user.subscriptionEndDate || new Date(user.subscriptionEndDate) > new Date());
-    
-    console.log('Subscription check details:', {
-      status: user.subscriptionStatus,
-      endDate: user.subscriptionEndDate,
-      isValid
-    });
-    
-    return isValid;
-};
+export async function checkSubscriptionAccess(userId: string) {
+  const user = await prisma.user.findUnique({
+    where: { id: userId },
+    select: {
+      subscriptionStatus: true,
+      subscriptionEndDate: true,
+      trialEndDate: true,
+    },
+  });
+
+  if (!user) return false;
+
+  const now = new Date();
+
+  // Check for expired subscription
+  if (user.subscriptionStatus === 'canceled' && 
+      user.subscriptionEndDate && 
+      now >= new Date(user.subscriptionEndDate)) {
+    return false; // Subscription has expired
+  }
+
+  // Allow access if:
+  // 1. Active subscription
+  // 2. In trial period
+  // 3. Canceled but still in grace period (before end date)
+  return (
+    user.subscriptionStatus === 'active' ||
+    user.subscriptionStatus === 'trialing' ||
+    (user.subscriptionStatus === 'canceled' && 
+     user.subscriptionEndDate && 
+     now < new Date(user.subscriptionEndDate))
+  );
+}
