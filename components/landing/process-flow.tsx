@@ -2,10 +2,10 @@ import { ArrowRight } from 'lucide-react'
 
 export default function ProcessFlow() {
     const steps = [
-        { number: 1, title: "Describe Your Brand", description: "Tell us about your brand's voice and style" },
-        { number: 2, title: "Add Content Sources", description: "Connect your favorite content inspiration sources" },
-        { number: 3, title: "Schedule Posts", description: "Set your preferred posting frequency" },
-        { number: 4, title: "Receive & Post", description: "Get generated posts via email and publish easily" },
+        { number: 1, title: "Describe Your Brand", description: "Tell us your brand style, tone, and preferences – our AI will do the rest." },
+        { number: 2, title: "Add Content Sources", description: "Link your favorite platforms or inspiration sources for tailored content ideas." },
+        { number: 3, title: "Schedule Posts", description: "Set it and forget it – pick your schedule, and we’ll handle the rest." },
+        { number: 4, title: "Receive & Post", description: "Get ready-to-post content straight to your inbox, ready to go live." },
     ]
 
     return (

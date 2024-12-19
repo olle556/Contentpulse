@@ -35,17 +35,17 @@ export default function LandingPage() {
       <main className="flex-1 w-full max-w-7xl">
         <section className="w-full py-6 sm:py-12 md:py-24 lg:py-32">
           <div className="container flex flex-col items-center gap-4 px-4 text-center md:px-6">
-            <div className="space-y-3">
+            <div className="space-y-3 mx-auto">
               <h1 className="text-3xl font-bold tracking-tighter sm:text-4xl md:text-5xl lg:text-6xl">
                 Automate Your Content Strategy
               </h1>
-              <p className="max-w-[700px] text-gray-400 text-sm sm:text-base md:text-xl/relaxed lg:text-base/relaxed xl:text-xl/relaxed text-left sm:text-center">
+              <p className="max-w-[700px] text-gray-400 text-sm sm:text-base md:text-xl/relaxed lg:text-base/relaxed xl:text-xl/relaxed text-left sm:mx-auto sm:text-center">
                 Generate, schedule, and manage your content with powerful automation tools. Save time and boost your productivity.
               </p>
             </div>
             <div className="flex flex-col gap-3 w-full sm:w-auto sm:flex-row sm:gap-4">
               <Button onClick={handleGetStarted} className="bg-white text-black hover:bg-gray-200 w-full sm:w-auto text-base sm:text-lg md:text-xl h-12 sm:h-12 md:h-14">
-                Get Started for Free
+              Automate My Content Now
                 <ArrowRight className="ml-2 h-5 w-5 sm:h-6 sm:w-6 md:h-7 md:w-7" />
               </Button>
             </div>
@@ -71,8 +71,7 @@ export default function LandingPage() {
                   <FileText className="h-10 w-10 text-white" />
                   <CardTitle className="text-white">Content Generation</CardTitle>
                   <CardDescription className="text-gray-400">
-                    Generate high-quality content automatically with AI assistance.
-                  </CardDescription>
+                  Craft engaging, platform-specific posts in seconds with AI tailored to your brand voice                  </CardDescription>
                 </CardHeader>
                 <CardContent>
                  
@@ -83,8 +82,7 @@ export default function LandingPage() {
                   <Layers className="h-10 w-10 text-white" />
                   <CardTitle className="text-white">Content Sources</CardTitle>
                   <CardDescription className="text-gray-400">
-                    Monitor and aggregate content from multiple sources.
-                  </CardDescription>
+                  Stay inspired by curating ideas from the platforms you love                  </CardDescription>
                 </CardHeader>
                 <CardContent>
                   
@@ -95,8 +93,7 @@ export default function LandingPage() {
                   <Clock className="h-10 w-10 text-white" />
                   <CardTitle className="text-white">Smart Scheduling</CardTitle>
                   <CardDescription className="text-gray-400">
-                    Schedule your content for optimal engagement times.
-                  </CardDescription>
+                  Maximize reach with AI-optimized post scheduling for peak engagement.                  </CardDescription>
                 </CardHeader>
                 <CardContent>
                  
@@ -122,13 +119,14 @@ export default function LandingPage() {
                   Start automating your content creation today
                 </h2>
                 <p className="mx-auto max-w-[600px] text-gray-400 md:text-xl/relaxed lg:text-base/relaxed xl:text-xl/relaxed">
-                  Join thousands of content creators who trust Content Pulse to
-                  manage their content strategy.
+                  Simplify content management so you can focus on growing your audience.
+
+
                 </p>
               </div>
               <div className="flex flex-col gap-2 min-[400px]:flex-row">
                 <Button onClick={handleGetStarted} className="bg-white text-black hover:bg-gray-200"> 
-                  Start a Free Trial
+                Start saving time
                   <ArrowRight className="ml-2 h-5 w-5" />
                 </Button>
               </div>

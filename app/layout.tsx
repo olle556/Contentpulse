@@ -15,7 +15,7 @@ export const metadata: Metadata = {
   title: 'Content Pulse - Social Media Content Generator',
   description: 'AI-powered social media content generation and management',
   icons: {
-    icon: '/public/zap.svg',
+    icon: '/public/zap.ico',
   },
 };
 
