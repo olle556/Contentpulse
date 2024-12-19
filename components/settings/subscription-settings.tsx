@@ -6,7 +6,7 @@ import { Button } from "@/components/ui/button";
 import { useToast } from "@/hooks/use-toast";
 import { Switch } from "@/components/ui/switch";
 import { Label } from "@/components/ui/label";
-import { CreditCard, Receipt, Trash2 } from "lucide-react";
+import { CreditCard, Receipt, Trash2, AlertTriangle } from "lucide-react";
 import {
   AlertDialog,
   AlertDialogAction,
@@ -283,23 +283,26 @@ export function SubscriptionSettings({
         )}
 
         {/* Paused Trial Message */}
-        {isTrialPaused && trialEndDate && (
-          <div className="p-4 rounded-lg border border-orange-200 bg-orange-50 dark:border-orange-900 dark:bg-orange-900/50">
-            <div className="flex flex-col space-y-2">
-              <p className="text-sm text-orange-800 dark:text-orange-200">
-                Your trial is currently paused. You have until{' '}
-                <span className="font-medium">
-                  {new Date(trialEndDate).toLocaleDateString('en-GB', {
-                    year: 'numeric',
-                    month: 'long',
-                    day: 'numeric'
-                  })}
-                </span>{' '}
-                to reactivate your trial.
-              </p>
-              <p className="text-sm text-orange-800 dark:text-orange-200">
-                After this date, you'll need to start a new subscription to access premium features.
-              </p>
+        {isTrialPaused && (
+          <div className="p-4 rounded-lg border border-red-200 bg-red-50 dark:border-red-900 dark:bg-red-900/50">
+            <div className="flex items-start space-x-3">
+              <AlertTriangle className="h-5 w-5 text-red-600 dark:text-red-400 mt-0.5" />
+              <div className="flex flex-col space-y-2">
+                <p className="text-sm font-medium text-red-800 dark:text-red-200">
+                  Trial Paused
+                </p>
+                <p className="text-sm text-red-700 dark:text-red-300">
+                  You've canceled your trial. You won't be able to use the app until you reactivate your subscription.
+                </p>
+                <Button
+                  onClick={handleSubscriptionChange}
+                  variant="destructive"
+                  size="sm"
+                  className="mt-2 w-fit"
+                >
+                  Reactivate Trial
+                </Button>
+              </div>
             </div>
           </div>
         )}

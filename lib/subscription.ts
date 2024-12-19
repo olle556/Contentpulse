@@ -7,6 +7,7 @@ export async function checkSubscriptionAccess(userId: string) {
       subscriptionStatus: true,
       subscriptionEndDate: true,
       trialEndDate: true,
+      isTrialPaused: true,
     },
   });
 
@@ -14,17 +15,18 @@ export async function checkSubscriptionAccess(userId: string) {
 
   const now = new Date();
 
+  // Block access if trial is paused
+  if (user.isTrialPaused) {
+    return false;
+  }
+
   // Check for expired subscription
   if (user.subscriptionStatus === 'canceled' && 
       user.subscriptionEndDate && 
       now >= new Date(user.subscriptionEndDate)) {
-    return false; // Subscription has expired
+    return false;
   }
 
-  // Allow access if:
-  // 1. Active subscription
-  // 2. In trial period
-  // 3. Canceled but still in grace period (before end date)
   return (
     user.subscriptionStatus === 'active' ||
     user.subscriptionStatus === 'trialing' ||

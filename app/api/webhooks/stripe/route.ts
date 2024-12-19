@@ -90,35 +90,32 @@ export async function POST(req: Request) {
       case 'customer.subscription.updated':
       case 'customer.subscription.deleted': {
         const subscription = event.data.object as Stripe.Subscription;
-        console.log('Subscription event data:', subscription);
-
+        
         try {
-          // Determine the correct subscription status
           let subscriptionStatus;
-          if (subscription.status === 'trialing') {
+          let isTrialPaused = false;
+
+          // Check if this was a trial cancellation
+          if (subscription.status === 'canceled' && subscription.trial_end) {
+            subscriptionStatus = 'trial_paused';
+            isTrialPaused = true;
+          } else if (subscription.status === 'trialing') {
             subscriptionStatus = 'trialing';
           } else if (subscription.status === 'active') {
             subscriptionStatus = 'active';
           } else if (subscription.cancel_at_period_end) {
-            // Subscription is active but will be canceled at period end
             subscriptionStatus = 'canceled';
-          } else if (subscription.status === 'canceled') {
-            // Check if it was a trial
-            if (subscription.trial_end) {
-              subscriptionStatus = 'paused';
-            } else {
-              subscriptionStatus = 'inactive';
-            }
           } else {
             subscriptionStatus = subscription.status;
           }
 
-          const updatedUser = await prisma.user.update({
+          await prisma.user.update({
             where: {
               stripeCustomerId: subscription.customer as string,
             },
             data: {
               subscriptionStatus: subscriptionStatus,
+              isTrialPaused: isTrialPaused,
               subscriptionEndDate: new Date(subscription.current_period_end * 1000),
               trialEndDate: subscription.trial_end 
                 ? new Date(subscription.trial_end * 1000)
@@ -126,7 +123,6 @@ export async function POST(req: Request) {
             },
           });
 
-          console.log('Updated user subscription:', updatedUser);
         } catch (error) {
           console.error('Error processing subscription event:', error);
         }

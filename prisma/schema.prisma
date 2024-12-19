@@ -68,6 +68,7 @@ model User {
   stripeSubscriptionId String?
   trialStartDate       DateTime?
   trialEndDate         DateTime?
+  isTrialPaused        Boolean       @default(false)
 
   @@index([email])
 }
