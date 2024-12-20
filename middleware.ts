@@ -23,7 +23,6 @@ export default withAuth(
           return new NextResponse('Unauthorized', { status: 401 });
         }
 
-        // Call the subscription check API
         const response = await fetch(`${process.env.NEXT_PUBLIC_BASE_URL}/api/check-subscription`, {
           method: 'GET',
           headers: {
@@ -37,7 +36,7 @@ export default withAuth(
           let errorType = 'SUBSCRIPTION_REQUIRED';
           let action = 'COMPLETE_SUBSCRIPTION';
 
-          if (data.status === 'canceled' && data.subscriptionEndDate) {
+          if (data.status === 'canceled' && (!data.subscriptionEndDate || new Date() > new Date(data.subscriptionEndDate))) {
             errorType = 'SUBSCRIPTION_EXPIRED';
             action = 'RENEW_SUBSCRIPTION';
           } else if (data.status === 'trial' && data.remainingTrialDays <= 0) {
