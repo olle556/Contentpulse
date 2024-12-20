@@ -63,7 +63,7 @@ export async function GET() {
         if (subscriptionEndDate && now < subscriptionEndDate) {
           status = 'active';
           authorized = true;
-          message = `Subscription active until ${subscriptionEndDate.toISOString()}`;
+          message = `Subscription active until  ${subscriptionEndDate.toISOString()}`;
         } else {
           status = 'expired';
           authorized = false;

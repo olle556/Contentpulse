@@ -84,6 +84,15 @@ export function SubscriptionSettings({
   const isTrialEnded = subscriptionData?.status === 'trial_ended';
   const needsPaymentMethod = subscriptionData?.needsPaymentMethod;
 
+  // Add this helper function at the top of the component
+  const formatDate = (dateString: string) => {
+    return new Date(dateString).toLocaleDateString('en-US', {
+      year: 'numeric',
+      month: 'long',
+      day: 'numeric'
+    });
+  };
+
   // Render subscription status message
   const renderSubscriptionStatus = () => {
     if (!subscriptionData) return null;
@@ -120,7 +129,8 @@ export function SubscriptionSettings({
           <div className="p-4 rounded-lg border border-green-200 bg-green-50 dark:border-green-900 dark:bg-green-900/50">
             <div className="flex flex-col space-y-2">
               <p className="text-sm text-green-800 dark:text-green-200">
-                {subscriptionData.message}
+                Subscription active until {subscriptionData.subscriptionEndDate ? 
+                  formatDate(subscriptionData.subscriptionEndDate) : 'N/A'}
               </p>
             </div>
           </div>
@@ -136,7 +146,8 @@ export function SubscriptionSettings({
                   Subscription Canceled
                 </p>
                 <p className="text-sm text-yellow-700 dark:text-yellow-300">
-                  {subscriptionData.message}
+                  Access until {subscriptionData.subscriptionEndDate ? 
+                    formatDate(subscriptionData.subscriptionEndDate) : 'N/A'}
                 </p>
                 <Button
                   onClick={handleSubscriptionChange}
