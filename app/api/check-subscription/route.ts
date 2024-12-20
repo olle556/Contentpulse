@@ -19,7 +19,40 @@ export async function GET() {
       return NextResponse.json({ authorized: false, reason: 'no_user_id' });
     }
     
+    // First, get the user data
     const user = await db.user.findUnique({
+      where: { id: session.user.id },
+    });
+
+    if (!user) {
+      return NextResponse.json({ authorized: false, reason: 'user_not_found' });
+    }
+
+    // If user has a Stripe subscription, verify the status with Stripe
+    if (user.stripeSubscriptionId) {
+      try {
+        const subscription = await stripe.subscriptions.retrieve(user.stripeSubscriptionId);
+        
+        // Update local database if Stripe status differs
+        if (subscription.status !== user.subscriptionStatus) {
+          await db.user.update({
+            where: { id: session.user.id },
+            data: {
+              subscriptionStatus: subscription.status,
+              subscriptionEndDate: new Date(subscription.current_period_end * 1000),
+              subscriptionStartDate: new Date(subscription.current_period_start * 1000),
+              trialEndDate: subscription.trial_end ? new Date(subscription.trial_end * 1000) : null,
+              trialStartDate: subscription.trial_start ? new Date(subscription.trial_start * 1000) : null,
+            },
+          });
+        }
+      } catch (error) {
+        console.error('Error verifying subscription with Stripe:', error);
+      }
+    }
+
+    // Refresh user data after potential update
+    const updatedUser = await db.user.findUnique({
       where: { id: session.user.id },
       select: {
         trialStartDate: true,
@@ -32,25 +65,21 @@ export async function GET() {
       },
     });
 
-    if (!user) {
-      return NextResponse.json({ authorized: false, reason: 'user_not_found' });
-    }
-
-    // Check if user has a payment method
+    // Check payment method
     let hasPaymentMethod = false;
-    if (user.stripeCustomerId) {
+    if (updatedUser?.stripeCustomerId) {
       const paymentMethods = await stripe.paymentMethods.list({
-        customer: user.stripeCustomerId,
+        customer: updatedUser.stripeCustomerId,
         type: 'card',
       });
       hasPaymentMethod = paymentMethods.data.length > 0;
     }
 
     const now = new Date();
-    const trialEndDate = user.trialEndDate;
-    const subscriptionEndDate = user.subscriptionEndDate;
+    const trialEndDate = updatedUser?.trialEndDate;
+    const subscriptionEndDate = updatedUser?.subscriptionEndDate;
 
-    // Calculate remaining trial days (if applicable)
+    // Calculate remaining trial days
     const remainingTrialDays = trialEndDate 
       ? Math.max(0, Math.ceil((trialEndDate.getTime() - now.getTime()) / (1000 * 60 * 60 * 24)))
       : 0;
@@ -60,77 +89,50 @@ export async function GET() {
     let message = '';
     let needsPaymentMethod = !hasPaymentMethod;
 
-    // Determine subscription status
-    switch (user.subscriptionStatus) {
-      case 'trialing':
-        if (trialEndDate && now < trialEndDate) {
-          status = 'trial';
-          authorized = true;
-          message = `Trial period: ${remainingTrialDays} days remaining`;
-        } else {
-          status = 'trial_ended';
-          authorized = false;
-          message = 'Trial period has ended';
-        }
-        break;
-
-      case 'active':
-        if (subscriptionEndDate && now < subscriptionEndDate) {
-          status = 'active';
-          authorized = true;
-          message = `Subscription active until  ${subscriptionEndDate.toISOString()}`;
-        } else {
-          status = 'expired';
-          authorized = false;
-          message = 'Subscription has expired';
-        }
-        break;
-
-      case 'canceled':
-        if (subscriptionEndDate && now < subscriptionEndDate) {
-          status = 'grace_period';
-          authorized = true;
-          message = `Access until ${subscriptionEndDate.toISOString()}`;
-        } else {
-          status = 'canceled';
-          authorized = false;
-          message = 'Subscription has been canceled';
-        }
-        break;
-
-      case 'past_due':
-        status = 'past_due';
-        authorized = false;
-        message = 'Payment is past due';
-        break;
-
-      default:
-        status = 'inactive';
-        authorized = false;
-        message = 'No active subscription - subscribe now!';
+    // Enhanced status determination
+    if (updatedUser?.subscriptionStatus === 'trialing') {
+      status = 'trial';
+      authorized = true;
+      message = `Trial period: ${remainingTrialDays} days remaining`;
+      if (!hasPaymentMethod) {
+        message += ' (Please add a payment method to continue after trial)';
+      }
+    } else if (updatedUser?.subscriptionStatus === 'active') {
+      status = 'active';
+      authorized = true;
+      message = 'Subscription active';
+    } else if (updatedUser?.subscriptionStatus === 'canceled' && subscriptionEndDate && now < subscriptionEndDate) {
+      status = 'grace_period';
+      authorized = true;
+      message = `Access until ${subscriptionEndDate.toISOString()}`;
+    } else {
+      status = updatedUser?.subscriptionStatus || 'inactive';
+      authorized = false;
+      message = 'No active subscription - subscribe now!';
     }
-    
-    return NextResponse.json({ 
+
+    return NextResponse.json({
       authorized,
       status,
       message,
       needsPaymentMethod,
-      trialEndDate: user.trialEndDate,
-      subscriptionEndDate: user.subscriptionEndDate,
-      subscriptionStartDate: user.subscriptionStartDate,
+      trialEndDate: updatedUser?.trialEndDate,
+      subscriptionEndDate: updatedUser?.subscriptionEndDate,
+      subscriptionStartDate: updatedUser?.subscriptionStartDate,
       remainingTrialDays,
-      debug: { 
+      debug: {
         userId: session.user.id,
-        subscriptionStatus: user.subscriptionStatus,
-        stripeSubscriptionId: user.stripeSubscriptionId,
+        subscriptionStatus: updatedUser?.subscriptionStatus,
+        stripeSubscriptionId: updatedUser?.stripeSubscriptionId,
         hasPaymentMethod,
-        checked: true 
+        checked: true
       }
     });
+
   } catch (error) {
     console.error('Detailed error in check-subscription:', error);
-    return NextResponse.json({ 
-      authorized: false, 
+    return NextResponse.json({
+      authorized: false,
       error: error instanceof Error ? error.message : 'Unknown error',
       reason: 'error_checking'
     });
