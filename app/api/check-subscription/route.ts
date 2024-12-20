@@ -1,29 +1,53 @@
-import { getServerSession } from 'next-auth/next';
 import { NextResponse } from 'next/server';
 import { prisma } from '@/lib/prisma';
 
-export async function GET() {
+export async function POST(req: Request) {
   try {
-    const session = await getServerSession();
-    
-    if (!session?.user?.email) {
-      return NextResponse.json({ error: 'Not authenticated' }, { status: 401 });
+    const { userId } = await req.json();
+
+    if (!userId) {
+      return NextResponse.json({ hasAccess: false, reason: 'no_user_id' });
     }
 
     const user = await prisma.user.findUnique({
-      where: { email: session.user.email },
+      where: { id: userId },
       select: {
-        stripeCustomerId: true,
         subscriptionStatus: true,
         subscriptionEndDate: true,
+        trialEndDate: true,
+        isTrialPaused: true,
+        stripeSubscriptionId: true,
       },
     });
 
-    console.log('User subscription status:', user);
+    if (!user) {
+      return NextResponse.json({ hasAccess: false, reason: 'user_not_found' });
+    }
 
-    return NextResponse.json(user);
+    const now = new Date();
+
+    // Block access if trial is paused AND they've never had a paid subscription
+    if (user.isTrialPaused && !user.stripeSubscriptionId) {
+      return NextResponse.json({ hasAccess: false, reason: 'trial_paused' });
+    }
+
+    // For paid subscribers who cancelled, check end date
+    if (user.subscriptionStatus === 'canceled' && 
+        user.subscriptionEndDate && 
+        now >= new Date(user.subscriptionEndDate)) {
+      return NextResponse.json({ hasAccess: false, reason: 'subscription_expired' });
+    }
+
+    const hasAccess = 
+      user.subscriptionStatus === 'active' ||
+      user.subscriptionStatus === 'trialing' ||
+      (user.subscriptionStatus === 'canceled' && 
+       user.subscriptionEndDate && 
+       now < new Date(user.subscriptionEndDate));
+
+    return NextResponse.json({ hasAccess, subscriptionStatus: user.subscriptionStatus });
   } catch (error) {
     console.error('Error checking subscription:', error);
-    return NextResponse.json({ error: 'Internal server error' }, { status: 500 });
+    return NextResponse.json({ hasAccess: false, reason: 'error' });
   }
 }

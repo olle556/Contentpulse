@@ -46,6 +46,7 @@ export function SubscriptionSettings({
   const [showActiveSubscriptionWarning, setShowActiveSubscriptionWarning] = useState(false);
   const [trialStatus, setTrialStatus] = useState<string | null>(null);
   const [trialEndDate, setTrialEndDate] = useState<Date | null>(null);
+  const [stripeSubscriptionId, setStripeSubscriptionId] = useState<string | null>(null);
 
   const baseUrl = useMemo(() => process.env.NEXT_PUBLIC_BASE_URL || '', []);
 
@@ -95,7 +96,8 @@ export function SubscriptionSettings({
   const isInGracePeriod = subscriptionStatus === 'canceled' && subscriptionEndDate && new Date() < new Date(subscriptionEndDate);
   const isSubscriptionExpired = subscriptionStatus === 'canceled' && subscriptionEndDate && new Date() >= new Date(subscriptionEndDate);
   const isTrialPeriod = trialStatus === 'trial';
-  const isTrialPaused = trialStatus === 'trial_paused';
+  const isTrialPaused = trialStatus === 'trial_paused' && !stripeSubscriptionId;
+  const isSubscriptionCanceled = subscriptionStatus === 'canceled' && stripeSubscriptionId;
   const isTrialEnded = trialStatus === 'trial_ended';
   const needsPaymentMethod = isTrialPeriod && !stripeCustomerId;
 
@@ -208,6 +210,16 @@ export function SubscriptionSettings({
       <div className="space-y-2">
         <div className="flex items-center gap-2">
           <h3 className="text-lg font-medium">Subscription Status</h3>
+          {isTrialPaused && (
+            <span className="inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-medium bg-red-100 text-red-800 dark:bg-red-900 dark:text-red-200">
+              Trial Paused
+            </span>
+          )}
+          {isSubscriptionCanceled && (
+            <span className="inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-medium bg-yellow-100 text-yellow-800 dark:bg-yellow-900 dark:text-yellow-200">
+              Canceling Soon
+            </span>
+          )}
           {isTrialPeriod && (
             <span className="inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-medium bg-blue-100 text-blue-800 dark:bg-blue-900 dark:text-blue-200">
               Trial
@@ -216,16 +228,6 @@ export function SubscriptionSettings({
           {isSubscribed && !isTrialPeriod && (
             <span className="inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-medium bg-purple-100 text-purple-800 dark:bg-purple-900 dark:text-purple-200">
               Active
-            </span>
-          )}
-          {isInGracePeriod && (
-            <span className="inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-medium bg-yellow-100 text-yellow-800 dark:bg-yellow-900 dark:text-yellow-200">
-              Canceling Soon
-            </span>
-          )}
-          {isTrialPaused && (
-            <span className="inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-medium bg-orange-100 text-orange-800 dark:bg-orange-900 dark:text-orange-200">
-              Trial Paused
             </span>
           )}
           {isSubscriptionExpired && (
@@ -318,8 +320,8 @@ export function SubscriptionSettings({
           </div>
         )}
 
-        {/* Grace Period Message (Canceled but still active) */}
-        {isInGracePeriod && subscriptionEndDate && (
+        {/* Canceled Subscription Message */}
+        {isSubscriptionCanceled && subscriptionEndDate && (
           <div className="p-4 rounded-lg border border-yellow-200 bg-yellow-50 dark:border-yellow-900 dark:bg-yellow-900/50">
             <div className="flex items-start space-x-3">
               <Receipt className="h-5 w-5 text-yellow-600 dark:text-yellow-400 mt-0.5" />

@@ -8,6 +8,7 @@ export async function checkSubscriptionAccess(userId: string) {
       subscriptionEndDate: true,
       trialEndDate: true,
       isTrialPaused: true,
+      stripeSubscriptionId: true,
     },
   });
 
@@ -15,12 +16,12 @@ export async function checkSubscriptionAccess(userId: string) {
 
   const now = new Date();
 
-  // Block access if trial is paused
-  if (user.isTrialPaused) {
+  // Block access if trial is paused AND they've never had a paid subscription
+  if (user.isTrialPaused && !user.stripeSubscriptionId) {
     return false;
   }
 
-  // Check for expired subscription
+  // For paid subscribers who cancelled, check end date
   if (user.subscriptionStatus === 'canceled' && 
       user.subscriptionEndDate && 
       now >= new Date(user.subscriptionEndDate)) {
