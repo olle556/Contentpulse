@@ -146,26 +146,29 @@ export async function POST(req: Request) {
 
       case 'customer.subscription.created': {
         const subscription = event.data.object as Stripe.Subscription;
+        console.log('DEBUG - New subscription:', {
+          subscriptionId: subscription.id,
+          status: subscription.status,
+          currentPeriodEnd: new Date(subscription.current_period_end * 1000)
+        });
+        
         try {
-          const isTrialSubscription = subscription.status === 'trialing';
-          const trialEnd = subscription.trial_end 
-            ? new Date(subscription.trial_end * 1000)
-            : null;
-
           await prisma.user.update({
             where: {
               stripeCustomerId: subscription.customer as string,
             },
             data: {
-              subscriptionStatus: isTrialSubscription ? 'trialing' : subscription.status,
+              subscriptionStatus: subscription.status,
               subscriptionEndDate: new Date(subscription.current_period_end * 1000),
               stripeSubscriptionId: subscription.id,
-              trialStartDate: isTrialSubscription ? new Date() : null,
-              trialEndDate: trialEnd,
+              subscriptionStartDate: new Date(subscription.current_period_start * 1000),
+              // Only set trial dates if actually in trial
+              trialStartDate: subscription.trial_start ? new Date(subscription.trial_start * 1000) : null,
+              trialEndDate: subscription.trial_end ? new Date(subscription.trial_end * 1000) : null,
             },
           });
         } catch (error) {
-          console.error('Error processing subscription.created:', error);
+          console.error('Subscription creation error:', error);
         }
         break;
       }
