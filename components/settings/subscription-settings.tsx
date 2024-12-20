@@ -21,6 +21,8 @@ import { deleteUser } from "@/lib/deleteUser";
 interface SubscriptionSettingsProps {
   stripeCustomerId?: string | null;
   userId?: string;
+  subscriptionStatus?: string | null;
+  subscriptionEndDate?: Date | null;
 }
 
 interface SubscriptionStatus {
@@ -43,6 +45,8 @@ interface SubscriptionStatus {
 export function SubscriptionSettings({
   stripeCustomerId,
   userId,
+  subscriptionStatus,
+  subscriptionEndDate,
 }: SubscriptionSettingsProps) {
   const router = useRouter();
   const { toast } = useToast();
