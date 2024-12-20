@@ -23,83 +23,189 @@ import { getStripe } from "@/lib/stripe";
 
 interface SubscriptionSettingsProps {
   stripeCustomerId?: string | null;
-  subscriptionStatus?: string | null;
-  subscriptionEndDate?: Date | null;
   userId?: string;
+}
+
+interface SubscriptionStatus {
+  authorized: boolean;
+  status: string;
+  message: string;
+  needsPaymentMethod: boolean;
+  trialEndDate: string | null;
+  subscriptionEndDate: string | null;
+  remainingTrialDays: number;
 }
 
 export function SubscriptionSettings({
   stripeCustomerId,
-  subscriptionStatus: initialStatus,
-  subscriptionEndDate: initialEndDate,
   userId,
 }: SubscriptionSettingsProps) {
   const router = useRouter();
   const { toast } = useToast();
   const [isLoading, setIsLoading] = useState(false);
-  const [showCancelDialog, setShowCancelDialog] = useState(false);
-  const [subscriptionStatus, setSubscriptionStatus] = useState(initialStatus);
-  const [subscriptionEndDate, setSubscriptionEndDate] = useState<Date | null>(
-    initialEndDate ? new Date(initialEndDate) : null
-  );
-  const [showDeleteConfirmation, setShowDeleteConfirmation] = useState(false);
-  const [showActiveSubscriptionWarning, setShowActiveSubscriptionWarning] = useState(false);
-  const [trialStatus, setTrialStatus] = useState<string | null>(null);
-  const [trialEndDate, setTrialEndDate] = useState<Date | null>(null);
-  const [stripeSubscriptionId, setStripeSubscriptionId] = useState<string | null>(null);
-
+  const [subscriptionData, setSubscriptionData] = useState<SubscriptionStatus | null>(null);
   const baseUrl = useMemo(() => process.env.NEXT_PUBLIC_BASE_URL || '', []);
 
+  // Add dialog state variables
+  const [showCancelDialog, setShowCancelDialog] = useState(false);
+  const [showDeleteConfirmation, setShowDeleteConfirmation] = useState(false);
+  const [showActiveSubscriptionWarning, setShowActiveSubscriptionWarning] = useState(false);
+
+  // Fetch subscription status
   useEffect(() => {
-    const checkTrialStatus = async () => {
+    const checkSubscription = async () => {
       try {
-        const response = await fetch(`${baseUrl}/api/check-subscription_2/check-trialstatus`);
+        const response = await fetch(`${baseUrl}/api/check-subscription`);
         const data = await response.json();
-        setTrialStatus(data.status);
-        setTrialEndDate(data.trialEndDate ? new Date(data.trialEndDate) : null);
+        setSubscriptionData(data);
       } catch (error) {
-        console.error('Error checking trial status:', error);
+        console.error('Error checking subscription:', error);
+        toast({
+          title: "Error",
+          description: "Failed to load subscription status",
+          variant: "destructive",
+        });
       }
     };
-    checkTrialStatus();
-  }, [baseUrl]);
+    checkSubscription();
+  }, [baseUrl, toast]);
 
-  useEffect(() => {
-    const params = new URLSearchParams(window.location.search);
-    const success = params.get('success');
-    const subscription = params.get('subscription');
+  // Computed states based on subscription data
+  const isSubscribed = subscriptionData?.status === 'active';
+  const isTrialActive = subscriptionData?.status === 'trial';
+  const isInGracePeriod = subscriptionData?.status === 'grace_period';
+  const isCanceled = subscriptionData?.status === 'canceled';
+  const isPastDue = subscriptionData?.status === 'past_due';
+  const isPaused = subscriptionData?.status === 'paused';
+  const needsPaymentMethod = subscriptionData?.needsPaymentMethod;
 
-    if (success === 'true' && subscription === 'active') {
-      // Update subscription status to reflect the new trial/subscription
-      setSubscriptionStatus('active');
-      
-      // Set trial status if it's a trial subscription
-      setTrialStatus('trial');
-      
-      // Set trial end date to 7 days from now (since that's your trial period)
-      const trialEnd = new Date();
-      trialEnd.setDate(trialEnd.getDate() + 7);
-      setTrialEndDate(trialEnd);
+  // Render subscription status message
+  const renderSubscriptionStatus = () => {
+    if (!subscriptionData) return null;
 
-      // Clear the URL parameters
-      window.history.replaceState({}, '', '/dashboard/settings');
-      
-      // Show a success toast (optional)
-      toast({
-        title: "Success!",
-        description: "Your subscription has been activated.",
-      });
+    switch (subscriptionData.status) {
+      case 'trial':
+        return (
+          <div className="p-4 rounded-lg border border-blue-200 bg-blue-50 dark:border-blue-900 dark:bg-blue-900/50">
+            <div className="flex flex-col space-y-2">
+              <p className="text-sm text-blue-800 dark:text-blue-200">
+                Trial Period Active
+              </p>
+              <p className="text-sm text-blue-700 dark:text-blue-300">
+                {subscriptionData.message}
+              </p>
+              {needsPaymentMethod && (
+                <div className="mt-2">
+                  <Button
+                    onClick={handleSubscriptionChange}
+                    variant="outline"
+                    size="sm"
+                    className="bg-blue-600 hover:bg-blue-700 text-white"
+                  >
+                    Add Payment Method
+                  </Button>
+                </div>
+              )}
+            </div>
+          </div>
+        );
+
+      case 'active':
+        return (
+          <div className="p-4 rounded-lg border border-green-200 bg-green-50 dark:border-green-900 dark:bg-green-900/50">
+            <div className="flex flex-col space-y-2">
+              <p className="text-sm text-green-800 dark:text-green-200">
+                {subscriptionData.message}
+              </p>
+            </div>
+          </div>
+        );
+
+      case 'grace_period':
+        return (
+          <div className="p-4 rounded-lg border border-yellow-200 bg-yellow-50 dark:border-yellow-900 dark:bg-yellow-900/50">
+            <div className="flex items-start space-x-3">
+              <Receipt className="h-5 w-5 text-yellow-600 dark:text-yellow-400 mt-0.5" />
+              <div className="flex flex-col space-y-2">
+                <p className="text-sm font-medium text-yellow-800 dark:text-yellow-200">
+                  Subscription Canceled
+                </p>
+                <p className="text-sm text-yellow-700 dark:text-yellow-300">
+                  {subscriptionData.message}
+                </p>
+                <Button
+                  onClick={handleSubscriptionChange}
+                  variant="outline"
+                  size="sm"
+                  className="mt-2 w-fit bg-yellow-600 hover:bg-yellow-700 text-white border-yellow-600"
+                >
+                  Reactivate Subscription
+                </Button>
+              </div>
+            </div>
+          </div>
+        );
+
+      case 'canceled':
+        return (
+          <div className="p-4 rounded-lg border border-red-200 bg-red-50 dark:border-red-900 dark:bg-red-900/50">
+            <div className="flex items-start space-x-3">
+              <Receipt className="h-5 w-5 text-red-600 dark:text-red-400 mt-0.5" />
+              <div className="flex flex-col space-y-2">
+                <p className="text-sm font-medium text-red-800 dark:text-red-200">
+                  Subscription Expired
+                </p>
+                <p className="text-sm text-red-700 dark:text-red-300">
+                  {subscriptionData.message}
+                </p>
+                <Button
+                  onClick={handleSubscriptionChange}
+                  variant="outline"
+                  size="sm"
+                  className="mt-2 w-fit bg-red-600 hover:bg-red-700 text-white border-red-600"
+                >
+                  Renew Subscription
+                </Button>
+              </div>
+            </div>
+          </div>
+        );
+
+      case 'past_due':
+        return (
+          <div className="p-4 rounded-lg border border-red-200 bg-red-50 dark:border-red-900 dark:bg-red-900/50">
+            <div className="flex items-start space-x-3">
+              <AlertTriangle className="h-5 w-5 text-red-600 dark:text-red-400 mt-0.5" />
+              <div className="flex flex-col space-y-2">
+                <p className="text-sm font-medium text-red-800 dark:text-red-200">
+                  Payment Past Due
+                </p>
+                <p className="text-sm text-red-700 dark:text-red-300">
+                  {subscriptionData.message}
+                </p>
+                <Button
+                  onClick={handleSubscriptionChange}
+                  variant="outline"
+                  size="sm"
+                  className="mt-2 w-fit"
+                >
+                  Update Payment Method
+                </Button>
+              </div>
+            </div>
+          </div>
+        );
+
+      default:
+        return (
+          <div className="p-4 rounded-lg border border-gray-200 bg-gray-50 dark:border-gray-800 dark:bg-gray-900/50">
+            <p className="text-sm text-gray-700 dark:text-gray-300">
+              {subscriptionData.message}
+            </p>
+          </div>
+        );
     }
-  }, [toast]);
-
-  const isSubscribed = subscriptionStatus === 'active';
-  const isInGracePeriod = subscriptionStatus === 'canceled' && subscriptionEndDate && new Date() < new Date(subscriptionEndDate);
-  const isSubscriptionExpired = subscriptionStatus === 'canceled' && subscriptionEndDate && new Date() >= new Date(subscriptionEndDate);
-  const isTrialPeriod = trialStatus === 'trial';
-  const isTrialPaused = trialStatus === 'trial_paused' && !stripeSubscriptionId;
-  const isSubscriptionCanceled = subscriptionStatus === 'canceled' && stripeSubscriptionId;
-  const isTrialEnded = trialStatus === 'trial_ended';
-  const needsPaymentMethod = isTrialPeriod && !stripeCustomerId;
+  };
 
   const handlePortalAccess = async () => {
     try {
@@ -167,8 +273,8 @@ export function SubscriptionSettings({
       setIsLoading(true);
 
       // Check for active subscription
-      if (isSubscribed && subscriptionStatus && 
-          !['canceled', 'active_until_period_end'].includes(subscriptionStatus)) {
+      if (isSubscribed && subscriptionData?.status && 
+          !['canceled', 'active_until_period_end'].includes(subscriptionData.status)) {
         setShowActiveSubscriptionWarning(true);
         return;
       }
@@ -210,218 +316,29 @@ export function SubscriptionSettings({
       <div className="space-y-2">
         <div className="flex items-center gap-2">
           <h3 className="text-lg font-medium">Subscription Status</h3>
-          {isTrialPaused && (
-            <span className="inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-medium bg-red-100 text-red-800 dark:bg-red-900 dark:text-red-200">
-              Trial Paused
-            </span>
-          )}
-          {isSubscriptionCanceled && (
-            <span className="inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-medium bg-yellow-100 text-yellow-800 dark:bg-yellow-900 dark:text-yellow-200">
-              Canceling Soon
-            </span>
-          )}
-          {isTrialPeriod && (
-            <span className="inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-medium bg-blue-100 text-blue-800 dark:bg-blue-900 dark:text-blue-200">
-              Trial
-            </span>
-          )}
-          {isSubscribed && !isTrialPeriod && (
-            <span className="inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-medium bg-purple-100 text-purple-800 dark:bg-purple-900 dark:text-purple-200">
-              Active
-            </span>
-          )}
-          {isSubscriptionExpired && (
-            <span className="inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-medium bg-red-100 text-red-800 dark:bg-red-900 dark:text-red-200">
-              Expired
+          {subscriptionData?.status && (
+            <span className={`inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-medium ${
+              isTrialActive ? 'bg-blue-100 text-blue-800 dark:bg-blue-900 dark:text-blue-200' :
+              isSubscribed ? 'bg-green-100 text-green-800 dark:bg-green-900 dark:text-green-200' :
+              isInGracePeriod ? 'bg-yellow-100 text-yellow-800 dark:bg-yellow-900 dark:text-yellow-200' :
+              'bg-red-100 text-red-800 dark:bg-red-900 dark:text-red-200'
+            }`}>
+              {subscriptionData.status.charAt(0).toUpperCase() + subscriptionData.status.slice(1)}
             </span>
           )}
         </div>
         
-        {/* Trial Period Message */}
-        {isTrialPeriod && trialEndDate && (
-          <div className="p-4 rounded-lg border border-blue-200 bg-blue-50 dark:border-blue-900 dark:bg-blue-900/50">
-            <div className="flex flex-col space-y-2">
-              <p className="text-sm text-blue-800 dark:text-blue-200">
-                Trial Period Active
-              </p>
-              <p className="text-sm text-blue-700 dark:text-blue-300">
-                Your trial ends on{' '}
-                <span className="font-medium">
-                  {new Date(trialEndDate).toLocaleDateString('en-GB', {
-                    year: 'numeric',
-                    month: 'long',
-                    day: 'numeric'
-                  })}
-                </span>
-                {' '}({Math.ceil((new Date(trialEndDate).getTime() - new Date().getTime()) / (1000 * 60 * 60 * 24))} days remaining)
-              </p>
-            </div>
-          </div>
-        )}
+        {renderSubscriptionStatus()}
 
-        {/* Payment Method Warning for Trial Users */}
-        {needsPaymentMethod && (
-          <div className="p-4 rounded-lg border border-yellow-200 bg-yellow-50 dark:border-yellow-900 dark:bg-yellow-900/50">
-            <div className="flex items-start space-x-3">
-              <CreditCard className="h-5 w-5 text-yellow-600 dark:text-yellow-400 mt-0.5" />
-              <div className="flex flex-col space-y-1">
-                <p className="text-sm font-medium text-yellow-800 dark:text-yellow-200">
-                  Action Required: Add Payment Method
-                </p>
-                <p className="text-sm text-yellow-700 dark:text-yellow-300">
-                  To continue using the app after your trial ends, please add a payment method. Your card won't be charged until your trial expires.
-                </p>
-                <Button
-                  onClick={handleSubscriptionChange}
-                  variant="outline"
-                  size="sm"
-                  className="mt-2 w-fit"
-                >
-                  Add Payment Method
-                </Button>
-              </div>
-            </div>
-          </div>
-        )}
-
-        {/* Paused Trial Message */}
-        {isTrialPaused && (
-          <div className="p-4 rounded-lg border border-red-200 bg-red-50 dark:border-red-900 dark:bg-red-900/50">
-            <div className="flex items-start space-x-3">
-              <AlertTriangle className="h-5 w-5 text-red-600 dark:text-red-400 mt-0.5" />
-              <div className="flex flex-col space-y-2">
-                <p className="text-sm font-medium text-red-800 dark:text-red-200">
-                  Trial Paused
-                </p>
-                <p className="text-sm text-red-700 dark:text-red-300">
-                  You've canceled your trial. You won't be able to use the app until you reactivate your subscription.
-                </p>
-                <Button
-                  onClick={handleSubscriptionChange}
-                  variant="destructive"
-                  size="sm"
-                  className="mt-2 w-fit"
-                >
-                  Reactivate Trial
-                </Button>
-              </div>
-            </div>
-          </div>
-        )}
-
-        {/* Trial Ended Message */}
-        {isTrialEnded && (
-          <div className="p-4 rounded-lg border border-red-200 bg-red-50 dark:border-red-900 dark:bg-red-900/50">
-            <div className="flex flex-col space-y-2">
-              <p className="text-sm text-red-800 dark:text-red-200">
-                Your trial period has ended. Please subscribe to continue using premium features.
-              </p>
-            </div>
-          </div>
-        )}
-
-        {/* Canceled Subscription Message */}
-        {isSubscriptionCanceled && subscriptionEndDate && (
-          <div className="p-4 rounded-lg border border-yellow-200 bg-yellow-50 dark:border-yellow-900 dark:bg-yellow-900/50">
-            <div className="flex items-start space-x-3">
-              <Receipt className="h-5 w-5 text-yellow-600 dark:text-yellow-400 mt-0.5" />
-              <div className="flex flex-col space-y-2">
-                <p className="text-sm font-medium text-yellow-800 dark:text-yellow-200">
-                  Subscription Canceled
-                </p>
-                <p className="text-sm text-yellow-700 dark:text-yellow-300">
-                  You'll have full access to all features until{' '}
-                  <span className="font-medium">
-                    {new Date(subscriptionEndDate).toLocaleDateString('en-GB', {
-                      year: 'numeric',
-                      month: 'long',
-                      day: 'numeric'
-                    })}
-                  </span>
-                </p>
-                <p className="text-sm text-yellow-700 dark:text-yellow-300">
-                  Want to keep your access? You can reactivate your subscription before it expires.
-                </p>
-                <Button
-                  onClick={handleSubscriptionChange}
-                  variant="outline"
-                  size="sm"
-                  className="mt-2 w-fit bg-yellow-600 hover:bg-yellow-700 text-white border-yellow-600"
-                >
-                  Reactivate Subscription
-                </Button>
-              </div>
-            </div>
-          </div>
-        )}
-
-        {/* Active Subscription Message */}
-        {isSubscribed && !isTrialPeriod && !isInGracePeriod && subscriptionEndDate && (
-          <div className="p-4 rounded-lg border border-purple-200 bg-purple-50 dark:border-purple-900 dark:bg-purple-900/50">
-            <div className="flex flex-col space-y-2">
-              <p className="text-sm text-purple-800 dark:text-purple-200">
-                Your subscription is active. Next billing date:{' '}
-                <span className="font-medium">
-                  {new Date(subscriptionEndDate).toLocaleDateString('en-GB', {
-                    year: 'numeric',
-                    month: 'long',
-                    day: 'numeric'
-                  })}
-                </span>
-              </p>
-            </div>
-          </div>
-        )}
-
-        {/* Expired Subscription Message */}
-        {isSubscriptionExpired && (
-          <div className="p-4 rounded-lg border border-red-200 bg-red-50 dark:border-red-900 dark:bg-red-900/50">
-            <div className="flex items-start space-x-3">
-              <Receipt className="h-5 w-5 text-red-600 dark:text-red-400 mt-0.5" />
-              <div className="flex flex-col space-y-2">
-                <p className="text-sm font-medium text-red-800 dark:text-red-200">
-                  Subscription Expired
-                </p>
-                <p className="text-sm text-red-700 dark:text-red-300">
-                  Your subscription ended on{' '}
-                  <span className="font-medium">
-                    {new Date(subscriptionEndDate!).toLocaleDateString('en-GB', {
-                      year: 'numeric',
-                      month: 'long',
-                      day: 'numeric'
-                    })}
-                  </span>
-                  . To regain access to premium features, please start a new subscription.
-                </p>
-                <Button
-                  onClick={handleSubscriptionChange}
-                  variant="outline"
-                  size="sm"
-                  className="mt-2 w-fit bg-red-600 hover:bg-red-700 text-white border-red-600"
-                >
-                  Renew Subscription
-                </Button>
-              </div>
-            </div>
-          </div>
-        )}
-
-        {/* Update button visibility logic */}
-        {!isInGracePeriod && !isSubscriptionExpired && (
+        {/* Manage Subscription Button */}
+        {subscriptionData && !isInGracePeriod && subscriptionData.status !== 'canceled' && (
           <div className="space-y-4 mt-4">
             <Button
               onClick={handleSubscriptionChange}
               disabled={isLoading}
-              variant={isTrialPaused ? "default" : "outline"}
-              className={`
-                ${isTrialPaused ? "bg-yellow-600 hover:bg-yellow-700 text-white" : ""}
-                ${needsPaymentMethod ? "bg-blue-600 hover:bg-blue-700 text-white" : ""}
-              `}
+              variant="outline"
             >
-              {isLoading ? "Loading..." : 
-                (isTrialPaused ? "Reactivate Trial" : 
-                 needsPaymentMethod ? "Add Payment Method" :
-                 "Manage Subscription")}
+              {isLoading ? "Loading..." : "Manage Subscription"}
             </Button>
           </div>
         )}

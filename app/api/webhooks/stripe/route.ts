@@ -93,18 +93,22 @@ export async function POST(req: Request) {
         
         try {
           let subscriptionStatus;
-          let isTrialPaused = false;
 
-          // Check if this was a trial cancellation
-          if (subscription.status === 'canceled' && subscription.trial_end) {
-            subscriptionStatus = 'trial_paused';
-            isTrialPaused = true;
-          } else if (subscription.status === 'trialing') {
+          // Handle paid subscription cancellation
+          if (subscription.cancel_at_period_end) {
+            subscriptionStatus = 'canceled';
+            console.log('Paid subscription scheduled for cancellation at period end:', 
+              new Date(subscription.current_period_end * 1000));
+          }
+          // Handle immediate cancellation
+          else if (subscription.status === 'canceled') {
+            subscriptionStatus = 'canceled';
+          }
+          // Handle other status updates
+          else if (subscription.status === 'trialing') {
             subscriptionStatus = 'trialing';
           } else if (subscription.status === 'active') {
             subscriptionStatus = 'active';
-          } else if (subscription.cancel_at_period_end) {
-            subscriptionStatus = 'canceled';
           } else {
             subscriptionStatus = subscription.status;
           }
@@ -114,15 +118,18 @@ export async function POST(req: Request) {
               stripeCustomerId: subscription.customer as string,
             },
             data: {
-              subscriptionStatus: subscriptionStatus,
-              isTrialPaused: isTrialPaused,
+              subscriptionStatus,
+              subscriptionStartDate: new Date(subscription.current_period_start * 1000),
               subscriptionEndDate: new Date(subscription.current_period_end * 1000),
+              stripeSubscriptionId: subscription.id,
+              trialStartDate: subscription.trial_start 
+                ? new Date(subscription.trial_start * 1000)
+                : null,
               trialEndDate: subscription.trial_end 
                 ? new Date(subscription.trial_end * 1000)
                 : null,
             },
           });
-
         } catch (error) {
           console.error('Error processing subscription event:', error);
         }

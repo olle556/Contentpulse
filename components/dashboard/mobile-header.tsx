@@ -1,6 +1,6 @@
 "use client";
 
-import { useState, useEffect } from "react";
+import { useState } from "react";
 import { Button } from "@/components/ui/button";
 import { Menu } from "lucide-react";
 import { Sheet, SheetContent, SheetTrigger } from "@/components/ui/sheet";
@@ -21,25 +21,6 @@ export function MobileHeader() {
   const [open, setOpen] = useState(false);
   const { data: session } = useSession();
   const router = useRouter();
-  const [showUpgradeButton, setShowUpgradeButton] = useState(false);
-
-  useEffect(() => {
-    const checkTrialStatus = async () => {
-      if (session?.user?.email) {
-        try {
-          const response = await fetch('/api/check-subscription_2/check-trialstatus');
-          const data = await response.json();
-          
-          // Show upgrade button if user is in trial period
-          setShowUpgradeButton(data.status === 'trial');
-        } catch (error) {
-          console.error('Error checking trial status:', error);
-        }
-      }
-    };
-
-    checkTrialStatus();
-  }, [session]);
 
   const handleSignOut = async () => {
     await signOut({ redirect: true, callbackUrl: '/' });
@@ -61,16 +42,6 @@ export function MobileHeader() {
       <div className="font-semibold">Content Pulse</div>
       
       <div className="flex items-center gap-2">
-        {showUpgradeButton && (
-          <Button
-            variant="default"
-            size="sm"
-            className="bg-gradient-to-r from-purple-500 to-blue-500 hover:from-purple-600 hover:to-blue-600 text-white"
-            onClick={() => router.push('/dashboard/settings')}
-          >
-            Upgrade
-          </Button>
-        )}
         <ModeToggle />
         <DropdownMenu>
           <DropdownMenuTrigger asChild>
