@@ -3,6 +3,11 @@ import { NextResponse } from 'next/server';
 import { getServerSession } from "next-auth/next";
 import { authOptions } from "@/lib/auth-options";
 import { db } from "@/lib/db";
+import Stripe from 'stripe';
+
+const stripe = new Stripe(process.env.STRIPE_SECRET_KEY!, {
+  apiVersion: '2024-11-20.acacia'
+});
 
 export const dynamic = 'force-dynamic';
 
@@ -31,6 +36,16 @@ export async function GET() {
       return NextResponse.json({ authorized: false, reason: 'user_not_found' });
     }
 
+    // Check if user has a payment method
+    let hasPaymentMethod = false;
+    if (user.stripeCustomerId) {
+      const paymentMethods = await stripe.paymentMethods.list({
+        customer: user.stripeCustomerId,
+        type: 'card',
+      });
+      hasPaymentMethod = paymentMethods.data.length > 0;
+    }
+
     const now = new Date();
     const trialEndDate = user.trialEndDate;
     const subscriptionEndDate = user.subscriptionEndDate;
@@ -43,7 +58,7 @@ export async function GET() {
     let status;
     let authorized = false;
     let message = '';
-    let needsPaymentMethod = !user.stripeCustomerId;
+    let needsPaymentMethod = !hasPaymentMethod;
 
     // Determine subscription status
     switch (user.subscriptionStatus) {
@@ -108,6 +123,7 @@ export async function GET() {
         userId: session.user.id,
         subscriptionStatus: user.subscriptionStatus,
         stripeSubscriptionId: user.stripeSubscriptionId,
+        hasPaymentMethod,
         checked: true 
       }
     });
