@@ -25,20 +25,30 @@ export default withAuth(
 
         // Call the subscription check API
         const response = await fetch(`${process.env.NEXT_PUBLIC_BASE_URL}/api/check-subscription`, {
-          method: 'POST',
+          method: 'GET',
           headers: {
             'Content-Type': 'application/json',
-          },
-          body: JSON.stringify({ userId: token.sub }),
+          }
         });
 
         const data = await response.json();
         
-        if (!data.hasAccess) {
+        if (!data.authorized) {
+          let errorType = 'SUBSCRIPTION_REQUIRED';
+          let action = 'COMPLETE_SUBSCRIPTION';
+
+          if (data.status === 'canceled' && data.subscriptionEndDate) {
+            errorType = 'SUBSCRIPTION_EXPIRED';
+            action = 'RENEW_SUBSCRIPTION';
+          } else if (data.status === 'trial' && data.remainingTrialDays <= 0) {
+            errorType = 'TRIAL_EXPIRED';
+            action = 'COMPLETE_SUBSCRIPTION';
+          }
+
           return NextResponse.json({ 
-            error: 'Subscription required',
-            type: data.reason === 'trial_paused' ? 'TRIAL_PAUSED' : 'SUBSCRIPTION_REQUIRED',
-            action: data.reason === 'trial_paused' ? 'REACTIVATE_TRIAL' : 'COMPLETE_SUBSCRIPTION',
+            error: data.message || 'Subscription required',
+            type: errorType,
+            action: action,
             redirectTo: '/dashboard/settings'
           }, { 
             status: 403 
