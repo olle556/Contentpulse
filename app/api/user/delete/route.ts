@@ -7,18 +7,22 @@ import { authOptions } from '@/lib/auth-options';
 export async function DELETE(req: Request) {
   try {
     const session = await getServerSession(authOptions);
+    const { userId } = await req.json();
     
     if (!session?.user?.email) {
       return NextResponse.json({ error: 'Unauthorized' }, { status: 401 });
     }
 
-    // Delete all related records first using a transaction
     await prisma.$transaction(async (tx) => {
       const user = await tx.user.findUnique({
-        where: { email: session.user.email! },
+        where: { id: userId },
         include: { 
           posts: true,
-          sources: true,
+          sources: {
+            include: {
+              scrapedContent: true
+            }
+          },
           brands: true,
           contentSchedules: true,
           onboardingProgress: true,
@@ -31,7 +35,12 @@ export async function DELETE(req: Request) {
         throw new Error('User not found');
       }
 
-      // Delete related records
+      // Verify the user is deleting their own account
+      if (user.email !== session.user.email) {
+        throw new Error('Unauthorized');
+      }
+
+      // Delete related records in correct order
       await tx.generatedPost.deleteMany({
         where: { userId: user.id }
       });
@@ -39,6 +48,13 @@ export async function DELETE(req: Request) {
       await tx.contentSchedule.deleteMany({
         where: { userId: user.id }
       });
+
+      // Delete ScrapedContent before ContentSource
+      for (const source of user.sources) {
+        await tx.scrapedContent.deleteMany({
+          where: { sourceId: source.id }
+        });
+      }
 
       await tx.contentSource.deleteMany({
         where: { userId: user.id }
@@ -70,7 +86,7 @@ export async function DELETE(req: Request) {
   } catch (error) {
     console.error('Error deleting user:', error);
     return NextResponse.json(
-      { error: 'Failed to delete user' },
+      { error: error instanceof Error ? error.message : 'Failed to delete user' },
       { status: 500 }
     );
   }

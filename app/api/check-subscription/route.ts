@@ -92,7 +92,7 @@ export async function GET() {
       default:
         status = 'inactive';
         authorized = false;
-        message = 'No active subscription';
+        message = 'No active subscription - subscribe now!';
     }
     
     return NextResponse.json({ 

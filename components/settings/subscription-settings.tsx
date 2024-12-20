@@ -4,9 +4,7 @@ import { useState, useEffect, useMemo } from "react";
 import { useRouter } from 'next/navigation';
 import { Button } from "@/components/ui/button";
 import { useToast } from "@/hooks/use-toast";
-import { Switch } from "@/components/ui/switch";
-import { Label } from "@/components/ui/label";
-import { CreditCard, Receipt, Trash2, AlertTriangle } from "lucide-react";
+import { Receipt, Trash2, AlertTriangle } from "lucide-react";
 import {
   AlertDialog,
   AlertDialogAction,
@@ -19,7 +17,6 @@ import {
 } from "@/components/ui/alert-dialog";
 import { signOut } from "next-auth/react";
 import { deleteUser } from "@/lib/deleteUser";
-import { getStripe } from "@/lib/stripe";
 
 interface SubscriptionSettingsProps {
   stripeCustomerId?: string | null;
@@ -33,7 +30,14 @@ interface SubscriptionStatus {
   needsPaymentMethod: boolean;
   trialEndDate: string | null;
   subscriptionEndDate: string | null;
+  subscriptionStartDate: string | null;
   remainingTrialDays: number;
+  debug?: {
+    userId: string;
+    subscriptionStatus: string;
+    stripeSubscriptionId: string | null;
+    checked: boolean;
+  };
 }
 
 export function SubscriptionSettings({
@@ -46,7 +50,7 @@ export function SubscriptionSettings({
   const [subscriptionData, setSubscriptionData] = useState<SubscriptionStatus | null>(null);
   const baseUrl = useMemo(() => process.env.NEXT_PUBLIC_BASE_URL || '', []);
 
-  // Add dialog state variables
+  // Dialog state variables
   const [showCancelDialog, setShowCancelDialog] = useState(false);
   const [showDeleteConfirmation, setShowDeleteConfirmation] = useState(false);
   const [showActiveSubscriptionWarning, setShowActiveSubscriptionWarning] = useState(false);
@@ -76,7 +80,8 @@ export function SubscriptionSettings({
   const isInGracePeriod = subscriptionData?.status === 'grace_period';
   const isCanceled = subscriptionData?.status === 'canceled';
   const isPastDue = subscriptionData?.status === 'past_due';
-  const isPaused = subscriptionData?.status === 'paused';
+  const isExpired = subscriptionData?.status === 'expired';
+  const isTrialEnded = subscriptionData?.status === 'trial_ended';
   const needsPaymentMethod = subscriptionData?.needsPaymentMethod;
 
   // Render subscription status message
@@ -147,13 +152,15 @@ export function SubscriptionSettings({
         );
 
       case 'canceled':
+      case 'expired':
+      case 'trial_ended':
         return (
           <div className="p-4 rounded-lg border border-red-200 bg-red-50 dark:border-red-900 dark:bg-red-900/50">
             <div className="flex items-start space-x-3">
               <Receipt className="h-5 w-5 text-red-600 dark:text-red-400 mt-0.5" />
               <div className="flex flex-col space-y-2">
                 <p className="text-sm font-medium text-red-800 dark:text-red-200">
-                  Subscription Expired
+                  {subscriptionData.status === 'trial_ended' ? 'Trial Ended' : 'Subscription Expired'}
                 </p>
                 <p className="text-sm text-red-700 dark:text-red-300">
                   {subscriptionData.message}
@@ -164,7 +171,7 @@ export function SubscriptionSettings({
                   size="sm"
                   className="mt-2 w-fit bg-red-600 hover:bg-red-700 text-white border-red-600"
                 >
-                  Renew Subscription
+                  {subscriptionData.status === 'trial_ended' ? 'Subscribe Now' : 'Renew Subscription'}
                 </Button>
               </div>
             </div>
@@ -331,14 +338,17 @@ export function SubscriptionSettings({
         {renderSubscriptionStatus()}
 
         {/* Manage Subscription Button */}
-        {subscriptionData && !isInGracePeriod && subscriptionData.status !== 'canceled' && (
+        {subscriptionData && !isInGracePeriod && !isCanceled && !isExpired && !isTrialEnded && (
           <div className="space-y-4 mt-4">
             <Button
               onClick={handleSubscriptionChange}
               disabled={isLoading}
-              variant="outline"
+              variant={subscriptionData.status === 'inactive' ? "default" : "outline"}
+              className={subscriptionData.status === 'inactive' ? 
+                "bg-blue-600 hover:bg-blue-700 text-white transition-colors duration-200" : 
+                ""}
             >
-              {isLoading ? "Loading..." : "Manage Subscription"}
+              {isLoading ? "Loading..." : subscriptionData.status === 'inactive' ? "Subscribe" : "Manage Subscription"}
             </Button>
           </div>
         )}
