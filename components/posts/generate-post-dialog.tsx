@@ -123,10 +123,12 @@ export function GeneratePostDialog({ open, onOpenChange, onSuccess }: GeneratePo
       },
     },
     onUpdate: ({ editor }) => {
-      const content = editor.getText(); // Use getText() instead of getHTML()
+      const content = editor.getText();
       setGeneratedContent(content);
-      setHasUnsavedChanges(true); // Mark that there are unsaved changes
+      setHasUnsavedChanges(true);
     },
+    editable: true,
+    immediatelyRender: false,
   });
 
   useEffect(() => {

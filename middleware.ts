@@ -23,16 +23,28 @@ export default withAuth(
           return new NextResponse('Unauthorized', { status: 401 });
         }
 
+        const cookies = request.headers.get('cookie') || '';
+
         const response = await fetch(`${process.env.NEXT_PUBLIC_BASE_URL}/api/check-subscription`, {
           method: 'GET',
           headers: {
             'Content-Type': 'application/json',
-          }
+            'Cookie': cookies,
+          },
+          credentials: 'include',
         });
 
         const data = await response.json();
         
+        console.log('Middleware subscription check:', {
+          authorized: data.authorized,
+          status: data.status,
+          subscriptionEndDate: data.subscriptionEndDate,
+          cookies: !!cookies,
+        });
+
         if (!data.authorized) {
+          console.log('Access denied - not authorized');
           let errorType = 'SUBSCRIPTION_REQUIRED';
           let action = 'COMPLETE_SUBSCRIPTION';
 
@@ -53,6 +65,8 @@ export default withAuth(
             status: 403 
           });
         }
+
+        console.log('Access granted');
       } catch (error) {
         console.error('Error checking subscription:', error);
         return new NextResponse('Internal Server Error', { status: 500 });
@@ -78,6 +92,7 @@ export default withAuth(
 export const config = {
   matcher: [
     '/dashboard/:path*',
+    '/api/generate-post',
     '/api/generate-post/:path*',
     '/api/schedule/:path*',
   ]
