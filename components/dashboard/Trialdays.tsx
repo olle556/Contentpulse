@@ -4,10 +4,14 @@ import { useEffect, useState } from 'react'
 import { Badge } from "@/components/ui/badge"
 
 interface TrialStatusResponse {
-  trialDaysRemaining: number | null;
-  subscriptionStatus: string | null;
+  authorized: boolean;
+  status: string;
+  message: string;
+  needsPaymentMethod: boolean;
   trialEndDate: string | null;
-  hasStartedTrial: boolean;
+  subscriptionEndDate: string | null;
+  subscriptionStartDate: string | null;
+  remainingTrialDays: number;
 }
 
 async function checkTrialStatus() {
@@ -29,40 +33,39 @@ export function TrialStatus() {
     checkTrialStatus().then(setTrialData)
   }, [])
 
-  // Don't show anything while loading
   if (!trialData) return null
 
-  // Don't show if user has an active subscription
-  if (trialData.subscriptionStatus === 'active') return null
+  // Don't show if subscription is active or in grace period
+  if (trialData.status === 'active' || trialData.status === 'grace_period') return null
 
-  // Show start trial message for new users
-  if (!trialData.hasStartedTrial) {
-    return (
-      <Badge 
-        variant="secondary" 
-        className="bg-green-100 text-green-800 hover:bg-green-200 transition-colors duration-200"
-      >
-        Start your free trial
-      </Badge>
-    )
+  // Show different badges based on status
+  const getBadgeStyles = () => {
+    switch (trialData.status) {
+      case 'trial':
+        return 'bg-purple-100 text-purple-800 hover:bg-purple-200'
+      case 'trial_ended':
+      case 'canceled':
+      case 'past_due':
+      case 'expired':
+        return 'bg-red-100 text-red-800 hover:bg-red-200'
+      case 'inactive':
+        return 'bg-green-100 text-green-800 hover:bg-green-200'
+      default:
+        return 'bg-gray-100 text-gray-800 hover:bg-gray-200'
+    }
   }
 
-  // Show trial status
   return (
     <Badge 
       variant="secondary" 
-      className={`${
-        trialData.trialDaysRemaining && trialData.trialDaysRemaining > 0
-          ? 'bg-purple-100 text-purple-800 hover:bg-purple-200' 
-          : 'bg-red-100 text-red-800 hover:bg-red-200'
-      } transition-colors duration-200`}
+      className={`${getBadgeStyles()} transition-colors duration-200`}
     >
-      {trialData.trialDaysRemaining && trialData.trialDaysRemaining > 0 ? (
+      {trialData.status === 'trial' ? (
         <>
-          <span className="font-bold">{trialData.trialDaysRemaining}</span> day{trialData.trialDaysRemaining !== 1 ? 's' : ''} left in trial
+          <span className="font-bold">{trialData.remainingTrialDays}</span> day{trialData.remainingTrialDays !== 1 ? 's' : ''} left in trial
         </>
       ) : (
-        'Trial expired'
+        trialData.message
       )}
     </Badge>
   )
