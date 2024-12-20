@@ -61,11 +61,9 @@ export async function POST(req: Request) {
 
           console.log('Subscription data:', subscription);
 
-          // Check if this is a trial subscription
-          const isTrialSubscription = subscription?.status === 'trialing';
-          const trialEnd = subscription?.trial_end 
-            ? new Date(subscription.trial_end * 1000)
-            : null;
+          // Always set new subscriptions to trialing for 7 days
+          const trialEnd = new Date();
+          trialEnd.setDate(trialEnd.getDate() + 7);
 
           // Update user record
           const updatedUser = await prisma.user.update({
@@ -73,10 +71,13 @@ export async function POST(req: Request) {
               stripeCustomerId: customerId,
             },
             data: {
-              subscriptionStatus: isTrialSubscription ? 'active' : subscription?.status || 'inactive',
-              subscriptionEndDate: trialEnd || (subscription 
+              subscriptionStatus: 'trialing',
+              trialStartDate: new Date(),
+              trialEndDate: trialEnd,
+              subscriptionEndDate: subscription 
                 ? new Date(subscription.current_period_end * 1000)
-                : null),
+                : null,
+              stripeSubscriptionId: subscription?.id || null,
             },
           });
 
@@ -173,13 +174,24 @@ export async function POST(req: Request) {
         const invoice = event.data.object as Stripe.Invoice;
         try {
           if (invoice.subscription) {
+            // Get the subscription to check if it was a trial
+            const subscription = await stripe.subscriptions.retrieve(invoice.subscription as string);
+            
+            // Only update to 'active' if this is the first payment after trial
+            // or if it's a regular payment
             await prisma.user.update({
               where: {
                 stripeCustomerId: invoice.customer as string,
               },
               data: {
-                subscriptionStatus: 'active',
+                // If coming from trial, update to active
+                subscriptionStatus: subscription.status === 'trialing' ? 'active' : 'active',
                 subscriptionEndDate: new Date(invoice.period_end * 1000),
+                // Clear trial dates if transitioning from trial
+                ...(subscription.status === 'trialing' ? {
+                  trialStartDate: null,
+                  trialEndDate: null,
+                } : {}),
               },
             });
           }

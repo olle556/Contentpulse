@@ -4,7 +4,7 @@ import { useState, useEffect, useMemo } from "react";
 import { useRouter } from 'next/navigation';
 import { Button } from "@/components/ui/button";
 import { useToast } from "@/hooks/use-toast";
-import { Receipt, Trash2, AlertTriangle } from "lucide-react";
+import { Receipt, Trash2, AlertTriangle, CheckCircle } from "lucide-react";
 import {
   AlertDialog,
   AlertDialogAction,
@@ -61,6 +61,7 @@ export function SubscriptionSettings({
       try {
         const response = await fetch(`${baseUrl}/api/check-subscription`);
         const data = await response.json();
+        console.log('Subscription data:', data);
         setSubscriptionData(data);
       } catch (error) {
         console.error('Error checking subscription:', error);
@@ -98,28 +99,54 @@ export function SubscriptionSettings({
     if (!subscriptionData) return null;
 
     switch (subscriptionData.status) {
-      case 'trial':
+      case 'trialing':
         return (
           <div className="p-4 rounded-lg border border-blue-200 bg-blue-50 dark:border-blue-900 dark:bg-blue-900/50">
-            <div className="flex flex-col space-y-2">
+            <div className="flex flex-col space-y-3">
+              <div className="flex items-center gap-2">
+                <p className="text-sm font-medium text-blue-800 dark:text-blue-200">
+                  Trial Active
+                </p>
+                <span className="px-2 py-1 text-xs font-medium rounded-full bg-blue-200 text-blue-800 dark:bg-blue-800 dark:text-blue-200">
+                  {subscriptionData.remainingTrialDays} days left
+                </span>
+              </div>
+              
               <p className="text-sm text-blue-800 dark:text-blue-200">
-                Trial Period Active
+                Trial ends on {subscriptionData.trialEndDate ? 
+                  formatDate(subscriptionData.trialEndDate) : 'N/A'}
               </p>
-              <p className="text-sm text-blue-700 dark:text-blue-300">
-                {subscriptionData.message}
-              </p>
-              {needsPaymentMethod && (
-                <div className="mt-2">
+
+              {/* Show different messages based on payment method status */}
+              <div className="flex flex-col space-y-2">
+                <div className="flex items-center gap-2">
+                  {subscriptionData.needsPaymentMethod ? (
+                    <>
+                      <AlertTriangle className="h-4 w-4 text-amber-500" />
+                      <p className="text-sm text-amber-600 dark:text-amber-400">
+                        Please add a payment method to continue after your trial ends
+                      </p>
+                    </>
+                  ) : (
+                    <>
+                      <CheckCircle className="h-4 w-4 text-green-500" />
+                      <p className="text-sm text-green-600 dark:text-green-400">
+                        Payment method added - You're all set for when your trial ends
+                      </p>
+                    </>
+                  )}
+                </div>
+                {subscriptionData.needsPaymentMethod && (
                   <Button
                     onClick={handleSubscriptionChange}
-                    variant="outline"
+                    variant="default"
                     size="sm"
-                    className="bg-blue-600 hover:bg-blue-700 text-white"
+                    className="w-fit bg-blue-600 hover:bg-blue-700 text-white"
                   >
                     Add Payment Method
                   </Button>
-                </div>
-              )}
+                )}
+              </div>
             </div>
           </div>
         );
