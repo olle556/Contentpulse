@@ -73,9 +73,6 @@ export async function GET() {
       status = 'trial';
       authorized = true;
       message = `Trial period: ${remainingTrialDays} days remaining`;
-      if (!hasPaymentMethod) {
-        message += ' (Please add a payment method to continue after trial)';
-      }
     } else if (updatedUser?.subscriptionStatus === 'active') {
       status = 'active';
       authorized = true;
