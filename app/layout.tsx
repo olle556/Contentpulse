@@ -5,7 +5,7 @@ import { Providers } from './providers';
 import { Toaster } from "@/components/ui/toaster";
 import { getServerSession } from 'next-auth';
 import { authOptions } from '@/lib/auth-options';
-import { Analytics } from "@vercel/analytics/react"
+import { Analytics } from "@vercel/analytics/next"
 import { CookieBanner } from "@/components/cookie/cookie-banner";
 
 
