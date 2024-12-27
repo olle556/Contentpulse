@@ -6,7 +6,7 @@ import { authOptions } from "@/lib/auth-options";
 import { getRelevantBrandContext } from '@/utils/getBrandContext';
 
 // At the top with other constants
-const THREAD_ENABLED_PLATFORMS = ['twitter', 'x', 'threads', 'twitter_premium', 'x premium', 'x_premium'];
+const THREAD_ENABLED_PLATFORMS = ['twitter', 'x', 'threads', 'twitter_premium', 'x premium', 'x_premium', 'bluesky'];
 
 export async function GET() {
   return NextResponse.json({ status: 'Route is working' });
