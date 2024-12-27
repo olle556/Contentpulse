@@ -28,28 +28,7 @@ export async function GET() {
       return NextResponse.json({ authorized: false, reason: 'user_not_found' });
     }
 
-    // If user has a Stripe subscription, verify the status with Stripe
-    if (user.stripeSubscriptionId) {
-      try {
-        const subscription = await stripe.subscriptions.retrieve(user.stripeSubscriptionId);
-        
-        // Update local database if Stripe status differs
-        if (subscription.status !== user.subscriptionStatus) {
-          await db.user.update({
-            where: { id: session.user.id },
-            data: {
-              subscriptionStatus: subscription.status,
-              subscriptionEndDate: new Date(subscription.current_period_end * 1000),
-              subscriptionStartDate: new Date(subscription.current_period_start * 1000),
-              trialEndDate: subscription.trial_end ? new Date(subscription.trial_end * 1000) : null,
-              trialStartDate: subscription.trial_start ? new Date(subscription.trial_start * 1000) : null,
-            },
-          });
-        }
-      } catch (error) {
-        console.error('Error verifying subscription with Stripe:', error);
-      }
-    }
+
 
     // Refresh user data after potential update
     const updatedUser = await db.user.findUnique({
