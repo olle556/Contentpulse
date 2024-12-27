@@ -241,7 +241,7 @@ export async function GET(req: NextRequest) {
         // Scrape content once
         const baseUrl = process.env.NEXTAUTH_URL || 'http://localhost:3000';
         const controller = new AbortController();
-        const timeoutId = setTimeout(() => controller.abort(), 30000); // 30 second timeout for scraping
+        const timeoutId = setTimeout(() => controller.abort(), 45000); // 30 second timeout for scraping
 
         try {
           const scrapeResponse = await fetch(`${baseUrl}/api/firecrawl`, {

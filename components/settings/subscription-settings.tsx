@@ -135,7 +135,7 @@ export function SubscriptionSettings({
                     <>
                       <CheckCircle className="h-4 w-4 text-green-500" />
                       <p className="text-sm text-green-600 dark:text-green-400">
-                        Payment method added - You're all set for when your trial ends
+                        Payment method added - You&apos;re all set for when your trial ends
                       </p>
                     </>
                   )}
