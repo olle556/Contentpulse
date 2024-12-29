@@ -90,6 +90,7 @@ export function SubscriptionSettings({
   const hasPaymentMethod = subscriptionData?.status === 'trialing_with_payment' || 
                           subscriptionData?.status === 'trial_canceled_with_payment';
 
+
   // Add this helper function at the top of the component
   const formatDate = (dateString: string) => {
     return new Date(dateString).toLocaleDateString('en-US', {
@@ -267,6 +268,31 @@ export function SubscriptionSettings({
                   className="mt-2 w-fit"
                 >
                   Update Payment Method
+                </Button>
+              </div>
+            </div>
+          </div>
+        );
+
+      case 'inactive':
+        return (
+          <div className="p-4 rounded-lg border border-gray-200 bg-gray-50 dark:border-gray-800 dark:bg-gray-900/50">
+            <div className="flex items-start space-x-3">
+              <Receipt className="h-5 w-5 text-gray-600 dark:text-gray-400 mt-0.5" />
+              <div className="flex flex-col space-y-2">
+                <p className="text-sm font-medium text-gray-800 dark:text-gray-200">
+                  No Active Subscription
+                </p>
+                <p className="text-sm text-gray-700 dark:text-gray-300">
+                  Your previous subscription has ended. Subscribe again to regain access to all features.
+                </p>
+                <Button
+                  onClick={() => window.location.href = '/#pricing'}
+                  variant="default"
+                  size="sm"
+                  className="mt-2 w-fit bg-blue-600 hover:bg-blue-700 text-white"
+                >
+                  View Plans
                 </Button>
               </div>
             </div>
