@@ -7,7 +7,6 @@ interface TrialStatusResponse {
   authorized: boolean;
   status: string;
   message: string;
-  needsPaymentMethod: boolean;
   trialEndDate: string | null;
   subscriptionEndDate: string | null;
   subscriptionStartDate: string | null;
@@ -35,23 +34,47 @@ export function TrialStatus() {
 
   if (!trialData) return null
 
-  // Don't show if subscription is active or in grace period
-  if (trialData.status === 'active' || trialData.status === 'grace_period') return null
+  // Don't show if subscription is active
+  if (trialData.status === 'active') return null
 
-  // Show different badges based on status
+  // Get badge styles based on status
   const getBadgeStyles = () => {
     switch (trialData.status) {
-      case 'trial':
-        return 'bg-purple-100 text-purple-800 hover:bg-purple-200'
-      case 'trial_ended':
-      case 'canceled':
+      case 'trialing':
+      case 'trialing_with_payment':
+        return 'bg-blue-100 text-blue-800 hover:bg-blue-200'
+      case 'trial_canceled':
+      case 'trial_canceled_with_payment':
+        return 'bg-yellow-100 text-yellow-800 hover:bg-yellow-200'
+      case 'grace_period':
+        return 'bg-yellow-100 text-yellow-800 hover:bg-yellow-200'
       case 'past_due':
-      case 'expired':
         return 'bg-red-100 text-red-800 hover:bg-red-200'
       case 'inactive':
-        return 'bg-green-100 text-green-800 hover:bg-green-200'
+        return 'bg-gray-100 text-gray-800 hover:bg-gray-200'
       default:
         return 'bg-gray-100 text-gray-800 hover:bg-gray-200'
+    }
+  }
+
+  // Get badge message based on status
+  const getBadgeMessage = () => {
+    switch (trialData.status) {
+      case 'trialing':
+        return `${trialData.remainingTrialDays} days left in trial - Add payment method`
+      case 'trialing_with_payment':
+        return `${trialData.remainingTrialDays} days left in trial`
+      case 'trial_canceled':
+      case 'trial_canceled_with_payment':
+        return `Trial ends in ${trialData.remainingTrialDays} days`
+      case 'grace_period':
+        return 'Subscription ending soon'
+      case 'past_due':
+        return 'Payment past due'
+      case 'inactive':
+        return 'Subscribe to continue'
+      default:
+        return trialData.message
     }
   }
 
@@ -60,13 +83,7 @@ export function TrialStatus() {
       variant="secondary" 
       className={`${getBadgeStyles()} transition-colors duration-200`}
     >
-      {trialData.status === 'trial' ? (
-        <>
-          <span className="font-bold">{trialData.remainingTrialDays}</span> day{trialData.remainingTrialDays !== 1 ? 's' : ''} left in trial
-        </>
-      ) : (
-        trialData.message
-      )}
+      {getBadgeMessage()}
     </Badge>
   )
 }

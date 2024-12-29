@@ -45,14 +45,14 @@ export async function GET() {
     });
 
     // Check payment method
-    let hasPaymentMethod = false;
-    if (updatedUser?.stripeCustomerId) {
-      const paymentMethods = await stripe.paymentMethods.list({
-        customer: updatedUser.stripeCustomerId,
-        type: 'card',
-      });
-      hasPaymentMethod = paymentMethods.data.length > 0;
-    }
+    // let hasPaymentMethod = false;
+    // if (updatedUser?.stripeCustomerId) {
+    //   const paymentMethods = await stripe.paymentMethods.list({
+    //     customer: updatedUser.stripeCustomerId,
+    //     type: 'card',
+    //   });
+    //   hasPaymentMethod = paymentMethods.data.length > 0;
+    // }
 
     const now = new Date();
     const trialEndDate = updatedUser?.trialEndDate;
@@ -66,13 +66,21 @@ export async function GET() {
     let status;
     let authorized = false;
     let message = '';
-    let needsPaymentMethod = !hasPaymentMethod;
+    //let needsPaymentMethod = !hasPaymentMethod;
 
     // Enhanced status determination
     if (updatedUser?.subscriptionStatus === 'trialing') {
-      status = 'trial';
+      status = 'trialing';
       authorized = true;
-      message = `Trial period: ${remainingTrialDays} days remaining`;
+      message = `Trial period: ${remainingTrialDays} days remaining. Add payment to continue after trial.`;
+    } else if (updatedUser?.subscriptionStatus === 'trialing_with_payment') {
+      status = 'trialing_with_payment';
+      authorized = true;
+      message = `Trial period: ${remainingTrialDays} days remaining. Your subscription will continue after trial.`;
+    } else if (updatedUser?.subscriptionStatus === 'trial_canceled' || updatedUser?.subscriptionStatus === 'trial_canceled_with_payment') {
+      status = 'trial_canceled';
+      authorized = true;
+      message = `Trial period: ${remainingTrialDays} days remaining. Trial will end without renewal.`;
     } else if (updatedUser?.subscriptionStatus === 'active') {
       status = 'active';
       authorized = true;
@@ -91,7 +99,7 @@ export async function GET() {
       authorized,
       status,
       message,
-      needsPaymentMethod,
+      //needsPaymentMethod,
       trialEndDate: updatedUser?.trialEndDate,
       subscriptionEndDate: updatedUser?.subscriptionEndDate,
       subscriptionStartDate: updatedUser?.subscriptionStartDate,
@@ -100,7 +108,7 @@ export async function GET() {
         userId: session.user.id,
         subscriptionStatus: updatedUser?.subscriptionStatus,
         stripeSubscriptionId: updatedUser?.stripeSubscriptionId,
-        hasPaymentMethod,
+        //hasPaymentMethod,
         checked: true
       }
     });

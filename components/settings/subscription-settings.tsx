@@ -29,7 +29,6 @@ interface SubscriptionStatus {
   authorized: boolean;
   status: string;
   message: string;
-  needsPaymentMethod: boolean;
   trialEndDate: string | null;
   subscriptionEndDate: string | null;
   subscriptionStartDate: string | null;
@@ -81,13 +80,15 @@ export function SubscriptionSettings({
 
   // Computed states based on subscription data
   const isSubscribed = subscriptionData?.status === 'active';
-  const isTrialActive = subscriptionData?.status === 'trial';
+  const isTrialActive = ['trialing', 'trialing_with_payment'].includes(subscriptionData?.status || '');
+  const isTrialCanceled = ['trial_canceled', 'trial_canceled_with_payment'].includes(subscriptionData?.status || '');
   const isInGracePeriod = subscriptionData?.status === 'grace_period';
   const isCanceled = subscriptionData?.status === 'canceled';
   const isPastDue = subscriptionData?.status === 'past_due';
   const isExpired = subscriptionData?.status === 'expired';
   const isTrialEnded = subscriptionData?.status === 'trial_ended';
-  const needsPaymentMethod = subscriptionData?.needsPaymentMethod;
+  const hasPaymentMethod = subscriptionData?.status === 'trialing_with_payment' || 
+                          subscriptionData?.status === 'trial_canceled_with_payment';
 
   // Add this helper function at the top of the component
   const formatDate = (dateString: string) => {
@@ -104,6 +105,7 @@ export function SubscriptionSettings({
 
     switch (subscriptionData.status) {
       case 'trialing':
+      case 'trialing_with_payment':
         return (
           <div className="p-4 rounded-lg border border-blue-200 bg-blue-50 dark:border-blue-900 dark:bg-blue-900/50">
             <div className="flex flex-col space-y-3">
@@ -121,10 +123,9 @@ export function SubscriptionSettings({
                   formatDate(subscriptionData.trialEndDate) : 'N/A'}
               </p>
 
-              {/* Show different messages based on payment method status */}
               <div className="flex flex-col space-y-2">
                 <div className="flex items-center gap-2">
-                  {subscriptionData.needsPaymentMethod ? (
+                  {subscriptionData.status === 'trialing' ? (
                     <>
                       <AlertTriangle className="h-4 w-4 text-amber-500" />
                       <p className="text-sm text-amber-600 dark:text-amber-400">
@@ -140,7 +141,7 @@ export function SubscriptionSettings({
                     </>
                   )}
                 </div>
-                {subscriptionData.needsPaymentMethod && (
+                {subscriptionData.status === 'trialing' && (
                   <Button
                     onClick={handleSubscriptionChange}
                     variant="default"
@@ -155,12 +156,39 @@ export function SubscriptionSettings({
           </div>
         );
 
+      case 'trial_canceled':
+      case 'trial_canceled_with_payment':
+        return (
+          <div className="p-4 rounded-lg border border-yellow-200 bg-yellow-50 dark:border-yellow-900 dark:bg-yellow-900/50">
+            <div className="flex items-start space-x-3">
+              <Receipt className="h-5 w-5 text-yellow-600 dark:text-yellow-400 mt-0.5" />
+              <div className="flex flex-col space-y-2">
+                <p className="text-sm font-medium text-yellow-800 dark:text-yellow-200">
+                  Trial Canceled
+                </p>
+                <p className="text-sm text-yellow-700 dark:text-yellow-300">
+                  Access until {subscriptionData.trialEndDate ? 
+                    formatDate(subscriptionData.trialEndDate) : 'N/A'}
+                </p>
+                <Button
+                  onClick={handleSubscriptionChange}
+                  variant="outline"
+                  size="sm"
+                  className="mt-2 w-fit bg-yellow-600 hover:bg-yellow-700 text-white border-yellow-600"
+                >
+                  Reactivate Trial
+                </Button>
+              </div>
+            </div>
+          </div>
+        );
+
       case 'active':
         return (
           <div className="p-4 rounded-lg border border-green-200 bg-green-50 dark:border-green-900 dark:bg-green-900/50">
             <div className="flex flex-col space-y-2">
               <p className="text-sm text-green-800 dark:text-green-200">
-                Subscription active until {subscriptionData.subscriptionEndDate ? 
+                Subscription active! Next billing date: {subscriptionData.subscriptionEndDate ? 
                   formatDate(subscriptionData.subscriptionEndDate) : 'N/A'}
               </p>
             </div>

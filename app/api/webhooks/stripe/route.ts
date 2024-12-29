@@ -4,9 +4,13 @@ import { stripe } from '@/lib/stripe';
 import { prisma } from '@/lib/prisma';
 import Stripe from 'stripe';
 
+type CustomSubscriptionStatus = Stripe.Subscription.Status | 'trialing_with_payment' | 'trial_canceled' | 'trial_canceled_with_payment';
+
 export async function POST(req: Request) {
   const body = await req.text();
   const signature = headers().get('Stripe-Signature') as string;
+
+  console.log('Received webhook request with signature:', signature);
 
   let event: Stripe.Event;
 
@@ -17,18 +21,38 @@ export async function POST(req: Request) {
       process.env.STRIPE_WEBHOOK_SECRET!
     );
 
-    console.log('Processing webhook event:', event.type);
+    console.log('Webhook event data:', {
+      type: event.type,
+      object: event.data.object,
+      created: event.created,
+      id: event.id
+    });
 
     switch (event.type) {
       case 'customer.created': {
         const customer = event.data.object as Stripe.Customer;
-        console.log('Customer created:', customer);
+        console.log('Customer details:', {
+          id: customer.id,
+          email: customer.email,
+          metadata: customer.metadata
+        });
+
+        // Validate customer data
+        if (!customer.email) {
+          console.error('Missing customer email');
+          break;
+        }
+
+        // Validate customer metadata if you're expecting specific fields
+        if (!customer.metadata?.userId) {
+          console.error('Missing required userId in customer metadata');
+          break;
+        }
 
         try {
-          // Update user with Stripe customer ID
           const updatedUser = await prisma.user.update({
             where: {
-              email: customer.email!,
+              email: customer.email,
             },
             data: {
               stripeCustomerId: customer.id,
@@ -41,165 +65,167 @@ export async function POST(req: Request) {
         break;
       }
 
-      case 'checkout.session.completed': {
-        const session = event.data.object as Stripe.Checkout.Session;
-        console.log('Checkout session data:', session);
-
-        try {
-          if (!session.customer) {
-            throw new Error('No customer ID in session');
-          }
-
-          const customerId = typeof session.customer === 'string' 
-            ? session.customer 
-            : session.customer.id;
-
-          // Fetch subscription details
-          const subscription = session.subscription 
-            ? await stripe.subscriptions.retrieve(session.subscription as string)
-            : null;
-
-          console.log('Subscription data:', subscription);
-
-          // Always set new subscriptions to trialing for 7 days
-          const trialEnd = new Date();
-          trialEnd.setDate(trialEnd.getDate() + 7);
-
-          // Update user record
-          const updatedUser = await prisma.user.update({
-            where: {
-              stripeCustomerId: customerId,
-            },
-            data: {
-              subscriptionStatus: 'trialing',
-              trialStartDate: new Date(),
-              trialEndDate: trialEnd,
-              subscriptionEndDate: subscription 
-                ? new Date(subscription.current_period_end * 1000)
-                : null,
-              stripeSubscriptionId: subscription?.id || null,
-            },
-          });
-
-          console.log('Updated user subscription:', updatedUser);
-        } catch (error) {
-          console.error('Error processing checkout.session.completed:', error);
-        }
-        break;
-      }
-
-      case 'customer.subscription.updated':
-      case 'customer.subscription.deleted': {
-        const subscription = event.data.object as Stripe.Subscription;
-        
-        try {
-          let subscriptionStatus;
-
-          // Handle paid subscription cancellation
-          if (subscription.cancel_at_period_end) {
-            subscriptionStatus = 'canceled';
-            console.log('Paid subscription scheduled for cancellation at period end:', 
-              new Date(subscription.current_period_end * 1000));
-          }
-          // Handle immediate cancellation
-          else if (subscription.status === 'canceled') {
-            subscriptionStatus = 'canceled';
-          }
-          // Handle other status updates
-          else if (subscription.status === 'trialing') {
-            subscriptionStatus = 'trialing';
-          } else if (subscription.status === 'active') {
-            subscriptionStatus = 'active';
-          } else {
-            subscriptionStatus = subscription.status;
-          }
-
-          await prisma.user.update({
-            where: {
-              stripeCustomerId: subscription.customer as string,
-            },
-            data: {
-              subscriptionStatus,
-              subscriptionStartDate: new Date(subscription.current_period_start * 1000),
-              subscriptionEndDate: new Date(subscription.current_period_end * 1000),
-              stripeSubscriptionId: subscription.id,
-              trialStartDate: subscription.trial_start 
-                ? new Date(subscription.trial_start * 1000)
-                : null,
-              trialEndDate: subscription.trial_end 
-                ? new Date(subscription.trial_end * 1000)
-                : null,
-            },
-          });
-        } catch (error) {
-          console.error('Error processing subscription event:', error);
-        }
-        break;
-      }
-
-      case 'customer.subscription.trial_will_end': {
-        const subscription = event.data.object as Stripe.Subscription;
-        console.log('Trial ending soon:', subscription);
-        // You can implement email notifications here if needed
-        break;
-      }
 
       case 'customer.subscription.created': {
         const subscription = event.data.object as Stripe.Subscription;
-        console.log('DEBUG - New subscription:', {
-          subscriptionId: subscription.id,
+        console.log('New subscription details:', {
+          id: subscription.id,
           status: subscription.status,
-          currentPeriodEnd: new Date(subscription.current_period_end * 1000)
+          customer: subscription.customer,
+          trial_end: subscription.trial_end,
+          trial_start: subscription.trial_start,
+          default_payment_method: subscription.default_payment_method
         });
-        
+
+        // Set initial trial period if applicable
+        const trialEnd = subscription.trial_end ?
+          new Date(subscription.trial_end * 1000) : null;
+        const trialStart = subscription.trial_start ?
+          new Date(subscription.trial_start * 1000) : null;
+
         try {
           await prisma.user.update({
-            where: {
-              stripeCustomerId: subscription.customer as string,
-            },
+            where: { stripeCustomerId: subscription.customer as string },
             data: {
               subscriptionStatus: subscription.status,
+              subscriptionStartDate: new Date(subscription.current_period_start * 1000),
               subscriptionEndDate: new Date(subscription.current_period_end * 1000),
               stripeSubscriptionId: subscription.id,
-              subscriptionStartDate: new Date(subscription.current_period_start * 1000),
-              // Only set trial dates if actually in trial
-              trialStartDate: subscription.trial_start ? new Date(subscription.trial_start * 1000) : null,
-              trialEndDate: subscription.trial_end ? new Date(subscription.trial_end * 1000) : null,
-            },
+              trialStartDate: trialStart,
+              trialEndDate: trialEnd
+            }
           });
         } catch (error) {
-          console.error('Subscription creation error:', error);
+          console.error('Failed to update user subscription:', error);
+          throw error;
+        }
+        break;
+      }
+
+      case 'payment_method.attached': {
+        const paymentMethod = event.data.object as Stripe.PaymentMethod;
+
+        // Check if user is in trial period
+        const user = await prisma.user.findFirst({
+          where: { stripeCustomerId: paymentMethod.customer as string }
+        });
+
+        try {
+          if (user?.subscriptionStatus === 'trialing') {
+            // User has added payment during trial - subscription will continue after trial
+            await prisma.user.update({
+              where: { stripeCustomerId: paymentMethod.customer as string },
+              data: { subscriptionStatus: 'trialing_with_payment' }
+            });
+          } else if (user?.subscriptionStatus === 'trial_canceled') {
+            // User has added payment after canceling trial
+            await prisma.user.update({
+              where: { stripeCustomerId: paymentMethod.customer as string },
+              data: { subscriptionStatus: 'trial_canceled_with_payment' }
+            });
+          }
+        } catch (error) {
+          console.error('Failed to update user subscription:', error);
+          throw error;
         }
         break;
       }
 
       case 'invoice.paid': {
         const invoice = event.data.object as Stripe.Invoice;
+
+        if (!invoice.subscription) break;
+
         try {
-          if (invoice.subscription) {
-            // Get the subscription to check if it was a trial
-            const subscription = await stripe.subscriptions.retrieve(invoice.subscription as string);
-            
-            // Only update to 'active' if this is the first payment after trial
-            // or if it's a regular payment
-            await prisma.user.update({
-              where: {
-                stripeCustomerId: invoice.customer as string,
-              },
-              data: {
-                // If coming from trial, update to active
-                subscriptionStatus: subscription.status === 'trialing' ? 'active' : 'active',
-                subscriptionEndDate: new Date(invoice.period_end * 1000),
-                // Clear trial dates if transitioning from trial
-                ...(subscription.status === 'trialing' ? {
-                  trialStartDate: null,
-                  trialEndDate: null,
-                } : {}),
-              },
-            });
+          const subscription = await stripe.subscriptions.retrieve(invoice.subscription as string);
+
+          // If it's a trial period, don't update the status
+          if (subscription.status === 'trialing') {
+            break;
+          }
+
+          await prisma.user.update({
+            where: { stripeCustomerId: invoice.customer as string },
+            data: {
+              subscriptionStatus: 'active',
+              subscriptionEndDate: new Date(subscription.current_period_end * 1000),
+              trialStartDate: null,
+              trialEndDate: null
+            }
+          });
+        } catch (error) {
+          console.error('Failed to update user subscription:', error);
+          throw error;
+        }
+        break;
+      }
+
+      case 'customer.subscription.updated': {
+        const subscription = event.data.object as Stripe.Subscription;
+
+        let DBsubscriptionStatus: CustomSubscriptionStatus = subscription.status;
+
+        // Check for attached payment methods
+        try {
+          const paymentMethods = await stripe.paymentMethods.list({
+            customer: subscription.customer as string,
+            type: 'card'
+          });
+          
+          // First check trial status with payment
+          if (subscription.status === 'trialing' && paymentMethods.data.length > 0) {
+            if (subscription.cancel_at_period_end) {
+              DBsubscriptionStatus = 'trial_canceled_with_payment';
+            } else {
+              DBsubscriptionStatus = 'trialing_with_payment';
+            }
+          }
+          // Then handle regular trial cancellation
+          else if (subscription.status === 'trialing' && subscription.cancel_at_period_end) {
+            DBsubscriptionStatus = 'trial_canceled';
+          }
+          // Finally handle regular cancellation
+          else if (subscription.cancel_at_period_end) {
+            DBsubscriptionStatus = 'canceled';
           }
         } catch (error) {
-          console.error('Error processing invoice.paid:', error);
+          console.error('Error checking payment methods:', error);
+        }
+
+        try {
+          await prisma.user.update({
+            where: { stripeCustomerId: subscription.customer as string },
+            data: {
+              subscriptionStatus: DBsubscriptionStatus,
+              subscriptionEndDate: new Date(subscription.current_period_end * 1000),
+              trialEndDate: subscription.trial_end ?
+                new Date(subscription.trial_end * 1000) : null
+            }
+          });
+        } catch (error) {
+          console.error('Failed to update user subscription:', error);
+          throw error;
+        }
+        break;
+      }
+
+      case 'customer.subscription.deleted': {
+        const subscription = event.data.object as Stripe.Subscription;
+
+        try {
+          await prisma.user.update({
+            where: { stripeCustomerId: subscription.customer as string },
+            data: {
+              subscriptionStatus: 'inactive',
+              subscriptionEndDate: null,
+              stripeSubscriptionId: null,
+              trialStartDate: null,
+              trialEndDate: null
+            }
+          });
+        } catch (error) {
+          console.error('Failed to update user subscription:', error);
+          throw error;
         }
         break;
       }
@@ -216,16 +242,16 @@ export async function POST(req: Request) {
                 subscriptionStatus: 'past_due',
               },
             });
-            // You might want to send an email to the user here
+            break;
           }
         } catch (error) {
           console.error('Error processing invoice.payment_failed:', error);
         }
-        break;
-      }
-    }
+      };
 
-    return NextResponse.json({ 
+
+    }
+    return NextResponse.json({
       received: true,
       type: event.type,
     });
@@ -233,7 +259,7 @@ export async function POST(req: Request) {
   } catch (error) {
     console.error('Webhook error:', error);
     return new NextResponse(
-      JSON.stringify({ error: 'Webhook signature verification failed' }), 
+      JSON.stringify({ error: 'Webhook signature verification failed' }),
       { status: 400 }
     );
   }
