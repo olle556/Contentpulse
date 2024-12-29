@@ -4,6 +4,7 @@ import { zodResolver } from "@hookform/resolvers/zod";
 import { useForm } from "react-hook-form";
 import * as z from "zod";
 import { Button } from "@/components/ui/button";
+import AutosaveToast from "@/components/autosave-toast";
 import {
   Form,
   FormControl,
@@ -22,7 +23,7 @@ const notificationFormSchema = z.object({
 
 export function NotificationSettings() {
   const [isLoading, setIsLoading] = useState(false);
-
+  const [showToast, setShowToast] = useState(false);
   const form = useForm<z.infer<typeof notificationFormSchema>>({
     resolver: zodResolver(notificationFormSchema),
     defaultValues: {
@@ -46,8 +47,8 @@ export function NotificationSettings() {
       if (!response.ok) {
         throw new Error('Failed to update preferences');
       }
-      
-      toast.success("Preferences updated successfully");
+      setShowToast(true);
+      setTimeout(() => setShowToast(false), 2000);
     } catch (error) {
       console.error('Error updating preferences:', error);
       toast.error("Failed to update preferences");
@@ -57,6 +58,7 @@ export function NotificationSettings() {
   }
 
   return (
+    <>
     <Form {...form}>
       <form onSubmit={form.handleSubmit(onSubmit)} className="space-y-6">
         <FormField
@@ -84,5 +86,7 @@ export function NotificationSettings() {
         </Button>
       </form>
     </Form>
+    <AutosaveToast show={showToast} />
+    </>
   );
 }
