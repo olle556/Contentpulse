@@ -2,6 +2,7 @@
 
 import { useEffect, useState } from 'react'
 import { Badge } from "@/components/ui/badge"
+import Link from 'next/link'
 
 interface TrialStatusResponse {
   authorized: boolean;
@@ -59,20 +60,46 @@ export function TrialStatus() {
 
   // Get badge message based on status
   const getBadgeMessage = () => {
+    const settingsUrl = '/dashboard/settings'
+    
     switch (trialData.status) {
       case 'trialing':
-        return `${trialData.remainingTrialDays} days left in trial - Add payment method`
+        return (
+          <Link href={settingsUrl}>
+            {trialData.remainingTrialDays} days left in trial - Add payment method
+          </Link>
+        )
+      case 'past_due':
+        return (
+          <Link href={settingsUrl}>
+            Payment past due
+          </Link>
+        )
+      case 'inactive':
+        return (
+          <Link href={settingsUrl}>
+            Subscribe to continue
+          </Link>
+        )
       case 'trialing_with_payment':
-        return `${trialData.remainingTrialDays} days left in trial`
+        return (
+          <Link href={settingsUrl}>
+            {trialData.remainingTrialDays} days left in trial
+          </Link>
+        )
       case 'trial_canceled':
       case 'trial_canceled_with_payment':
-        return `Trial ends in ${trialData.remainingTrialDays} days`
+        return (
+          <Link href={settingsUrl}>
+            Trial ends in {trialData.remainingTrialDays} days
+          </Link>
+        )
       case 'grace_period':
-        return 'Subscription ending soon'
-      case 'past_due':
-        return 'Payment past due'
-      case 'inactive':
-        return 'Subscribe to continue'
+        return (
+          <Link href={settingsUrl}>
+            Subscription ending soon
+          </Link>
+        )
       default:
         return trialData.message
     }
