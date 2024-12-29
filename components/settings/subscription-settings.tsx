@@ -284,16 +284,8 @@ export function SubscriptionSettings({
                   No Active Subscription
                 </p>
                 <p className="text-sm text-gray-700 dark:text-gray-300">
-                  Your previous subscription has ended. Subscribe again to regain access to all features.
+                Subscribe to access all features.
                 </p>
-                <Button
-                  onClick={() => window.location.href = '/#pricing'}
-                  variant="default"
-                  size="sm"
-                  className="mt-2 w-fit bg-blue-600 hover:bg-blue-700 text-white"
-                >
-                  View Plans
-                </Button>
               </div>
             </div>
           </div>
