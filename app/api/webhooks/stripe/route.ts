@@ -149,15 +149,7 @@ export async function POST(req: Request) {
         try {
           const paymentMethods = await stripe.paymentMethods.list({
             customer: subscription.customer as string,
-            type: 'card'
           });
-          const paymentMethods_withoutType = await stripe.paymentMethods.list({
-            customer: subscription.customer as string,
-          });
-
-          console.log('Payment methods:', paymentMethods.data);
-          console.log('Payment methods without type:', paymentMethods_withoutType.data);
-          
           // First check trial status with payment
           if (subscription.status === 'trialing' && paymentMethods.data.length > 0) {
             if (subscription.cancel_at_period_end) {
