@@ -10,8 +10,6 @@ export async function POST(req: Request) {
   const body = await req.text();
   const signature = headers().get('Stripe-Signature') as string;
 
-  console.log('Received webhook request with signature:', signature);
-
   let event: Stripe.Event;
 
   try {
@@ -21,21 +19,11 @@ export async function POST(req: Request) {
       process.env.STRIPE_WEBHOOK_SECRET!
     );
 
-    console.log('Webhook event data:', {
-      type: event.type,
-      object: event.data.object,
-      created: event.created,
-      id: event.id
-    });
 
     switch (event.type) {
       case 'customer.created': {
         const customer = event.data.object as Stripe.Customer;
-        console.log('Customer details:', {
-          id: customer.id,
-          email: customer.email,
-          metadata: customer.metadata
-        });
+       
 
         // Validate customer data
         if (!customer.email) {
@@ -58,7 +46,7 @@ export async function POST(req: Request) {
               stripeCustomerId: customer.id,
             },
           });
-          console.log('Updated user with customer ID:', updatedUser);
+         
         } catch (error) {
           console.error('Error processing customer.created:', error);
         }
@@ -68,14 +56,6 @@ export async function POST(req: Request) {
 
       case 'customer.subscription.created': {
         const subscription = event.data.object as Stripe.Subscription;
-        console.log('New subscription details:', {
-          id: subscription.id,
-          status: subscription.status,
-          customer: subscription.customer,
-          trial_end: subscription.trial_end,
-          trial_start: subscription.trial_start,
-          default_payment_method: subscription.default_payment_method
-        });
 
         // Set initial trial period if applicable
         const trialEnd = subscription.trial_end ?
@@ -172,6 +152,8 @@ export async function POST(req: Request) {
             type: 'card'
           });
           
+          console.log('Payment methods:', paymentMethods.data);
+
           // First check trial status with payment
           if (subscription.status === 'trialing' && paymentMethods.data.length > 0) {
             if (subscription.cancel_at_period_end) {

@@ -256,24 +256,36 @@ export function ContentScheduler({ open, onOpenChange, contentSources, editSched
                     >
                       <FormControl>
                         <SelectTrigger>
-                          <SelectValue placeholder={isLoading ? "Loading sources..." : "Select a content source"} />
+                          <SelectValue placeholder={
+                            isLoading ? "Loading sources..." : 
+                            contentSources.length === 0 ? "You need to add a source first" :
+                            "Select a content source"
+                          } />
                         </SelectTrigger>
                       </FormControl>
                       <SelectContent>
-                        {contentSources.map((source) => (
-                          <SelectItem
-                            key={source.id}
-                            value={source.id}
-                            className="flex flex-col items-start py-2"
-                          >
-                            <div className="max-w-[500px] break-all">
-                              {source.url}
-                            </div>
-                            <span className="text-xs text-muted-foreground">
-                              {source.category}
-                            </span>
-                          </SelectItem>
-                        ))}
+                        {contentSources.length === 0 ? (
+                          <div className="flex flex-col gap-2 p-4">
+                            <p className="text-sm text-muted-foreground">
+                              Go to Sources page to add your first content source
+                            </p>
+                          </div>
+                        ) : (
+                          contentSources.map((source) => (
+                            <SelectItem
+                              key={source.id}
+                              value={source.id}
+                              className="flex flex-col items-start py-2"
+                            >
+                              <div className="max-w-[500px] break-all">
+                                {source.url}
+                              </div>
+                              <span className="text-xs text-muted-foreground">
+                                {source.category}
+                              </span>
+                            </SelectItem>
+                          ))
+                        )}
                       </SelectContent>
                     </Select>
                   </FormItem>
