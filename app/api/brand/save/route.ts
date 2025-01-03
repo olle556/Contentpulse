@@ -13,7 +13,12 @@ export async function POST(req: Request) {
     }
 
     const { values, brandId } = await req.json()
-    console.log('Processing request:', { brandId, userId: session.user.id })
+    console.log('Processing request:', { 
+      brandId, 
+      brandIdType: typeof brandId,
+      parsedBrandId: brandId ? parseInt(brandId) : null,
+      userId: session.user.id 
+    })
     
     if (!values.brandName || !values.brandType || !values.industry || !values.brandVoice) {
       return NextResponse.json(
@@ -46,6 +51,7 @@ export async function POST(req: Request) {
         },
         update: {
           ...data,
+          userId: session.user.id,
           updatedAt: new Date(),
         },
         create: {
@@ -54,7 +60,11 @@ export async function POST(req: Request) {
         },
       })
       
-      console.log('Upserted brand:', result)
+      console.log('Upserted brand:', {
+        result,
+        userId: session.user.id,
+        brandId: result.id
+      })
       return NextResponse.json({ 
         id: result.id,
         success: true 

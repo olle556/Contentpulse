@@ -1,7 +1,7 @@
 import { prisma } from '@/lib/prisma'
 
 interface BrandQueryResult {
-  id: string
+  id: number
   brandName: string
   brandType: string
   industry: string
@@ -20,33 +20,33 @@ interface BrandQueryResult {
 
 export async function getRelevantBrandContext(userId: string) {
   try {
-    const brands = await prisma.$queryRaw<BrandQueryResult[]>`
-      SELECT 
-        id, 
-        "brandName",
-        "brandType",
-        industry,
-        language,
-        website,
-        "brandVoice",
-        description,
-        "missionStatement",
-        slogans,
-        demographics,
-        psychographics,
-        "contentThemes",
-        "primaryObjectives",
-        "brandStory"
-      FROM "Brand"
-      WHERE "userId" = ${userId}
-      LIMIT 1;
-    `
+    const brand = await prisma.brand.findFirst({
+      where: {
+        userId: userId
+      },
+      select: {
+        id: true,
+        brandName: true,
+        brandType: true,
+        industry: true,
+        language: true,
+        website: true,
+        brandVoice: true,
+        description: true,
+        missionStatement: true,
+        slogans: true,
+        demographics: true,
+        psychographics: true,
+        contentThemes: true,
+        primaryObjectives: true,
+        brandStory: true
+      }
+    });
 
-    if (!brands.length) {
+    if (!brand) {
       return null;
     }
 
-    const brand = brands[0];
     return `
       Brand: ${brand.brandName}
       Type: ${brand.brandType}
