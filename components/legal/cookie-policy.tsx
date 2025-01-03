@@ -86,7 +86,7 @@ export function CookiePolicy() {
               href="mailto:support@contentpulse.ai" 
               className="text-primary hover:underline"
             >
-              info@contentpulse.app
+              hello@coove.studio
             </a>
           </p>
         </section>
