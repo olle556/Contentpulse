@@ -3,7 +3,7 @@
 import { useEffect, useState } from "react";
 import { WelcomeCard } from "@/components/dashboard/welcome-card";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
-import { FileText, Users, Activity, TrendingUp } from "lucide-react";
+import { FileText, Calendar, Activity, TrendingUp, Link as LinkIcon } from "lucide-react";
 
 export default function Dashboard() {
   const [showWelcome, setShowWelcome] = useState(true);
@@ -97,13 +97,13 @@ export default function Dashboard() {
           title="Active Sources"
           value={sourcesCount}
           description="Content sources monitored"
-          icon={<Users className="h-5 w-5 sm:h-6 sm:w-6" />}
+          icon={<LinkIcon className="h-5 w-5 sm:h-6 sm:w-6" />}
         />
         <StatsCard
           title="Active Schedules"
           value={schedulesCount}
           description="Schedules in action"
-          icon={<Users className="h-5 w-5 sm:h-6 sm:w-6" />}
+          icon={<Calendar className="h-5 w-5 sm:h-6 sm:w-6" />}
         />
       </div>
     </div>
@@ -121,6 +121,9 @@ function StatsCard({
   description: string;
   icon: React.ReactNode;
 }) {
+  // Format the display value
+  const displayValue = value === "0" ? "0" : value;
+
   return (
     <Card className="overflow-hidden">
       <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
@@ -128,7 +131,7 @@ function StatsCard({
         <div className="opacity-75">{icon}</div>
       </CardHeader>
       <CardContent>
-        <div className="text-xl sm:text-2xl font-bold">{value}</div>
+        <div className="text-xl sm:text-2xl font-bold">{displayValue}</div>
         <p className="text-xs text-muted-foreground mt-1 line-clamp-2">{description}</p>
       </CardContent>
     </Card>
