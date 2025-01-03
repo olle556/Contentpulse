@@ -6,10 +6,10 @@ export function useOnboarding() {
   const { data: completedSteps, isLoading } = useQuery({
     queryKey: ['onboarding-progress'],
     queryFn: async () => {
-      console.log('useOnboarding - Fetching progress');
+
       const response = await fetch('/api/onboarding/progress');
       const data = await response.json();
-      console.log('useOnboarding - Received progress data:', data);
+
       
       if (!data.success) {
         throw new Error(data.error || 'Failed to fetch progress');
@@ -25,10 +25,10 @@ export function useOnboarding() {
 
   const markStepCompleted = async (stepId: string) => {
     try {
-      console.log('useOnboarding - Marking step as completed:', stepId);
+
       
       queryClient.setQueryData(['onboarding-progress'], (old: string[] = []) => {
-        console.log('useOnboarding - Current progress:', old);
+
         if (!old.includes(stepId)) {
           return [...old, stepId];
         }
@@ -42,7 +42,7 @@ export function useOnboarding() {
       });
 
       const data = await response.json();
-      console.log('useOnboarding - Step completion response:', data);
+
 
       if (!response.ok) {
         throw new Error(data.error || 'Failed to mark step as completed');

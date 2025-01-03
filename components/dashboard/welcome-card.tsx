@@ -12,8 +12,7 @@ import { useOnboarding } from "@/hooks/use-onboarding";
 export function WelcomeCard() {
   const { completedSteps, isLoading } = useOnboarding();
 
-  console.log('WelcomeCard - Current completed steps:', completedSteps);
-  console.log('WelcomeCard - Loading state:', isLoading);
+
 
   const [steps, setSteps] = useState<OnboardingStep[]>([
     {
@@ -52,13 +51,13 @@ export function WelcomeCard() {
 
   useEffect(() => {
     if (completedSteps) {
-      console.log('WelcomeCard - Updating steps with completedSteps:', completedSteps);
+
       setSteps(prevSteps => {
         const updatedSteps = prevSteps.map(step => ({
           ...step,
           isCompleted: completedSteps.includes(step.id)
         }));
-        console.log('WelcomeCard - Updated steps:', updatedSteps);
+
         return updatedSteps;
       });
     }
@@ -67,10 +66,10 @@ export function WelcomeCard() {
   const ALL_STEPS = ['brand', 'sources', 'posts', 'schedule'] as const;
 
   const allStepsCompleted = completedSteps?.length === ALL_STEPS.length;
-  console.log('WelcomeCard - All steps completed?', allStepsCompleted);
+
 
   if (allStepsCompleted) {
-    console.log('WelcomeCard - Hiding card due to all steps being completed');
+
     return null;
   }
 

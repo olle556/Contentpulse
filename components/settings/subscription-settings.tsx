@@ -64,7 +64,7 @@ export function SubscriptionSettings({
       try {
         const response = await fetch(`${baseUrl}/api/check-subscription`);
         const data = await response.json();
-        console.log('Subscription data:', data);
+
         setSubscriptionData(data);
       } catch (error) {
         console.error('Error checking subscription:', error);
