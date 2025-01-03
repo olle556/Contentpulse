@@ -82,7 +82,7 @@ export function ContactForm({ defaultTab }: ContactFormProps) {
         <Form {...form}>
             <form onSubmit={form.handleSubmit(onSubmit)} className="space-y-6">
                 <div className="space-y-4">
-                    <FormDescription className="max-w-[50%]">
+                    <FormDescription className="">
                         {form.watch("isFeedback")
                             ? "We love your feedback! Please share your thoughts about Content Pulse! Are there any features you would like to see? Or, do you have any suggestions for improvements?"
                             : "Have a question? We're here to help! Write your question below and we will get back to you as soon as possible."}

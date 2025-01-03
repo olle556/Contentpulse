@@ -35,7 +35,7 @@ export async function POST(req: NextRequest) {
 
     const messageData = {
       from: `Content Pulse Form <mailgun@${process.env.MAILGUN_DOMAIN}>`,
-      to: "jesperviktormollbrant@gmail.com",
+      to: ["jesperviktormollbrant@gmail.com", "olleevertsson@gmail.com"],
       subject: `Content Pulse ${switchValue} from ${name || 'Anonymous'}`,
       html: `
         <h2>${switchValue} from ${name || 'Anonymous'}</h2>
