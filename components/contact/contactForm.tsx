@@ -19,8 +19,8 @@ import { useState } from "react";
 import { toast } from "sonner";
 
 const contactFormSchema = z.object({
-    name: z.string().min(2, "Name must be at least 2 characters").optional(),
-    email: z.string().email("Invalid email address").optional(),
+    name: z.string().optional(),
+    email: z.string().optional(),
     message: z.string().min(5, "Message must be at least 5 characters"),
     isFeedback: z.boolean(),
 });
@@ -45,7 +45,7 @@ export function ContactForm({ defaultTab }: ContactFormProps) {
     async function onSubmit(values: z.infer<typeof contactFormSchema>) {
         setIsLoading(true);
         try {
-            const baseUrl = process.env.NEXTAUTH_URL || 'http://localhost:3000';
+            const baseUrl = process.env.NEXTAUTH_URL ;
             const response = await fetch(`${baseUrl}/api/formMail`, {
                 method: 'POST',
                 headers: {
@@ -55,19 +55,29 @@ export function ContactForm({ defaultTab }: ContactFormProps) {
                     name: values.name,
                     email: values.email,
                     message: values.message,
-                    swicthValue: values.isFeedback ? 'Feedback' : 'Question'
+                    switchValue: values.isFeedback ? 'Feedback' : 'Question'
                 }),
             });
 
-            if (!response.ok) {
-                throw new Error('Failed to send message');
+            // First check if the response is JSON
+            const contentType = response.headers.get("content-type");
+            if (contentType && contentType.indexOf("application/json") !== -1) {
+                const data = await response.json();
+                if (!response.ok) {
+                    throw new Error(data.error || 'Failed to send message');
+                }
+            } else {
+                // Handle non-JSON response
+                const textError = await response.text();
+                console.error('Server returned non-JSON response:', textError);
+                throw new Error('Server error occurred');
             }
 
             form.reset();
             toast.success("Message sent successfully");
         } catch (error) {
             console.error('Error sending message:', error);
-            toast.error("Failed to send message");
+            toast.error(error instanceof Error ? error.message : "Failed to send message");
         } finally {
             setIsLoading(false);
         }

@@ -9,34 +9,51 @@ const mailgunClient = mailgun.client({
   url: "https://api.eu.mailgun.net"
 });
 
-
-
-
 export async function POST(req: NextRequest) {
+ 
+  
   if (!process.env.MAILGUN_DOMAIN || !process.env.MAILGUN_API_KEY) {
-    console.error('Missing Mailgun configuration');
-    return NextResponse.json({ error: 'Server configuration error' }, { status: 500 });
+    console.error('Missing Mailgun configuration:', {
+      hasDomain: !!process.env.MAILGUN_DOMAIN,
+      hasApiKey: !!process.env.MAILGUN_API_KEY
+    });
+    return NextResponse.json(
+      { error: 'Server configuration error' }, 
+      { status: 500 }
+    );
   }
 
   try {
-    const { email, name, message, swicthValue } = await req.json();
+    const body = await req.json();
+    console.log('Received request body:', body);
+    const { email, name, message, switchValue } = body;
 
-    if (!email || !name || !message || !swicthValue) {
-      console.error('Missing required fields:', { email, name, message, swicthValue});
-      return NextResponse.json({ error: 'Missing required fields' }, { status: 400 });
+    if (!message || !switchValue) {
+      console.error('Missing required fields:', { message, switchValue });
+      return NextResponse.json(
+        { error: 'Missing required fields' }, 
+        { status: 400 }
+      );
     }
 
-    const formMailResult = await mailgunClient.messages.create(process.env.MAILGUN_DOMAIN, {
-      from: `Content Pulse Form <noreply@${process.env.MAILGUN_DOMAIN}>`,
+    const messageData = {
+      from: `Content Pulse Form <mailgun@${process.env.MAILGUN_DOMAIN}>`,
       to: "jesperviktormollbrant@gmail.com",
-      subject: `Content Pulse ${swicthValue} from ${name}`,
+      subject: `Content Pulse ${switchValue} from ${name || 'Anonymous'}`,
       html: `
-        <h2>${swicthValue} from ${name}</h2>
-        <p><strong>Email:</strong> ${email}</p>
+        <h2>${switchValue} from ${name || 'Anonymous'}</h2>
+        ${email ? `<p><strong>Email:</strong> ${email}</p>` : ''}
         <p><strong>Message:</strong></p>
         <p>${message}</p>
       `
-    });
+    };
+
+    
+
+    const formMailResult = await mailgunClient.messages.create(
+      process.env.MAILGUN_DOMAIN,
+      messageData
+    );
     
     if (!formMailResult.id) {
       throw new Error('Failed to send user email');
