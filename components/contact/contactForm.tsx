@@ -45,7 +45,7 @@ export function ContactForm({ defaultTab }: ContactFormProps) {
     async function onSubmit(values: z.infer<typeof contactFormSchema>) {
         setIsLoading(true);
         try {
-            const baseUrl = process.env.NEXTAUTH_URL ;
+            const baseUrl = process.env.NEXTAUTH_URL;
             const response = await fetch(`${baseUrl}/api/formMail`, {
                 method: 'POST',
                 headers: {
@@ -59,18 +59,12 @@ export function ContactForm({ defaultTab }: ContactFormProps) {
                 }),
             });
 
-            // First check if the response is JSON
-            const contentType = response.headers.get("content-type");
-            if (contentType && contentType.indexOf("application/json") !== -1) {
-                const data = await response.json();
-                if (!response.ok) {
-                    throw new Error(data.error || 'Failed to send message');
-                }
-            } else {
-                // Handle non-JSON response
-                const textError = await response.text();
-                console.error('Server returned non-JSON response:', textError);
-                throw new Error('Server error occurred');
+            // Handle both JSON and text responses
+            const responseData = await response.text();
+            const data = responseData ? JSON.parse(responseData) : {};
+
+            if (!response.ok) {
+                throw new Error(data.error || 'Failed to send message');
             }
 
             form.reset();
@@ -142,10 +136,10 @@ export function ContactForm({ defaultTab }: ContactFormProps) {
                 </div>
 
                 <Button type="submit" disabled={isLoading}>
-                    {isLoading 
-                        ? "Sending..." 
-                        : form.watch("isFeedback") 
-                            ? "Send Feedback" 
+                    {isLoading
+                        ? "Sending..."
+                        : form.watch("isFeedback")
+                            ? "Send Feedback"
                             : "Send Question"}
                 </Button>
             </form>
