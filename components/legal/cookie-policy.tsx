@@ -2,7 +2,7 @@ export function CookiePolicy() {
     return (
       <div className="prose prose-gray dark:prose-invert max-w-none">
         <h1 className="text-4xl font-bold mb-2">Cookie Policy</h1>
-        <p className="text-sm text-muted-foreground mb-8">Last Updated: March 19, 2024</p>
+        <p className="text-sm text-muted-foreground mb-8">Last updated: 1/3/2025</p>
   
         <section className="mb-8">
           <h2 className="text-2xl font-semibold mb-4">1. Introduction</h2>
