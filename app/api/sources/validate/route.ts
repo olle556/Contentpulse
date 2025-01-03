@@ -19,7 +19,7 @@ export async function POST(req: Request) {
       const timeoutId = setTimeout(() => controller.abort(), 3000);
 
       const response = await fetch(url, {
-        method: 'HEAD',
+        method: 'GET',
         signal: controller.signal,
         headers: {
           'User-Agent': 'Mozilla/5.0 (compatible; YourBot/1.0)',
