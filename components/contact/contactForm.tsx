@@ -45,7 +45,8 @@ export function ContactForm({ defaultTab }: ContactFormProps) {
     async function onSubmit(values: z.infer<typeof contactFormSchema>) {
         setIsLoading(true);
         try {
-            const baseUrl = process.env.NEXTAUTH_URL;
+            const baseUrl = process.env.NEXT_PUBLIC_BASE_URL;
+            console.log(baseUrl);
             const response = await fetch(`${baseUrl}/api/formMail`, {
                 method: 'POST',
                 headers: {

@@ -10,8 +10,6 @@ const mailgunClient = mailgun.client({
 });
 
 export async function POST(req: NextRequest) {
- 
-  
   if (!process.env.MAILGUN_DOMAIN || !process.env.MAILGUN_API_KEY) {
     console.error('Missing Mailgun configuration:', {
       hasDomain: !!process.env.MAILGUN_DOMAIN,
@@ -25,7 +23,6 @@ export async function POST(req: NextRequest) {
 
   try {
     const body = await req.json();
-    console.log('Received request body:', body);
     const { email, name, message, switchValue } = body;
 
     if (!message || !switchValue) {
@@ -47,8 +44,6 @@ export async function POST(req: NextRequest) {
         <p>${message}</p>
       `
     };
-
-    
 
     const formMailResult = await mailgunClient.messages.create(
       process.env.MAILGUN_DOMAIN,
