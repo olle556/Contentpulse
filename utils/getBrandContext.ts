@@ -47,22 +47,27 @@ export async function getRelevantBrandContext(userId: string) {
       return null;
     }
 
-    return `
-      Brand: ${brand.brandName}
-      Type: ${brand.brandType}
-      Industry: ${brand.industry}
-      Language: ${brand.language ?? 'N/A'}
-      Website: ${brand.website ?? 'N/A'}
-      Voice: ${brand.brandVoice}
-      Description: ${brand.description ?? 'N/A'}
-      Mission: ${brand.missionStatement ?? 'N/A'}
-      Slogans: ${brand.slogans ?? 'N/A'}
-      Demographics: ${brand.demographics ?? 'N/A'}
-      Psychographics: ${brand.psychographics ?? 'N/A'}
-      Content Themes: ${brand.contentThemes ?? 'N/A'}
-      Primary Objectives: ${brand.primaryObjectives ?? 'N/A'}
-      Brand Story: ${brand.brandStory ?? 'N/A'}
-    `.trim();
+    // Format the context in a more structured way for the AI prompt
+    return `Brand Profile:
+• Name: ${brand.brandName}
+• Type: ${brand.brandType}
+• Industry: ${brand.industry}
+• Language: ${brand.language || 'English'}
+• Voice: ${brand.brandVoice}
+
+Brand Details:
+${brand.description ? `• Description: ${brand.description}` : ''}
+${brand.missionStatement ? `• Mission: ${brand.missionStatement}` : ''}
+${brand.slogans ? `• Key Slogans: ${brand.slogans}` : ''}
+
+Target Audience:
+${brand.demographics ? `• Demographics: ${brand.demographics}` : ''}
+${brand.psychographics ? `• Psychographics: ${brand.psychographics}` : ''}
+
+Content Strategy:
+${brand.contentThemes ? `• Content Themes: ${brand.contentThemes}` : ''}
+${brand.primaryObjectives ? `• Primary Objectives: ${brand.primaryObjectives}` : ''}
+${brand.brandStory ? `• Brand Story: ${brand.brandStory}` : ''}`.trim();
   } catch (error) {
     console.error('Error getting brand context:', error);
     return null;
