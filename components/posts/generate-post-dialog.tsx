@@ -157,7 +157,7 @@ export function GeneratePostDialog({ open, onOpenChange, onSuccess }: GeneratePo
 
   // Modify the handleDialogClose function
   const handleDialogClose = async (open: boolean) => {
-    console.log('Dialog close triggered', { open, hasUnsavedChanges });
+
     
     if (!open && hasUnsavedChanges) {
       const confirm = window.confirm('You have unsaved changes. Are you sure you want to close?');
@@ -167,7 +167,7 @@ export function GeneratePostDialog({ open, onOpenChange, onSuccess }: GeneratePo
     }
     
     if (!open) {
-      console.log('Resetting dialog');
+
       resetDialog();
     }
     onOpenChange(open);
@@ -216,7 +216,7 @@ export function GeneratePostDialog({ open, onOpenChange, onSuccess }: GeneratePo
   // Function for quick-saving generated content
   const handleSavePost = async (event?: React.MouseEvent) => {
     event?.preventDefault(); // Prevent any default actions
-    console.log('Save post started');
+
     setIsSaving(true);
     try {
       const response = await fetch('/api/posts', {
@@ -238,13 +238,13 @@ export function GeneratePostDialog({ open, onOpenChange, onSuccess }: GeneratePo
       setHasUnsavedChanges(false);
       toast.success('Post saved successfully');
       onSuccess?.(); // Refresh the posts list if needed
-      console.log('Save post completed successfully');
+
     } catch (error) {
       console.error('Save error:', error);
       toast.error('Failed to save post');
     } finally {
       setIsSaving(false);
-      console.log('Save post finished');
+
     }
   };
 
@@ -324,7 +324,7 @@ export function GeneratePostDialog({ open, onOpenChange, onSuccess }: GeneratePo
         ...(scrapedContent && { scrapedContent })
       };
 
-      console.log('Sending request to:', endpoint, requestBody);
+
 
       const response = await fetch(endpoint, {
         method: 'POST',
@@ -361,7 +361,7 @@ export function GeneratePostDialog({ open, onOpenChange, onSuccess }: GeneratePo
       }
       
       if (!isRegeneration) {
-        console.log('Setting scraped content from response:', data.scrapedContent);
+
         setScrapedContent(data.scrapedContent);
       }
       
@@ -373,7 +373,7 @@ export function GeneratePostDialog({ open, onOpenChange, onSuccess }: GeneratePo
       
       toast.success(isRegeneration ? 'Post regenerated successfully' : 'Post generated successfully');
     } catch (error: any) {
-      console.error('Generation error:', error);
+
       toast.error(error.message || 'Failed to generate post');
     } finally {
       setGeneratingPost(false);
@@ -409,16 +409,16 @@ export function GeneratePostDialog({ open, onOpenChange, onSuccess }: GeneratePo
       <DialogContent 
         className="sm:max-w-[600px] max-h-[90vh] flex flex-col"
         onInteractOutside={(e) => {
-          console.log('Interaction outside dialog');
+
           e.preventDefault();
         }}
         onEscapeKeyDown={(e) => {
-          console.log('Escape key pressed');
+
           e.preventDefault();
         }}
       >
         <DialogHeader>
-          <DialogTitle>Generate Post from Sources</DialogTitle>
+          <DialogTitle className="text-lg font-semibold">Generate Post from Sources</DialogTitle>
         </DialogHeader>
         
         <div className="space-y-4 flex-1 py-y px-2 overflow-y-auto">
