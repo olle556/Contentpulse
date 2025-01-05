@@ -15,9 +15,11 @@ import {
 import { FileText, Layers, Clock, Palette } from "lucide-react";
 import { PricingSection } from "@/components/landing/pricing-section";
 import ProcessFlow from "./process-flow";
+import { useSession } from "next-auth/react";
 
 export default function LandingPage() {
   const router = useRouter();
+  const { data: session } = useSession();
 
   const handleLogin = () => {
     toast.success("Redirecting to login...");
@@ -31,7 +33,11 @@ export default function LandingPage() {
 
   return (
     <div className="min-h-screen bg-black text-white flex flex-col items-center">
-      <Header onLogin={handleLogin} onGetStarted={handleGetStarted} />
+      <Header 
+      onLogin={handleLogin}
+      onGetStarted={handleGetStarted}
+      isAuthenticated={!!session?.user}
+      />
       <main className="flex-1 w-full max-w-7xl">
         <section className="w-full py-6 sm:py-12 md:py-24 lg:py-32">
           <div className="container flex flex-col items-center gap-4 px-4 text-center md:px-6">

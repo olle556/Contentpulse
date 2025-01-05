@@ -9,7 +9,15 @@ const navigation = [
   { name: "About", href: "#about", icon: FileText },
 ];
 
-export function Header({ onLogin, onGetStarted }: { onLogin: () => void, onGetStarted: () => void }) {
+export function Header({ 
+  onLogin, 
+  onGetStarted,
+  isAuthenticated = false
+}: { 
+  onLogin: () => void, 
+  onGetStarted: () => void,
+  isAuthenticated?: boolean
+}) {
   const [isMobileMenuOpen, setIsMobileMenuOpen] = useState(false);
 
   return (
@@ -33,17 +41,33 @@ export function Header({ onLogin, onGetStarted }: { onLogin: () => void, onGetSt
         </div>
 
         <div className="hidden md:flex items-center gap-2 lg:gap-4">
-          <Button 
-            onClick={onLogin} 
-            size="lg" 
-            variant="outline"
-            className="text-base font-medium bg-white/10 text-white hover:text-white dark:hover:text-white hover:bg-white/20 transition-all duration-200 px-6 h-11"
+          {isAuthenticated ? (
+            <Button 
+              onClick={() => window.location.href = '/dashboard'} 
+              size="lg" 
+              className="bg-white text-black hover:bg-gray-200 text-base lg:text-lg"
             >
-            Login
-          </Button>
-          <Button onClick={onGetStarted} size="lg" className="bg-white text-black hover:bg-gray-200 w-full sm:w-auto text-base lg:text-lg">
-            Get Started
-          </Button>
+              Dashboard
+            </Button>
+          ) : (
+            <>
+              <Button 
+                onClick={onLogin} 
+                size="lg" 
+                variant="outline"
+                className="text-base font-medium bg-white/10 text-white hover:text-white dark:hover:text-white hover:bg-white/20 transition-all duration-200 px-6 h-11"
+              >
+                Login
+              </Button>
+              <Button 
+                onClick={onGetStarted} 
+                size="lg" 
+                className="bg-white text-black hover:bg-gray-200 w-full sm:w-auto text-base lg:text-lg"
+              >
+                Get Started
+              </Button>
+            </>
+          )}
         </div>
         
         <div className="flex md:hidden">
@@ -83,19 +107,32 @@ export function Header({ onLogin, onGetStarted }: { onLogin: () => void, onGetSt
                   {item.name}
                 </Link>
               ))}
-              <Button
-                onClick={onLogin}
-                size="sm"
-                className="w-full mt-2 bg-transparent hover:bg-white hover:text-black transition-colors border-2 border-white"
-              >
-                Login
-              </Button>
-              <Button
-                onClick={onGetStarted}
-                size="sm"
-                className="w-full mt-4 bg-black text-white hover:bg-gray-800">
-                Get Started
-              </Button>
+              {isAuthenticated ? (
+                <Button
+                  onClick={() => window.location.href = '/dashboard'}
+                  size="sm"
+                  className="w-full mt-2 bg-black text-white hover:bg-gray-800"
+                >
+                  Dashboard
+                </Button>
+              ) : (
+                <>
+                  <Button
+                    onClick={onLogin}
+                    size="sm"
+                    className="w-full mt-2 bg-transparent hover:bg-white hover:text-black transition-colors border-2 border-white"
+                  >
+                    Login
+                  </Button>
+                  <Button
+                    onClick={onGetStarted}
+                    size="sm"
+                    className="w-full mt-4 bg-black text-white hover:bg-gray-800"
+                  >
+                    Get Started
+                  </Button>
+                </>
+              )}
             </nav>
           </div>
         </div>
