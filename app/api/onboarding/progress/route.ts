@@ -47,10 +47,35 @@ export async function GET() {
     // Calculate actual completed steps based on data existence
     const actualCompletedSteps = [];
     
-    if (user.brands.length > 0) actualCompletedSteps.push('brand');
-    if (user.sources.length > 0) actualCompletedSteps.push('sources');
-    if (user.posts.length > 0) actualCompletedSteps.push('posts');
-    if (user.contentSchedules.length > 0) actualCompletedSteps.push('schedule');
+    // Mark trial as complete if user has a trialEndDate
+    if (user.trialEndDate) {
+      console.log('Trial status: User has trial end date:', user.trialEndDate);
+      actualCompletedSteps.push('trial');
+    }
+    if (user.brands.length > 0) {
+      console.log('Brands count:', user.brands.length);
+      actualCompletedSteps.push('brand');
+    }
+    if (user.sources.length > 0) {
+      console.log('Sources count:', user.sources.length);
+      actualCompletedSteps.push('sources');
+    }
+    if (user.posts.length > 0) {
+      console.log('Posts count:', user.posts.length);
+      actualCompletedSteps.push('posts');
+    }
+    if (user.contentSchedules.length > 0) {
+      console.log('Schedules count:', user.contentSchedules.length);
+      actualCompletedSteps.push('schedule');
+    }
+
+    console.log('All counts:', {
+      brands: user.brands.length,
+      sources: user.sources.length,
+      posts: user.posts.length,
+      schedules: user.contentSchedules.length
+    });
+    console.log('Final completed steps:', actualCompletedSteps);
 
     // Update stored progress if it differs from actual progress
     const storedSteps = user.onboardingProgress?.completedSteps || [];

@@ -90,13 +90,13 @@ export type ContentSchedule = {
   threadCount: number;
 }
 
-export interface OnboardingStep {
-  id: 'brand' | 'sources' | 'posts' | 'schedule';
-  title: string;
-  description: string;
-  icon: JSX.Element;
-  href: string;
-  isCompleted: boolean;
+export type OnboardingStep = {
+  id: 'trial' | 'brand' | 'sources' | 'posts' | 'schedule'
+  title: string
+  description: string
+  icon: React.ReactNode
+  href: string
+  isCompleted: boolean
 }
 
 export interface Post {

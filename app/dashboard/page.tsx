@@ -5,6 +5,8 @@ import { WelcomeCard } from "@/components/dashboard/welcome-card";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { FileText, Calendar, Activity, TrendingUp, Link as LinkIcon } from "lucide-react";
 
+const ALL_STEPS = ['trial', 'brand', 'sources', 'posts', 'schedule'] as const;
+
 export default function Dashboard() {
   const [showWelcome, setShowWelcome] = useState(true);
   const [postsCount, setPostsCount] = useState<string>("--");
@@ -18,8 +20,8 @@ export default function Dashboard() {
         const data = await response.json();
         
         if (data.success) {
-          // Hide welcome card if all steps are completed
-          setShowWelcome(data.completedSteps.length < 4);
+          // Hide welcome card only when ALL steps are completed
+          setShowWelcome(data.completedSteps.length < ALL_STEPS.length);
         }
       } catch (error) {
         console.error('Failed to check onboarding status:', error);

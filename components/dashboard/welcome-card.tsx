@@ -3,7 +3,7 @@
 import { useEffect, useState } from "react";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
-import { ArrowRight, Wand2, Target, Settings, Calendar, CheckCircle2 } from "lucide-react";
+import { ArrowRight, Wand2, Target, Settings, Calendar, CheckCircle2, Sparkles } from "lucide-react";
 import Link from "next/link";
 import { useQuery } from "@tanstack/react-query";
 import { OnboardingStep } from "@/types";
@@ -15,6 +15,14 @@ export function WelcomeCard() {
 
 
   const [steps, setSteps] = useState<OnboardingStep[]>([
+    {
+      id: 'trial',
+      title: "Sign up for a free trial",
+      description: "Start your journey with a free trial to explore all features.",
+      icon: <Sparkles className="h-5 w-5" />,
+      href: "/dashboard/settings",
+      isCompleted: false
+    },
     {
       id: 'brand',
       title: "Set up your brand",
@@ -63,7 +71,7 @@ export function WelcomeCard() {
     }
   }, [completedSteps]);
 
-  const ALL_STEPS = ['brand', 'sources', 'posts', 'schedule'] as const;
+  const ALL_STEPS = ['trial', 'brand', 'sources', 'posts', 'schedule'] as const;
 
   const allStepsCompleted = completedSteps?.length === ALL_STEPS.length;
 

@@ -4,7 +4,7 @@ import { getServerSession } from 'next-auth';
 import { authOptions } from '@/lib/auth-options';
 
 // Define valid steps to prevent invalid data
-const VALID_STEPS = ['brand', 'sources', 'posts', 'schedule'] as const;
+const VALID_STEPS = ['trial', 'brand', 'sources', 'posts', 'schedule'] as const;
 type OnboardingStep = typeof VALID_STEPS[number];
 
 export async function POST(req: Request) {
@@ -85,6 +85,16 @@ async function verifyStepCompletion(userId: string, step: OnboardingStep): Promi
     console.log(`Verifying step ${step} for user ${userId}`);
     
     switch (step) {
+      case 'trial': {
+        const user = await prisma.user.findUnique({
+          where: { id: userId },
+          select: { trialEndDate: true }
+        });
+        console.log('Trial verification - trialEndDate:', user?.trialEndDate);
+        const isComplete = !!user?.trialEndDate;
+        console.log('Trial verification result:', isComplete);
+        return isComplete;
+      }
       case 'brand': {
         const brand = await prisma.brand.findFirst({ 
           where: { 
