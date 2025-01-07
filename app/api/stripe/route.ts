@@ -34,6 +34,12 @@ export async function POST(req: Request) {
 
     const user = await prisma.user.findUnique({
       where: { email: session.user.email },
+      select: {
+        id: true,
+        email: true,
+        stripeCustomerId: true,
+        trialEndDate: true,
+      }
     });
 
     if (!user || !user.email) {
@@ -89,43 +95,52 @@ export async function POST(req: Request) {
       );
     }
 
+    // Determine if user should get a trial
+    const hasHadTrial = user.trialEndDate !== null;
+    
+    // Base checkout session configuration
+    const checkoutSessionConfig: Stripe.Checkout.SessionCreateParams = {
+      customer: customerId,
+      mode: 'subscription',
+      payment_method_types: ['card'],
+      line_items: [
+        {
+          price: priceId,
+          quantity: 1,
+        },
+      ],
+      billing_address_collection: 'required',
+      payment_method_collection: 'if_required',
+      allow_promotion_codes: true,
+      automatic_tax: { 
+        enabled: true,
+        liability: { type: 'self' }
+      },
+      tax_id_collection: { enabled: true },
+      customer_update: {
+        address: 'auto',
+        name: 'auto',
+        shipping: 'auto'
+      },
+      success_url: `${process.env.NEXT_PUBLIC_BASE_URL}/dashboard/settings?success=true`,
+      cancel_url: `${process.env.NEXT_PUBLIC_BASE_URL}/dashboard/settings?canceled=true`,
+    };
+
+    // Only add trial period if user hasn't had one before
+    if (!hasHadTrial) {
+      checkoutSessionConfig.subscription_data = {
+        trial_period_days: 7,
+        trial_settings: {
+          end_behavior: {
+            missing_payment_method: 'cancel'
+          }
+        }
+      };
+    }
+
     // Create Stripe Checkout Session
     try {
-      const checkoutSession = await stripe.checkout.sessions.create({
-        customer: customerId,
-        mode: 'subscription',
-        payment_method_types: ['card'],
-        line_items: [
-          {
-            price: priceId,
-            quantity: 1,
-          },
-        ],
-        subscription_data: {
-          trial_period_days: 7,
-          trial_settings: {
-            end_behavior: {
-              missing_payment_method: 'cancel'
-            }
-          }
-        },
-        billing_address_collection: 'required',
-        payment_method_collection: 'if_required',
-        allow_promotion_codes: true,
-        automatic_tax: { 
-          enabled: true,
-          liability: { type: 'self' }
-        },
-        tax_id_collection: { enabled: true },
-        customer_update: {
-          address: 'auto',
-          name: 'auto',
-          shipping: 'auto'
-        },
-        success_url: `${process.env.NEXT_PUBLIC_BASE_URL}/dashboard/settings?success=true`,
-        cancel_url: `${process.env.NEXT_PUBLIC_BASE_URL}/dashboard/settings?canceled=true`,
-      });
-
+      const checkoutSession = await stripe.checkout.sessions.create(checkoutSessionConfig);
       return NextResponse.json({ sessionId: checkoutSession.id });
     } catch (error) {
       console.error('Stripe checkout session creation error:', error);

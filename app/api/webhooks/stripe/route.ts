@@ -57,11 +57,13 @@ export async function POST(req: Request) {
       case 'customer.subscription.created': {
         const subscription = event.data.object as Stripe.Subscription;
 
-        // Set initial trial period if applicable
+        const yesterday = new Date();
+        yesterday.setDate(yesterday.getDate() - 1);
+        
         const trialEnd = subscription.trial_end ?
-          new Date(subscription.trial_end * 1000) : null;
+          new Date(subscription.trial_end * 1000) : yesterday;
         const trialStart = subscription.trial_start ?
-          new Date(subscription.trial_start * 1000) : null;
+          new Date(subscription.trial_start * 1000) : yesterday;
 
         try {
           await prisma.user.update({
@@ -129,8 +131,6 @@ export async function POST(req: Request) {
             data: {
               subscriptionStatus: 'active',
               subscriptionEndDate: new Date(subscription.current_period_end * 1000),
-              trialStartDate: null,
-              trialEndDate: null
             }
           });
         } catch (error) {
@@ -176,8 +176,6 @@ export async function POST(req: Request) {
             data: {
               subscriptionStatus: DBsubscriptionStatus,
               subscriptionEndDate: new Date(subscription.current_period_end * 1000),
-              trialEndDate: subscription.trial_end ?
-                new Date(subscription.trial_end * 1000) : null
             }
           });
         } catch (error) {
@@ -197,8 +195,6 @@ export async function POST(req: Request) {
               subscriptionStatus: 'inactive',
               subscriptionEndDate: null,
               stripeSubscriptionId: null,
-              trialStartDate: null,
-              trialEndDate: null
             }
           });
         } catch (error) {

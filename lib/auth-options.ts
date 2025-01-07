@@ -3,6 +3,7 @@ import GoogleProvider from "next-auth/providers/google";
 import { PrismaClient } from "@prisma/client";
 import { Adapter, AdapterUser, AdapterAccount, AdapterSession } from "next-auth/adapters";
 import { prisma } from "./prisma";
+import { stripe } from "./stripe";
 
 interface CreateUserData {
   email: string;
@@ -21,13 +22,69 @@ const customPrismaAdapter: Adapter = {
   async createUser(data: CreateUserData): Promise<AdapterUser> {
     const prismaClient = new PrismaClient();
     try {
-      const user = await prismaClient.user.create({ 
+      // Check for existing Stripe customer
+      const existingCustomers = await stripe.customers.search({
+        query: `email:'${data.email}'`,
+      });
+      let stripeCustomerId = null;
+      let stripeSubscriptionId = null;
+      let subscriptionStatus = null;
+      let subscriptionStartDate = null;
+      let subscriptionEndDate = null;
+      let trialStartDate = null;
+      let trialEndDate = null;
+
+      if (existingCustomers.data.length > 0) {
+        const stripeCustomer = existingCustomers.data[0];
+        stripeCustomerId = stripeCustomer.id;
+
+        // Get the most recent subscription if any
+        const subscriptions = await stripe.subscriptions.list({
+          customer: stripeCustomer.id,
+          limit: 1,
+          status: 'all'
+        });
+
+        // Only set subscription ID if there is an active subscription
+        if (subscriptions.data.length > 0) {
+          subscriptionStatus = subscriptions.data[0].status === 'canceled' 
+            ? 'inactive' 
+            : subscriptions.data[0].status;
+          subscriptionStartDate = subscriptions.data[0].current_period_start;
+          subscriptionEndDate = subscriptions.data[0].current_period_end;
+          trialStartDate = subscriptions.data[0].trial_start;
+          
+          // Set trialEndDate to yesterday if trial_end is null
+          if (subscriptions.data[0].trial_end === null) {
+            const yesterday = new Date();
+            yesterday.setDate(yesterday.getDate() - 1);
+            trialEndDate = Math.floor(yesterday.getTime() / 1000); // Convert to Unix timestamp
+          } else {
+            trialEndDate = subscriptions.data[0].trial_end;
+          }
+          
+          // Only set stripeSubscriptionId if status is not 'canceled'
+          stripeSubscriptionId = subscriptions.data[0].status !== 'canceled' 
+            ? subscriptions.data[0].id 
+            : null;
+        }
+      } 
+
+      // Create the user with Stripe data if found
+      const user = await prismaClient.user.create({
         data: {
           email: data.email,
           name: data.name,
           image: data.image,
           emailVerified: data.emailVerified,
-        } 
+          stripeCustomerId: stripeCustomerId, // Add Stripe customer ID if found
+          stripeSubscriptionId: stripeSubscriptionId, // Add Stripe subscription ID if found
+          subscriptionStatus: subscriptionStatus,
+          subscriptionStartDate: subscriptionStartDate ? new Date(subscriptionStartDate * 1000).toISOString() : null,
+          subscriptionEndDate: subscriptionEndDate ? new Date(subscriptionEndDate * 1000).toISOString() : null,
+          trialStartDate: trialStartDate ? new Date(trialStartDate * 1000).toISOString() : null,
+          trialEndDate: trialEndDate ? new Date(trialEndDate * 1000).toISOString() : null,
+        }
       });
       return {
         id: user.id,
@@ -210,7 +267,7 @@ export const authOptions: AuthOptions = {
           select: { stripeCustomerId: true }
         });
 
-        // Store this information in the user's session instead of redirecting
+        // Store this information in the user's session instead of redirecting?? vad gör denna?
         if (!existingUser?.stripeCustomerId) {
           return true; // Allow sign in, we'll handle redirect in the dashboard
         }
