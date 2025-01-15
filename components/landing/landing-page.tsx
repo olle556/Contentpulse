@@ -14,6 +14,7 @@ import {
 } from "@/components/ui/card";
 import { FileText, Layers, Clock, Palette } from "lucide-react";
 import { PricingSection } from "@/components/landing/pricing-section";
+import FAQ from "./FAQ";
 import ProcessFlow from "./process-flow";
 import { useSession } from "next-auth/react";
 
@@ -151,6 +152,9 @@ export default function LandingPage() {
 
         <section id="pricing">
         <PricingSection onSubscribe={handleGetStarted} />
+        </section>
+        <section id="faq">
+          <FAQ />
         </section>
         <section className="w-full  py-12 md:py-24 lg:py-32">
           <div className="container px-4 md:px-6">
