@@ -58,6 +58,27 @@ export default function LandingPage() {
               <p className="text-sm text-gray-400">No credit card required - 7 days trial</p>
           </div>
         </section>
+        <section id="demo">
+          <div className="container px-4 md:px-6 py-12">
+            <div className="flex flex-col items-center justify-center space-y-4 text-center">
+              <h2 className="text-2xl font-bold tracking-tighter sm:text-3xl md:text-4xl lg:text-5xl">
+                See it in action
+              </h2>
+              <p className="mx-auto max-w-[700px] text-gray-400 text-sm sm:text-base md:text-xl/relaxed lg:text-base/relaxed xl:text-xl/relaxed">
+                Watch how our platform streamlines your content creation process
+              </p>
+              <div className="w-full max-w-4xl mx-auto aspect-video">
+                <iframe
+                  className="w-full h-full rounded-lg"
+                  src="https://www.youtube.com/embed/bOcZwkOEbAA"
+                  title="Product Demo"
+                  allow="accelerometer; autoplay; clipboard-write; encrypted-media; gyroscope; picture-in-picture"
+                  allowFullScreen
+                ></iframe>
+              </div>
+            </div>
+          </div>
+        </section>
         <section className="w-full py-6 sm:py-12 md:py-24 lg:py-32" id="features">
           <div className="container px-4 md:px-6">
             <div className="flex flex-col items-center justify-center space-y-4 text-center">
