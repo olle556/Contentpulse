@@ -28,7 +28,7 @@ export function Header({
           <span className="text-2xl md:text-3xl">Content Pulse</span>
         </Link>
 
-        <div className="hidden md:flex items-center gap-4 lg:gap-8">
+        <div className="hidden md:flex items-center gap-4 lg:gap-8 absolute left-1/2 transform -translate-x-1/2">
           {navigation.map((item) => (
             <Link
               key={item.name}
