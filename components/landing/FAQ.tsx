@@ -12,7 +12,7 @@ export default function FAQSection() {
     <section className="w-full py-12 md:py-24 lg:py-32 bg-background">
       <div className="container px-4 md:px-6">
         <div className="flex flex-col items-center justify-center space-y-4 text-center">
-          <h2 className="text-3xl font-bold tracking-tighter sm:text-5xl">
+          <h2 className="text-3xl font-bold tracking-tighter sm:text-5xl text-foreground">
             Frequently Asked Questions
           </h2>
           <p className="max-w-[700px] text-gray-500 md:text-xl/relaxed lg:text-base/relaxed xl:text-xl/relaxed dark:text-gray-400">
@@ -20,7 +20,7 @@ export default function FAQSection() {
           </p>
         </div>
         <div className="mx-auto max-w-[800px] mt-8 md:mt-16">
-          <Accordion type="single" collapsible className="w-full">
+          <Accordion type="single" collapsible className="w-full text-foreground">
             <AccordionItem value="item-1">
               <AccordionTrigger>What is Content Pulse?</AccordionTrigger>
               <AccordionContent>
